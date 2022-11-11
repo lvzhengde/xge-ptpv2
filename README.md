@@ -9,14 +9,14 @@
 2.  完整支持IEEE Std 1588-2008标准所描述的One-step Clock 和Two-step Clock两种工作模式
 3.  Delay Request-Response机制和Peer Delay机制均支持
 4.  支持各种封装格式的IEEE1588v2报文
-    -PTP over IEEE802.3/Ethernet， 因此支持802.1AS
-	-PTP over UDP/IPv4，UDP/IPv6
-	-No VLAN/Single VLAN/Double VLAN
+    - PTP over IEEE802.3/Ethernet， 因此支持802.1AS
+	- PTP over UDP/IPv4，UDP/IPv6
+	- No VLAN/Single VLAN/Double VLAN
 5.  支持Transparent Clock的完全硬件实现（TC Hardware Offload）
 6.  精确高效的时间戳处理
-    -固定在SFD处产生时间戳，保持一致性和精确性
-	-在线（on-the-wire）插入时间戳至PTP报文
-	-在线计算修改后报文的CRC及IPv6 UDP Checksum
+    - 固定在SFD处产生时间戳，保持一致性和精确性
+	- 在线（on-the-wire）插入时间戳至PTP报文
+	- 在线计算修改后报文的CRC及IPv6 UDP Checksum
 7.  设计尽量简化并且预留扩展适配接口，以支持1G/2.5G/5G/20G以太网等
 
 #### 使用说明
