@@ -15,8 +15,8 @@
 5.  支持Transparent Clock的完全硬件实现（TC Hardware Offload）
 6.  精确高效的时间戳处理
     - 固定在SFD处产生时间戳，保持一致性和精确性
-	- 在线（on-the-wire）插入时间戳至PTP报文
-	- 在线计算修改后报文的CRC及IPv6 UDP Checksum
+	- 在传输过程中（on-the-fly）插入时间戳至PTP报文
+	- 在传输过程中（on-the-fly）更新报文的CRC及IPv6 UDP Checksum
 7.  设计尽量简化并且预留扩展适配接口，以支持1G/2.5G/5G/20G以太网等
 
 #### 使用说明
