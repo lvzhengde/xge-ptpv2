@@ -10,7 +10,7 @@
 3.  Delay Request-Response机制和Peer Delay机制均支持
 4.  支持各种封装格式的IEEE1588v2报文
     - PTP over IEEE802.3/Ethernet， 因此支持802.1AS
-	- PTP over UDP/IPv4，UDP/IPv6
+	- PTP over UDP IPv4/IPv6
 	- No VLAN/Single VLAN/Double VLAN
 5.  支持Transparent Clock的完全硬件实现（TC Hardware Offload）
 6.  精确高效的时间戳处理
@@ -31,9 +31,9 @@
 #### 免责声明
 
 本设计可以自由使用，作者不索取任何费用。<br>
-设计可能涉及到其他实体的专利， 则专利权属于相关的所有者。<br>
+IEEE1588-2008标准以及设计中涉及到的解决方案可能隐含有一些机构或者个人的专利诉求， 则专利权属于相关的所有者。<br>
 作者对使用结果不做任何承诺也不承担其产生的任何法律责任。<br>
-使用者须知晓并同意上述申明，如不同意则不要使用。<br>
+使用者须知晓并同意上述声明，如不同意则不要使用。<br>
 
 #### 关注开发者公众号
 如果需要了解项目最新状态和加入相关技术探讨，请打开微信搜索公众号"时光之箭"或者扫描以下二维码关注开发者公众号。<br>
