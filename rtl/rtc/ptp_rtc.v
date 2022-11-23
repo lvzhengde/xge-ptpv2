@@ -24,8 +24,8 @@ module ptp_rtc (
   wire [`NSC_W-1:0]     ns_counter_p1;
   wire [`NSC_W-1:0]     ns_contrled_rtc;
   wire [`NSC_W-1:0]     ns_synced_rtc; 
-  wire signed [32:0]   tmp_ns, tmp_ns1;
-  reg  signed [32:0]   tmp_ns_d1;
+  wire signed [32:0]    tmp_ns, tmp_ns1;
+  reg  signed [32:0]    tmp_ns_d1;
            
   //counter for seconds
   reg  [47:0]          sc_counter;

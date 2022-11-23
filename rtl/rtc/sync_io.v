@@ -139,14 +139,14 @@ module sync_io (
   //it can be corrected by software easily
   wire pps_pos_pul = pps_in_d2 & (~pps_in_d3);
   always @(posedge rtc_clk or negedge rtc_rst_n) begin
-	if(!rtc_rst_n) begin
+    if(!rtc_rst_n) begin
       pts_std_o <= 80'h0;
-	  pts_fns_o <= 16'h0;    
-	end
-	else begin
-      pts_std_o <= pts_std_o;
-	  pts_fns_o <= pts_fns_o;    
-	end
+      pts_fns_o <= 16'h0;    
+    end
+    else begin
+      pts_std_o <= rtc_std_i;
+      pts_fns_o <= rtc_fns_i;    
+    end
   end
 
 endmodule
