@@ -25,6 +25,10 @@ module timestamp_unit (
   output [63:0]       xge_txd_o,
   output [7:0]        xge_txc_o,
 
+  //time input
+  input  [79:0]       rtc_std_i,             //48 bits seconds + 32 bits nanoseconds
+  input  [15:0]       rtc_fns_i,             //16 bit fractional nanoseconds of rtc
+
   //32 bits on chip bus access interface
   input               bus2ip_clk   ,
   input               bus2ip_rst_n  ,

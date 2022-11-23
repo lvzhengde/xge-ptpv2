@@ -47,6 +47,9 @@ module ptpv2_core (
   input               pps_i,        //1 pulse per second input
   output              pps_o         //1 pulse per second output
 );
+  wire [79:0]         rtc_std;      //48 bits seconds + 32 bits nanoseconds
+  wire [15:0]         rtc_fns;      //16 bit fractional nanoseconds of rtc
+
   wire [31:0]         rtc_ip2bus_data;
   wire [31:0]         tsu_ip2bus_data;
 
@@ -66,6 +69,10 @@ module ptpv2_core (
     .bus2ip_wr_ce_i           (bus2ip_wr_ce_i  ),         
     .ip2bus_data_o            (rtc_ip2bus_data ),  
 
+	//time related signals
+    .rtc_std_o                (rtc_std),          
+    .rtc_fns_o                (rtc_fns),           
+	
     .int_xms_o                (int_xms_o),
     .pps_i                    (pps_i),        
     .pps_o                    (pps_o)         
@@ -91,6 +98,10 @@ module ptpv2_core (
     .xge_txc_i                (xge_txc_i  ),
     .xge_txd_o                (xge_txd_o  ),
     .xge_txc_o                (xge_txc_o  ),
+
+	//time input
+    .rtc_std_i                (rtc_std),          
+    .rtc_fns_i                (rtc_fns),           
 
     //on chip bus access interface
     .bus2ip_clk               (bus2ip_clk    ),
