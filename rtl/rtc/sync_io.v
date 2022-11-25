@@ -18,7 +18,7 @@ module sync_io (
 
   input                pps_i,              //pps input
   output reg [79:0]    pts_std_o,          //timestamp of pps input (second+nanosecond)
-  output reg [15:0]    pts_fns_o,          //timestamp of pps output (fractional nanosecond) 
+  output reg [15:0]    pts_fns_o,          //timestamp of pps input (fractional nanosecond) 
   output reg           pps_o,              //pps output from current time
   output               intxms_o   
 );
