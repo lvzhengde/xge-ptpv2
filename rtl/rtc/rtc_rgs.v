@@ -3,7 +3,6 @@
 --*/
 
 `include "ptpv2_defines.v"
-`timescale 1ns/10fs
 
 module rtc_rgs (
   //32 bits on chip bus access interface

@@ -24,6 +24,7 @@
 
 
 
+`timescale 1ns/10fs
 
 `endif
 

@@ -3,7 +3,6 @@
 --*/
 
 `include "ptpv2_defines.v"
-`timescale 1ns/10fs
 
 module sync_io (
   input                rtc_clk,

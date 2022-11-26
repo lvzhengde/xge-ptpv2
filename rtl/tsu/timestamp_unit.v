@@ -2,7 +2,6 @@
 //  ptpv2 timestamp unit 
 --*/
 `include "ptpv2_defines.v"
-`timescale 1ns/10fs
 
 module timestamp_unit (
   input               dis_ptpv2_i,            //disable ptpv2

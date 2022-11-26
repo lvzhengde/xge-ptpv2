@@ -4,7 +4,6 @@
 //  32 bits on-chip-bus register I/O interface, 
 --*/
 `include "ptpv2_defines.v"
-`timescale 1ns/10fs
 
 module ptpv2_core (
   input               rtc_clk,
@@ -40,7 +39,7 @@ module ptpv2_core (
   output [31:0]       ip2bus_data_o ,  
 
   //interrupt signals generated from ptpv2 core
-  output              int_xms_o,
+  output              intxms_o,
   output              int_rx_ptp_o,
   output              int_tx_ptp_o,
 
@@ -73,7 +72,7 @@ module ptpv2_core (
     .rtc_std_o                (rtc_std),          
     .rtc_fns_o                (rtc_fns),           
 	
-    .int_xms_o                (int_xms_o),
+    .intxms_o                 (intxms_o),
     .pps_i                    (pps_i),        
     .pps_o                    (pps_o)         
   );
