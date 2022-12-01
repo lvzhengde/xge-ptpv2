@@ -39,7 +39,7 @@ module rtc_rgs (
   always @(*) begin
     ip2bus_data = 32'h0;
 
-    if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i[31:8] == `RTC_BASE_ADDR) begin   //base address to rtc
+    if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i[31:8] == `RTC_BLK_ADDR) begin   //base address to rtc
       case(bus2ip_addr_i[7:0])    //deal with offset address
 		`RTC_CTL_ADDR:      ip2bus_data = {29'h0, intxms_sel_o, clear_rtc_o, offset_valid_o};
         `TICK_INC_ADDR:     ip2bus_data = tick_inc_o[31:0];
@@ -88,7 +88,7 @@ module rtc_rgs (
 	  pps_width_o   <= 32'h0;
 
     end
-    else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i[31:8] == `RTC_BASE_ADDR) begin   //deal with base address
+    else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i[31:8] == `RTC_BLK_ADDR) begin   //deal with base address
       case(bus2ip_addr_i[7:0]) //deal with offset address
         
         `RTC_CTL_ADDR:   {intxms_sel_o, clear_rtc, offset_valid} <= bus2ip_data_i[2:0];  //rtc control register
