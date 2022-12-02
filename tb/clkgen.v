@@ -10,10 +10,10 @@ module clkgen (
 
   output       rtc_clk,
   output       tx_clk,
-  output reg   bus_clk,
+  output reg   pbus_clk,
   output reg   rst_sys_n
 );
-  parameter    T_BUS_CLK     = 40,
+  parameter    T_PBUS_CLK     = 40,
                T_RTC_CLK     = 8,
                T_XGE_RTC_CLK = 6.4,
                T_GE_TX_CLK   = 8,
@@ -31,12 +31,12 @@ module clkgen (
     gfe_rtc_clk = 0;
     xge_rtc_clk = 0;
 
-    bus_clk     = 0;
+    pbus_clk     = 0;
     rst_sys_n   = 1;
   end
   
   // clock generation
-  always #(T_BUS_CLK/2) bus_clk = ~bus_clk;
+  always #(T_PBUS_CLK/2) pbus_clk = ~pbus_clk;
 
   always #(T_RTC_CLK/2) gfe_rtc_clk = ~gfe_rtc_clk;
 

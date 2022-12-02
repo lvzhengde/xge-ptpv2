@@ -109,7 +109,7 @@ module harness;
   );
   defparam channel_model.DELAY_LEN = 8;       
 
-  tb_ptpv2_hw_sys tb_ptpv2_hw_sys (
+  ptpv2_endpoint ptpv2_endpoint (
     .rx_clk         (lp_channel_clk ),
     .tx_clk         (tx_clk ),
 
@@ -135,9 +135,9 @@ module harness;
     .pps_o          (pps_o)
   );
   //local device is slave
-  defparam  tb_ptpv2_hw_sys.CLOCK_MS = 0;
+  defparam  ptpv2_endpoint.CLOCK_MS = 0;
   
-  tb_ptpv2_hw_sys lp_tb_ptpv2_hw_sys (
+  ptpv2_endpoint lp_ptpv2_endpoint (
     .rx_clk         (channel_clk ),
     .tx_clk         (lp_tx_clk ),
 
@@ -164,7 +164,7 @@ module harness;
     .pps_o          (lp_pps_o)
   );
   //link parter is master
-  defparam lp_tb_ptpv2_hw_sys.CLOCK_MS = 1;
+  defparam lp_ptpv2_endpoint.CLOCK_MS = 1;
 
 endmodule
 
