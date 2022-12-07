@@ -37,11 +37,11 @@ module ptp_agent (
   //--
   input                  bus2ip_clk   ,
   input                  bus2ip_rst_n  ,
-  output reg  [15:0]     bus2ip_addr_o ,
-  output reg  [15:0]     bus2ip_data_o ,
+  output reg  [31:0]     bus2ip_addr_o ,
+  output reg  [31:0]     bus2ip_data_o ,
   output reg             bus2ip_rd_ce_o ,         //active high
   output reg             bus2ip_wr_ce_o ,         //active high
-  input   [15:0]         ip2bus_data_i   
+  input   [31:0]         ip2bus_data_i   
 );  
 `include "utils.v"
 
@@ -83,8 +83,8 @@ module ptp_agent (
     tx_half_aligned = 0;
 `endif
 
-    bus2ip_addr_o  = 16'h0; 
-    bus2ip_data_o  = 16'h0; 
+    bus2ip_addr_o  = 32'h0; 
+    bus2ip_data_o  = 32'h0; 
     bus2ip_rd_ce_o = 1'b0 ;      
     bus2ip_wr_ce_o = 1'b0 ;      
   end

@@ -68,12 +68,12 @@ module gfe_cvt (
   
   reg frm_start_d1, frm_end_d1;
 
-  always @(posedge ) begin
+  always @(posedge clk) begin
     en_d1 <= en_i;   
     er_d1 <= er_i;
     d_d1  <= d_i ;
 
-    frm_stard_d1 <= frm_start;
+    frm_start_d1 <= frm_start;
     frm_end_d1 <= frm_end;
   end
 
@@ -294,7 +294,7 @@ module gfe_cvt (
   reg [7:0] ge_d   ; 
 
   reg       ctl_ge;
-  reg [7:0] oct_ge  
+  reg [7:0] oct_ge;  
 
   always @(*) begin
     case(clk_cnt)
@@ -461,9 +461,9 @@ module gfe_cvt (
     fe_d = 8'h0;
     case(clk_cnt)
       4'd0, 4'd2, 4'd4, 4'd6, 4'd8, 4'd10, 4'd12, 4'd14:
-        fe_d = {4'b0, fe_dp[3:0];
+        fe_d = {4'b0, fe_dp[3:0]};
       4'd1, 4'd3, 4'd5, 4'd7, 4'd9, 4'd11, 4'd13, 4'd15:
-        fe_d = {4'b0, fe_dp[7:4];
+        fe_d = {4'b0, fe_dp[7:4]};
     endcase
   end
   
