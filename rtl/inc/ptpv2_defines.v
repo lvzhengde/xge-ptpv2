@@ -33,8 +33,8 @@
 `define RTC_CTL_ADDR     (8'h00)    //rtc control {29'h0, intxms_sel_o, clear_rtc_o, offset_valid_o}
 `define TICK_INC_ADDR    (8'h04)    //tick increment valule tick_inc[31:0]
 `define NS_OFST_ADDR     (8'h08)    //nanosecond offset ns_offset[31:0]
-`define SC_OFST_ADDR0    (8'h0c)    //second offset sc_offset[47:16]
-`define SC_OFST_ADDR1    (8'h10)    //second offset {16'b0, sc_offset[15:0]}
+`define SC_OFST_ADDR0    (8'h0c)    //second offset sc_offset{16'b0, [47:32]}
+`define SC_OFST_ADDR1    (8'h10)    //second offset sc_offset[31:0]
 `define CUR_TM_ADDR0     (8'h14)    //current time rtc_std[79:48]
 `define CUR_TM_ADDR1     (8'h18)    //current time rtc_std[47:16]
 `define CUR_TM_ADDR2     (8'h1c)    //current time {rtc_std[15:0], rtc_fns[15:0]}

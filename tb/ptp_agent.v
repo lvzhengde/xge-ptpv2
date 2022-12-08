@@ -381,8 +381,8 @@ module ptp_agent (
             //set nanosecond offset
             write_reg({`RTC_BLK_ADDR, `NS_OFST_ADDR}, ns_diff[31:0]);
             //set second offset
-            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, sc_diff[47:16]);
-            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, {16'b0, sc_diff[15:0]});
+            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, sc_diff[47:32]});
+            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1},  sc_diff[31:0]);
             //offset adjustment take effect
             write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 16'h1);
           end  
@@ -406,8 +406,8 @@ module ptp_agent (
             //set nanosecond offset
             write_reg({`RTC_BLK_ADDR, `NS_OFST_ADDR}, ns_diff[31:0]);
             //set second offset
-            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, sc_diff[47:16]);
-            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, {16'b0, sc_diff[15:0]});
+            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, sc_diff[47:32]});
+            write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, sc_diff[31:0]);
             //offset adjustment take effect
             write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 16'h1);
           end  

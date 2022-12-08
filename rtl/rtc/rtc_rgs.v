@@ -44,8 +44,8 @@ module rtc_rgs (
 		`RTC_CTL_ADDR:      ip2bus_data = {29'h0, intxms_sel_o, clear_rtc_o, offset_valid_o};
         `TICK_INC_ADDR:     ip2bus_data = tick_inc_o[31:0];
         `NS_OFST_ADDR:      ip2bus_data = ns_offset_o[31:0];
-        `SC_OFST_ADDR0:     ip2bus_data = sc_offset_o[47:16];
-        `SC_OFST_ADDR1:     ip2bus_data = {16'h0, sc_offset_o[15:0]};         
+        `SC_OFST_ADDR0:     ip2bus_data = {16'b0, sc_offset_o[47:32]};
+        `SC_OFST_ADDR1:     ip2bus_data = sc_offset_o[31:0];         
 
         `CUR_TM_ADDR0:      ip2bus_data = rtc_std_i[79:48];         
         `CUR_TM_ADDR1:      ip2bus_data = rtc_std_i[47:16];  
@@ -94,8 +94,8 @@ module rtc_rgs (
         `RTC_CTL_ADDR:   {intxms_sel_o, clear_rtc, offset_valid} <= bus2ip_data_i[2:0];  //rtc control register
         `TICK_INC_ADDR:  tick_inc_o  <= bus2ip_data_i[31:0];
         `NS_OFST_ADDR:   ns_offset_o <= bus2ip_data_i[31:0];
-        `SC_OFST_ADDR0:  sc_offset_o[47:16]  <= bus2ip_data_i[31:0];
-        `SC_OFST_ADDR1:  sc_offset_o[15:0]   <= ip2bus_data_o[15:0];
+        `SC_OFST_ADDR0:  sc_offset_o[47:32]  <= bus2ip_data_i[15:0];
+        `SC_OFST_ADDR1:  sc_offset_o[31:0]   <= ip2bus_data_o[31:0];
         `PPS_W_ADDR:     pps_width_o <= ip2bus_data_o[31:0];
       endcase  
     end
