@@ -384,7 +384,7 @@ module ptp_agent (
             write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, sc_diff[47:32]});
             write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1},  sc_diff[31:0]);
             //offset adjustment take effect
-            write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 16'h1);
+            write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 32'h1);
           end  
         end
         else if(rx_messageType == 4'h8) begin  //follow_up message received
@@ -409,7 +409,7 @@ module ptp_agent (
             write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, sc_diff[47:32]});
             write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, sc_diff[31:0]);
             //offset adjustment take effect
-            write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 16'h1);
+            write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 32'h1);
           end  
         end
         else if(rx_messageType == 4'h9) begin  //delay_resp message received
