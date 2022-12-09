@@ -142,7 +142,7 @@ module sync_io (
       pts_std_o <= 80'h0;
       pts_fns_o <= 16'h0;    
     end
-    else begin
+    else if(pps_pos_pul == 1) begin
       pts_std_o <= rtc_std_i;
       pts_fns_o <= rtc_fns_i;    
     end

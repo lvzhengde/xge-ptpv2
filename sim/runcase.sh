@@ -14,9 +14,12 @@ if [ $# -ne $ARG_NUM ]; then
   exit 1
 fi
 
-elfFile = ptpv2 
-waveFile = ptpv2
+#define variables
+#note: remove space around '='
+elfFile=ptpv2 
+waveFile=ptpv2
 
-iverilog -o $(elfFile).out -s $1 -f comp.f 
-vvp -n $(elfFile).out -fst
-#gtkwave $(waveFile).fst
+#compile and run
+iverilog -o ${elfFile}.out -s $1 -f comp.f 
+vvp -n ${elfFile}.out -fst
+#gtkwave ${waveFile}.fst
