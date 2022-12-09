@@ -58,13 +58,13 @@ module tc_rtc;
   //monitor pps output
   wire pps_out = harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.pps_o;
   wire [79:0] rtc_std = harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.rtc_std; 
-  wire 79:0]  pts_std = harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.rtc_unit_inst.rtc_rgs_inst.pts_std_i;
+  wire [79:0] pts_std = harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.rtc_unit_inst.rtc_rgs_inst.pts_std_i;
 
   initial begin
     force harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.pps_i = pps_out;
   end
   
-  always @(posedge lpPpsOut) begin
+  always @(posedge pps_out) begin
     #200;
     $display("positive edge of pps output is detected!");
     $display("current ptpv2 rtc time = %h", rtc_std);

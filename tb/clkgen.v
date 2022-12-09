@@ -55,7 +55,6 @@ module clkgen (
   assign rtc_clk = xge_rtc_clk;
   assign tx_clk  = xge_tx_clk;
 `endif
-`endif
 
   // task for reset operation
   task reset;

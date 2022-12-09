@@ -81,11 +81,11 @@ module ptpv2_core_wrapper (
   //interconnect signals.
   wire                bus2ip_clk   ;
   wire                bus2ip_rst_n ;
-  wire  [15:0]        bus2ip_addr  ;
-  wire  [15:0]        bus2ip_data  ;
+  wire  [31:0]        bus2ip_addr  ;
+  wire  [31:0]        bus2ip_data  ;
   wire                bus2ip_rd_ce ;       //active high
   wire                bus2ip_wr_ce ;       //active high
-  wire  [15:0]        ip2bus_data  ;
+  wire  [31:0]        ip2bus_data  ;
 
   //apb-like bus slave bridge 
   pbus_bridge pbus_bridge_inst (
@@ -206,7 +206,7 @@ module ptpv2_core_wrapper (
   ptpv2_core ptpv2_core_inst (
     .rtc_clk          (rtc_clk    ),    
     .rtc_rst_n        (rtc_rst_n  ),   
-    .                  
+                      
     .dis_ptpv2_i      (dis_ptpv2_i),    
   
     //rx interface

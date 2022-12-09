@@ -21,11 +21,11 @@ module pbus_bridge (
   //standard ip access bus interface
   output              bus2ip_clk   ,
   output              bus2ip_rst_n  ,
-  output [15:0]       bus2ip_addr_o ,
-  output [15:0]       bus2ip_data_o ,
+  output [31:0]       bus2ip_addr_o ,
+  output [31:0]       bus2ip_data_o ,
   output              bus2ip_rd_ce_o ,         //active high
   output              bus2ip_wr_ce_o ,         //active high
-  input  [15:0]       ip2bus_data_i   
+  input  [31:0]       ip2bus_data_i   
 );
 
   //generate bus control signals

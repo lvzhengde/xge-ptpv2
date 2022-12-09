@@ -1044,7 +1044,7 @@ module ptp_agent (
     begin
       current_crc = 32'hffffffff;
       for(i = 8; i < data_len; i = i + 1) begin
-        next_crc = next_crc32__d8(reverse_8b(frame_mem[i]), current_crc);
+        next_crc = nextCRC32_D8(reverse_8b(frame_mem[i]), current_crc);
         current_crc = next_crc;	
       end
 
