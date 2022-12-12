@@ -4,6 +4,7 @@
 
 `include "ptpv2_defines.v"
 `define WAVE_DUMP_FILE "./ptpv2.fst"
+//`define SIM_PPS
 
 module tc_rtc;
 
@@ -25,7 +26,7 @@ module tc_rtc;
 
     //initial rtc 
     $display("initialize rtc with second offset 32'h1234_5678 !");
-    harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, 16'h0});
+    harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, 16'h11});
     harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, 32'h1234_5678);
     harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `NS_OFST_ADDR}, 32'h0150_0000);
     harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 32'h1);
@@ -37,7 +38,7 @@ module tc_rtc;
     #10_0000;
 
     //reset sc_counter and ns_counter
-    harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, 16'h0});
+    harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, 16'h11});
     harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, 32'h2222_3333);
     harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `NS_OFST_ADDR}, 32'h0);
     harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 32'h1);
@@ -49,15 +50,17 @@ module tc_rtc;
     harness.ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `TICK_INC_ADDR}, 32'h1999_999a);
     #10_0000;
 
+`ifdef SIM_PPS
     //wait 1.2 seconds
-    $display("wait 1.3 seconds for pps output!");
+    $display("wait 1.2 seconds for pps output!");
 
-    for(i = 1; i < 130; i=i+1) begin
+    for(i = 1; i < 120; i=i+1) begin
       #1000_0000;
       $display("%f seconds elapsed!", i*0.01);
     end
+`endif
 
-    #1000_0000;
+    #10_0000;
 
     $finish;
   end
@@ -71,13 +74,16 @@ module tc_rtc;
     force harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.pps_i = pps_out;
   end
   
+`ifdef SIM_PPS
   always @(posedge pps_out) begin
+    #20;
     $display("positive edge of pps output is detected!");
     $display("current ptpv2 rtc time = %h", rtc_std);
     #200;
     $display("timestamp of pps input = %h", pts_std);
     $display("\n");
   end
+`endif
 
   reg  dump_on_flag;
   reg  dump_off_flag;
@@ -86,7 +92,9 @@ module tc_rtc;
   begin
     $dumpfile(`WAVE_DUMP_FILE);
     $dumpvars(0, tc_rtc.harness.ptpv2_endpoint);
-    //$dumpon;
+
+    $dumpon;
+`ifdef SIM_PPS
     $dumpoff;
 
     dump_on_flag = 0;
@@ -107,6 +115,8 @@ module tc_rtc;
 
       #10;
     end
+`endif
+
   end    
 
 endmodule

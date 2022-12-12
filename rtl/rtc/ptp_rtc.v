@@ -36,19 +36,7 @@ module ptp_rtc (
   reg                  offset_adjust;
   reg  [31:0]          tick_inc_d1;  
 
-  //_synchronize related control signals to rtc_clk domain
-  reg  clear_rtc_d1, clear_rtc_d2, clear_rtc_d3;
-  wire clear_rtc_pul;
-
-  always @(posedge rtc_clk or negedge rtc_rst_n) begin
-    if(!rtc_rst_n)
-      {clear_rtc_d1, clear_rtc_d2, clear_rtc_d3} <= 3'b0;
-    else
-      {clear_rtc_d1, clear_rtc_d2, clear_rtc_d3} <= {clear_rtc_i, clear_rtc_d1, clear_rtc_d2};
-  end
-
-  assign clear_rtc_pul = clear_rtc_d2 & (~clear_rtc_d3);
-
+  //synchronize related control signals to rtc_clk domain
   always @(posedge rtc_clk or negedge rtc_rst_n) begin
     if(!rtc_rst_n)
       tick_inc_d1  <= 32'h0;
@@ -138,7 +126,7 @@ module ptp_rtc (
   always @(posedge rtc_clk or negedge rtc_rst_n) begin
     if (!rtc_rst_n)
       ns_counter <= 0; 
-    else if(clear_rtc_pul == 1'b1)
+    else if(clear_rtc_i == 1'b1)
       ns_counter <= 0;
     else
       ns_counter <= ns_counter_p1;
@@ -176,7 +164,7 @@ module ptp_rtc (
   always @(posedge rtc_clk or negedge rtc_rst_n) begin
     if (!rtc_rst_n)
       sc_counter <= 48'd0;  
-    else if(clear_rtc_pul == 1'b1)
+    else if(clear_rtc_i == 1'b1)
       sc_counter <= 48'd0;
     else
       sc_counter <= sc_counter_p1;

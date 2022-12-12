@@ -25,10 +25,10 @@
 //rtc related macros
 `define FNS_W  (26)                //width of fractional nanosecond(16 < FNS_W < 28)
 `define NSC_W  (`FNS_W + 32)       //width of nanosecond counter (ns+fractional ns)
-`define SC2NS  (32'd1000000000)    //1 seconds = 10^9 nanoseconds
+`define SC2NS  (32'd10_0000_0000)  //1 seconds = 10^9 nanoseconds
 
 //rtc register addresses
-`define RTC_BLK_ADDR     (24'h000000)    //RTC block address
+`define RTC_BLK_ADDR     (24'h00_0000)    //RTC block address
 
 `define RTC_CTL_ADDR     (8'h00)    //rtc control {29'h0, intxms_sel_o, clear_rtc_o, offset_valid_o}
 `define TICK_INC_ADDR    (8'h04)    //tick increment valule tick_inc[31:0]
@@ -44,7 +44,7 @@
 `define PPS_W_ADDR       (8'h2c)    //pulse width of pps output pps_width[31:0]
 
 //timestamp unit addresses
-`define TSU_BLK_ADDR     (24'h000001)  //TSU block address
+`define TSU_BLK_ADDR     (24'h00_0001)  //TSU block address
 
 //tx direction
 `define TX_TS_ADDR0      (8'h20)    //tx timestamp second[47:16]
