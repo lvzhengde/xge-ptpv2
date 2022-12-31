@@ -4,7 +4,7 @@
 
 `include "ptpv2_defines.v"
 `define WAVE_DUMP_FILE "./ptpv2.fst"
-//`define SIM_PPS
+`define SIM_PPS
 
 module tc_rtc;
 
@@ -101,13 +101,13 @@ module tc_rtc;
     dump_off_flag = 1;
 
     while (1) begin
-      if((rtc_std[31:0] > 32'd9_9000_0000 || rtc_std[31:0] < 32'd1000_0000) && dump_off_flag == 1) begin
+      if((rtc_std[31:0] > 32'd9_9900_0000 || rtc_std[31:0] < 32'd100_0000) && dump_off_flag == 1) begin
 	      $dumpon;
         dump_on_flag = 1;
         dump_off_flag = 0;
       end
 
-      if((rtc_std[31:0] <= 32'd9_9000_0000 && rtc_std[31:0] >= 32'd1000_0000) && dump_on_flag == 1) begin
+      if((rtc_std[31:0] <= 32'd9_9900_0000 && rtc_std[31:0] >= 32'd100_0000) && dump_on_flag == 1) begin
 	      $dumpoff;
         dump_on_flag = 0;
         dump_off_flag = 1;

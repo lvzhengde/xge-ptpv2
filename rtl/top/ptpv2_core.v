@@ -76,6 +76,7 @@ module ptpv2_core (
     .pps_i                    (pps_i),        
     .pps_o                    (pps_o)         
   );
+  defparam rtc_unit_inst.BLK_ADDR = `RTC_BLK_ADDR;
 
   timestamp_unit timestamp_unit_inst(
     .dis_ptpv2_i              (dis_ptpv2_i    ),         
@@ -115,6 +116,7 @@ module ptpv2_core (
     .int_rx_ptp_o             (int_rx_ptp_o),
     .int_tx_ptp_o             (int_tx_ptp_o)
   );
+  defparam timestamp_unit_inst.BLK_ADDR = `TSU_BLK_ADDR;
 
 endmodule
 

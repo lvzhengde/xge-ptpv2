@@ -42,6 +42,8 @@ module timestamp_unit (
   output              int_tx_ptp_o
 );
 
+  parameter BLK_ADDR = `TSU_BLK_ADDR;
+
 endmodule
 
 

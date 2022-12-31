@@ -26,6 +26,7 @@ module rtc_unit(
   input                pps_i,              //pps input
   output               pps_o               //pps output from current time
 );  
+  parameter BLK_ADDR = `RTC_BLK_ADDR;
 
   wire [31:0]    tick_inc;        
   wire [31:0]    ns_offset;     
@@ -68,6 +69,7 @@ module rtc_unit(
     .pps_width_o      (pps_width ),
     .intxms_sel_o     (intxms_sel)        
   );
+  defparam rtc_rgs_inst.BLK_ADDR = BLK_ADDR;
   
   //shape related signal, syncronize with rtc_clk
   reg  offset_valid_d1, offset_valid_d2, offset_valid_d3;
