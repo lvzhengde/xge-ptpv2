@@ -68,7 +68,7 @@
 
 `define RX_TVID_ADDR     (8'h6c)    //rx {majorSdoId[3:0], messageType[3:0], minorVersionPTP[3:0], versionPTP[3:0], sequenceId[15:0]}
 
-`timescale 1ns/10fs
+//`timescale 1ns/10fs
 
 `endif
 

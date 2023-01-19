@@ -24,7 +24,8 @@ module sync_io (
   parameter  INT10MS = 24'd10000000;       //10^7  nano seconds  10ms,  aligned with 1_p_p_s
   parameter  INTQ8MS = 24'd7812500;        //7812500 ns, 7.8125ms
 
-  wire  [23:0]  intxms_period = (intxms_sel_i == 1'b0) ? INT10MS : INTQ8MS;
+  wire  [63:0] zero_dword = 64'b0;
+  wire  [23:0] intxms_period = (intxms_sel_i == 1'b0) ? INT10MS : INTQ8MS;
 
   //++
   //generate pps output
@@ -34,7 +35,7 @@ module sync_io (
   reg   [31:0]  ns_adjusted_mod_d1;
 
   //take tick increment every cycle into consideration
-  assign ns_phase_adjusted = rtc_std_i[31:0] + tick_inc_i[31:`FNS_W-1];  //+2*tick_inc_i
+  assign ns_phase_adjusted = rtc_std_i[31:0] + {zero_dword[`FNS_W-2:0], tick_inc_i[31:`FNS_W-1]};  //+2*tick_inc_i
   assign ns_adjusted_mod   = (ns_phase_adjusted < `SC2NS) ? ns_phase_adjusted : (ns_phase_adjusted - `SC2NS);
 
   always @(posedge rtc_clk or negedge rtc_rst_n) begin
@@ -90,7 +91,7 @@ module sync_io (
       seconds_d1 <= rtc_std_i[32];
   end
   
-  assign counterxms_p1 = counterxms + tick_inc_i;
+  assign counterxms_p1 = counterxms + {zero_dword[`FNS_W-9:0], tick_inc_i};
 
   wire [`FNS_W+23:0] intxms_period_shift;
   assign intxms_period_shift[`FNS_W+23:`FNS_W] = intxms_period;

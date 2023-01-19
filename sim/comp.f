@@ -6,8 +6,8 @@
 
 ../rtl/tsu/timestamp_unit.v
 
-//../rtl/cvt/gfe_cvt.v
-//../rtl/cvt/xgmii_dr2sr.v
+../rtl/cvt/gfe_cvt.v
+../rtl/cvt/xgmii_dr2sr.v
 
 ../rtl/top/pbus_bridge.v
 ../rtl/top/ptpv2_core_wrapper.v

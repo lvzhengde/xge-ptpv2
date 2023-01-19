@@ -92,13 +92,13 @@ module rtc_rgs (
     end
     else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i[31:8] == BLK_ADDR) begin   //deal with base address
       case(bus2ip_addr_i[7:0]) //deal with offset address
-        
         `RTC_CTL_ADDR:   {intxms_sel_o, clear_rtc, offset_valid} <= bus2ip_data_i[2:0];  //rtc control register
         `TICK_INC_ADDR:  tick_inc_o  <= bus2ip_data_i[31:0];
         `NS_OFST_ADDR:   ns_offset_o <= bus2ip_data_i[31:0];
         `SC_OFST_ADDR0:  sc_offset_o[47:32]  <= bus2ip_data_i[15:0];
         `SC_OFST_ADDR1:  sc_offset_o[31:0]   <= bus2ip_data_i[31:0];
         `PPS_W_ADDR:     pps_width_o <= bus2ip_data_i[31:0];
+		default: ;
       endcase  
     end
     else begin  //clear self-clearing register bits

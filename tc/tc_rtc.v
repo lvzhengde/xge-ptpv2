@@ -71,7 +71,7 @@ module tc_rtc;
   wire [79:0] pts_std = harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.rtc_unit_inst.rtc_rgs_inst.pts_std_i;
 
   initial begin
-    force harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.pps_i = pps_out;
+    force harness.ptpv2_endpoint.pps_in = pps_out;
   end
   
 `ifdef SIM_PPS

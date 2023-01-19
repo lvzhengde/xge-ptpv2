@@ -77,12 +77,13 @@ module ptpv2_endpoint (
   wire              pbus_ready;
   wire              pbus_slverr;
 
-  wire   pps; 
+  wire   pps_out; 
+  wire   pps_in = 1'b0;
   wire   intxms; 
   wire   int_rx_ptp; 
   wire   int_tx_ptp;
   
-  assign pps_o = pps;
+  assign pps_o = pps_out;
 
 `ifdef GFE_DESIGN
   assign       mii_mode_o = mii_mode_hw;
@@ -240,8 +241,8 @@ module ptpv2_endpoint (
     .int_rx_ptp_o            (int_rx_ptp ),
     .int_tx_ptp_o            (int_tx_ptp ),
 
-    .pps_o                   (pps  ), 
-    .pps_i                   (1'b0)           
+    .pps_o                   (pps_out  ), 
+    .pps_i                   (pps_in)           
   );
 
 endmodule

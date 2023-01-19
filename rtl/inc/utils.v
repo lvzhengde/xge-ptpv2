@@ -498,6 +498,7 @@ function [31:0] xgeCalculateCRC;
         nextCRC = nextCRC32_D56(reverse_56b(data[55:0]), currentCRC);
       4'd8:
         nextCRC = nextCRC32_D64(reverse_64b(data[63:0]), currentCRC);
+	  default: nextCRC = currentCRC;
     endcase
 
     xgeCalculateCRC = nextCRC;

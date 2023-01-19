@@ -99,7 +99,7 @@ module ptp_agent (
     t3 = 80'h0;
     t4 = 80'h0;
 
-    clk_ctl = 4'b0;
+    clk_ctl = 5'b0;
 `ifdef GFE_DESIGN
     mii_mode   = 1'b0;
 `endif
@@ -633,11 +633,11 @@ module ptp_agent (
     for(i = 0; i < 8; i = i+1) begin
       if(xge_rxc_i[i] == 1 && xge_rxd_i[i*8+7-:8] == `START) begin 
         eth_count = 0;
-        rcvd_frame[eth_count] = 8'h55;
+        rcvd_frame[eth_count[7:0]] = 8'h55;
         eth_count = eth_count + 1;
       end
       else if(xge_rxc_i[i] == 0  && eth_count < 255) begin
-        rcvd_frame[eth_count] = xge_rxd_i[i*8+7-:8];      
+        rcvd_frame[eth_count[7:0]] = xge_rxd_i[i*8+7-:8];      
         eth_count = eth_count + 1;
       end
       else if(xge_rxc_i[i] == 1 && xge_rxd_i[i*8+7-:8] == `TERMINATE)

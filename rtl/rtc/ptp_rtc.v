@@ -17,10 +17,11 @@ module ptp_rtc (
   output [79:0]        rtc_std_o,          //48 bits seconds + 32 bits nanoseconds
   output [15:0]        rtc_fns_o           //fractional nanoseconds of current time
 );  
+  wire  [63:0] zero_dword = 64'b0;
                        
   //counter for nanosecond including fractional nanosecond
   reg  [`NSC_W-1:0]     ns_counter;
-  wire [`NSC_W-1:0]     ns_counter_p1;
+  //wire [`NSC_W-1:0]     ns_counter_p1;
   wire [`NSC_W-1:0]     ns_contrled_rtc;
   wire [`NSC_W-1:0]     ns_synced_rtc; 
   wire signed [32:0]    tmp_ns, tmp_ns1;
@@ -93,7 +94,7 @@ module ptp_rtc (
   end
 
   //controlled nanosecond increment
-  assign ns_contrled_rtc = ns_counter + tick_inc_i;
+  assign ns_contrled_rtc = ns_counter + {zero_dword[`NSC_W-33:0], tick_inc_i};
   
   reg [`NSC_W-1:0]   ns_contrled_reg;
   //if no wrap-around occur,  ns_contrled_reg = ns_contrled_rtc
@@ -101,7 +102,7 @@ module ptp_rtc (
     if(!rtc_rst_n)
       ns_contrled_reg <= 0;
     else
-      ns_contrled_reg <= ns_counter + {tick_inc_i, 1'b0};  //+ 2*tick_inc
+      ns_contrled_reg <= ns_counter + {zero_dword[`NSC_W-34:0], tick_inc_i, 1'b0};  //+ 2*tick_inc
   end
   
   assign tmp_ns = $signed({1'b0, ns_contrled_reg[`NSC_W-1:`FNS_W]})+ $signed({ns_offset_i[31], ns_offset_i});
@@ -121,25 +122,32 @@ module ptp_rtc (
   assign tmp_ns1_shift[`NSC_W-1:`FNS_W] = tmp_ns1[31:0];
   assign tmp_ns1_shift[`FNS_W-1:0] = 0;
   
-  assign ns_synced_rtc   = tmp_ns1_shift + tick_inc_i;  
-  
-  always @(posedge rtc_clk or negedge rtc_rst_n) begin
-    if (!rtc_rst_n)
-      ns_counter <= 0; 
-    else if(clear_rtc_i == 1'b1)
-      ns_counter <= 0;
-    else
-      ns_counter <= ns_counter_p1;
-  end
+  assign ns_synced_rtc   = tmp_ns1_shift + {zero_dword[`NSC_W-33:0], tick_inc_i};  
   
   wire [`NSC_W-1:0] SC2NS_shift;
   assign SC2NS_shift[`NSC_W-1:`FNS_W] = `SC2NS;
   assign SC2NS_shift[`FNS_W-1:0] = 0;
 
-  assign ns_counter_p1 = (offset_adjust == 1'b1) ? ns_synced_rtc : 
-                           ((ns_wrap_around_flag == 1'b1) ? ns_contrled_reg - SC2NS_shift :
-                            ns_contrled_rtc);
-  
+  always @(posedge rtc_clk or negedge rtc_rst_n) begin
+    if (!rtc_rst_n)
+      ns_counter <= 0; 
+    else if(clear_rtc_i == 1'b1)
+      ns_counter <= 0;
+    else if(offset_adjust == 1'b1)
+	  ns_counter <= ns_synced_rtc;
+    else if(ns_wrap_around_flag == 1'b1)
+	  ns_counter <= ns_contrled_reg - SC2NS_shift;
+    else
+	  ns_counter <= ns_contrled_rtc;
+    //else
+    //  ns_counter <= ns_counter_p1;
+  end
+
+  //this cause Verilator command failed (return code=Segmentation fault)
+  //assign ns_counter_p1 = (offset_adjust == 1'b1) ? ns_synced_rtc : 
+  //                         ((ns_wrap_around_flag == 1'b1) ? ns_contrled_reg - SC2NS_shift :
+  //                          ns_contrled_rtc);
+
   //++
   //counter operation for seconds
   //--

@@ -10,5 +10,8 @@ vsim:
 debug:
 	gtkwave $(waveFile).fst
 
+lint:
+	verilator --lint-only --timing --top-module tc_rtc -f comp.f
+
 clean:
 	rm -rf *.fst *.lxt *.vcd *.out
