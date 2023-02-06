@@ -102,13 +102,13 @@ module tc_rtc;
 
     while (1) begin
       if((rtc_std[31:0] > 32'd9_9900_0000 || rtc_std[31:0] < 32'd100_0000) && dump_off_flag == 1) begin
-	      $dumpon;
+        $dumpon;
         dump_on_flag = 1;
         dump_off_flag = 0;
       end
 
       if((rtc_std[31:0] <= 32'd9_9900_0000 && rtc_std[31:0] >= 32'd100_0000) && dump_on_flag == 1) begin
-	      $dumpoff;
+        $dumpoff;
         dump_on_flag = 0;
         dump_off_flag = 1;
       end

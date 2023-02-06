@@ -137,10 +137,10 @@ module ptpv2_core_wrapper (
 
   gfe_cvt rx_gfe_cvt (
     .clk         (rx_clk),
-	.rst_n       (rx_rst_n),
+    .rst_n       (rx_rst_n),
 
-	.mii_mode_i  (mii_mode_hw_i),
-	.clk_en_o    (rx_clk_en),
+    .mii_mode_i  (mii_mode_hw_i),
+    .clk_en_o    (rx_clk_en),
 
     .en_i        (rx_en_i), 
     .er_i        (rx_er_i),
@@ -167,10 +167,10 @@ module ptpv2_core_wrapper (
   
   gfe_cvt_tx_gfe_cvt (
     .clk         (tx_clk),
-	.rst_n       (tx_rst_n),
+    .rst_n       (tx_rst_n),
 
-	.mii_mode_i  (mii_mode_hw_i),
-	.clk_en_o    (tx_clk_en),
+    .mii_mode_i  (mii_mode_hw_i),
+    .clk_en_o    (tx_clk_en),
 
     .en_i        (tx_en_i), 
     .er_i        (tx_er_i),
@@ -201,7 +201,7 @@ module ptpv2_core_wrapper (
   
   assign xge_txd_o = (dis_ptpv2_i == 1'b1) ? xge_txd_i : xge_txd_out;
   assign xge_txc_o = (dis_ptpv2_i == 1'b1) ? xge_txc_i : xge_txc_out;
-`endif	
+`endif  
 
   ptpv2_core ptpv2_core_inst (
     .rtc_clk          (rtc_clk    ),    

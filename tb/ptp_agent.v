@@ -977,12 +977,12 @@ module ptp_agent (
       len = len + 4;
       frame_mem[len+0] = 8'h00; frame_mem[len+1] = 8'h00; frame_mem[len+2] = 8'h00; frame_mem[len+3] = 8'h00;  //correctionField[31:0]
       len = len + 4;
-	  if(vclk_ctl[0] == 1'b1 && messageType == 4'h3) begin
-		//messageTypeSpecific
+    if(vclk_ctl[0] == 1'b1 && messageType == 4'h3) begin
+    //messageTypeSpecific
         frame_mem[len+0] = timestamp[31:24]; frame_mem[len+1] = timestamp[23:16]; frame_mem[len+2] = timestamp[15:8]; frame_mem[len+3] = timestamp[7:0];  
         timestamp = 80'h0;
-	  end
-	  else begin
+    end
+    else begin
         frame_mem[len+0] = 8'h00; frame_mem[len+1] = 8'h00; frame_mem[len+2] = 8'h00; frame_mem[len+3] = 8'h00;  //messageTypeSpecific
       end
       len = len + 4;
@@ -1045,7 +1045,7 @@ module ptp_agent (
       current_crc = 32'hffffffff;
       for(i = 8; i < data_len; i = i + 1) begin
         next_crc = nextCRC32_D8(reverse_8b(frame_mem[i]), current_crc);
-        current_crc = next_crc;	
+        current_crc = next_crc; 
       end
 
       calculate_crc = ~reverse_32b(current_crc);

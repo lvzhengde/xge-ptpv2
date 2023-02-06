@@ -217,8 +217,8 @@ module ptpv2_endpoint (
 `endif
     
     //apb-like bus register access interface
-	.pbus_clk                (pbus_clk),
-	.pbus_rst_n              (pbus_rst_n),
+    .pbus_clk                (pbus_clk),
+    .pbus_rst_n              (pbus_rst_n),
 
     .pbus_addr_i             (pbus_addr  ),
     .pbus_write_i            (pbus_write ),

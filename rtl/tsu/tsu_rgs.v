@@ -56,29 +56,29 @@ module tsu_rgs (
     if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i[31:8] == BLK_ADDR) begin   //base address to tsu
       case(bus2ip_addr_i[7:0])    //deal with offset address
         `TSU_CFG_ADDR:      ip2bus_data = tsu_cfg_o;
-		`LINK_DELAY_ADDR:   ip2bus_data = link_delay_o;
-		`IN_ASYM_ADDR:      ip2bus_data = ingress_asymmetry_o;
-		`EG_ASYM_ADDR:      ip2bus_data = egress_asymmetry_o;
+        `LINK_DELAY_ADDR:   ip2bus_data = link_delay_o;
+        `IN_ASYM_ADDR:      ip2bus_data = ingress_asymmetry_o;
+        `EG_ASYM_ADDR:      ip2bus_data = egress_asymmetry_o;
         `LOC_MAC_ADDR0:     ip2bus_data = {16'h0, loc_mac_addr_o[47:32]};
-		`LOC_MAC_ADDR1:     ip2bus_data = loc_mac_addr_o[31:0];
+        `LOC_MAC_ADDR1:     ip2bus_data = loc_mac_addr_o[31:0];
 
         `TX_TS_ADDR0:       ip2bus_data = tx_timestamp_i[79:48];
         `TX_TS_ADDR1:       ip2bus_data = tx_timestamp_i[47:16];
-		`TX_TS_ADDR2:       ip2bus_data = {tx_timestamp_i[15:0], tx_timestamp_frac_ns_i[15:0]};    
+        `TX_TS_ADDR2:       ip2bus_data = {tx_timestamp_i[15:0], tx_timestamp_frac_ns_i[15:0]};    
         `TX_SPF_ADDR0:      ip2bus_data = tx_sourcePortIdentity_i[79:48];
-		`TX_SPF_ADDR1:      ip2bus_data = tx_sourcePortIdentity_i[47:16];
-		`TX_SPF_ADDR2:      ip2bus_data = {tx_sourcePortIdentity_i[15:0], tx_flagField_i[15:0]};
-		`TX_TVID_ADDR:      ip2bus_data = {tx_majorSdoId_i[3:0], tx_messageType_i[3:0], tx_minorVersionPTP_i[3:0],
-		                                   tx_versionPTP_i[3:0], tx_seqId_i[15:0]};
+        `TX_SPF_ADDR1:      ip2bus_data = tx_sourcePortIdentity_i[47:16];
+        `TX_SPF_ADDR2:      ip2bus_data = {tx_sourcePortIdentity_i[15:0], tx_flagField_i[15:0]};
+        `TX_TVID_ADDR:      ip2bus_data = {tx_majorSdoId_i[3:0], tx_messageType_i[3:0], tx_minorVersionPTP_i[3:0],
+                                       tx_versionPTP_i[3:0], tx_seqId_i[15:0]};
 
         `RX_TS_ADDR0:       ip2bus_data = rx_timestamp_i[79:48];
         `RX_TS_ADDR1:       ip2bus_data = rx_timestamp_i[47:16];
-		`RX_TS_ADDR2:       ip2bus_data = {rx_timestamp_i[15:0], rx_timestamp_frac_ns_i[15:0]};    
+        `RX_TS_ADDR2:       ip2bus_data = {rx_timestamp_i[15:0], rx_timestamp_frac_ns_i[15:0]};    
         `RX_SPF_ADDR0:      ip2bus_data = rx_sourcePortIdentity_i[79:48];
-		`RX_SPF_ADDR1:      ip2bus_data = rx_sourcePortIdentity_i[47:16];
-		`RX_SPF_ADDR2:      ip2bus_data = {rx_sourcePortIdentity_i[15:0], rx_flagField_i[15:0]};
-		`RX_TVID_ADDR:      ip2bus_data = {rx_majorSdoId_i[3:0], rx_messageType_i[3:0], rx_minorVersionPTP_i[3:0],
-		                                   rx_versionPTP_i[3:0], rx_seqId_i[15:0]};
+        `RX_SPF_ADDR1:      ip2bus_data = rx_sourcePortIdentity_i[47:16];
+        `RX_SPF_ADDR2:      ip2bus_data = {rx_sourcePortIdentity_i[15:0], rx_flagField_i[15:0]};
+        `RX_TVID_ADDR:      ip2bus_data = {rx_majorSdoId_i[3:0], rx_messageType_i[3:0], rx_minorVersionPTP_i[3:0],
+                                       rx_versionPTP_i[3:0], rx_seqId_i[15:0]};
 
         default:            ip2bus_data = 32'h0;
       endcase                        
@@ -102,12 +102,12 @@ module tsu_rgs (
     else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i[31:8] == BLK_ADDR) begin   //deal with base address
       case(bus2ip_addr_i[7:0]) //deal with offset address
         `TSU_CFG_ADDR:    tsu_cfg_o             <= bus2ip_data_i[31:0];
-		`LINK_DELAY_ADDR: link_delay_o          <= bus2ip_data_i[31:0];
-		`IN_ASYM_ADDR:    ingress_asymmetry_o   <= bus2ip_data_i[31:0];
-		`EG_ASYM_ADDR:    egress_asymmetry_o    <= bus2ip_data_i[31:0];
+        `LINK_DELAY_ADDR: link_delay_o          <= bus2ip_data_i[31:0];
+        `IN_ASYM_ADDR:    ingress_asymmetry_o   <= bus2ip_data_i[31:0];
+        `EG_ASYM_ADDR:    egress_asymmetry_o    <= bus2ip_data_i[31:0];
         `LOC_MAC_ADDR0:   loc_mac_addr_o[47:32] <= bus2ip_data_i[15:0];
-		`LOC_MAC_ADDR1:   loc_mac_addr_o[31:0]  <= bus2ip_data_i[31:0];
-		default: ;
+        `LOC_MAC_ADDR1:   loc_mac_addr_o[31:0]  <= bus2ip_data_i[31:0];
+        default: ;
       endcase  
     end
   end

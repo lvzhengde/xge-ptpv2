@@ -43,7 +43,7 @@ module rtc_rgs (
 
     if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i[31:8] == BLK_ADDR) begin   //base address to rtc
       case(bus2ip_addr_i[7:0])    //deal with offset address
-		`RTC_CTL_ADDR:      ip2bus_data = {29'h0, intxms_sel_o, clear_rtc_o, offset_valid_o};
+        `RTC_CTL_ADDR:      ip2bus_data = {29'h0, intxms_sel_o, clear_rtc_o, offset_valid_o};
         `TICK_INC_ADDR:     ip2bus_data = tick_inc_o[31:0];
         `NS_OFST_ADDR:      ip2bus_data = ns_offset_o[31:0];
         `SC_OFST_ADDR0:     ip2bus_data = {16'b0, sc_offset_o[47:32]};
@@ -56,7 +56,7 @@ module rtc_rgs (
         `PTS_ADDR0:         ip2bus_data = pts_std_i[79:48]; 
         `PTS_ADDR1:         ip2bus_data = pts_std_i[47:16]; 
         `PTS_ADDR2:         ip2bus_data = {pts_std_i[15:0], pts_fns_i}; 
-		
+    
         `PPS_W_ADDR:        ip2bus_data = pps_width_o[31:0];  
         default:            ip2bus_data = 32'h0;
       endcase                        
@@ -87,8 +87,7 @@ module rtc_rgs (
       tick_inc_o    <= 32'h0;
       ns_offset_o   <= 32'h0;
       sc_offset_o   <= 48'h0;
-	  pps_width_o   <= 32'h0;
-
+      pps_width_o   <= 32'h0;
     end
     else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i[31:8] == BLK_ADDR) begin   //deal with base address
       case(bus2ip_addr_i[7:0]) //deal with offset address
@@ -98,7 +97,7 @@ module rtc_rgs (
         `SC_OFST_ADDR0:  sc_offset_o[47:32]  <= bus2ip_data_i[15:0];
         `SC_OFST_ADDR1:  sc_offset_o[31:0]   <= bus2ip_data_i[31:0];
         `PPS_W_ADDR:     pps_width_o <= bus2ip_data_i[31:0];
-		default: ;
+        default: ;
       endcase  
     end
     else begin  //clear self-clearing register bits

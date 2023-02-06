@@ -55,7 +55,7 @@ module ptp_rtc (
     if(!rtc_rst_n)
       ns_wrap_around_flag <= 0;
     else if(ns_wrap_around_flag == 1'b1 || ns_wrap_around_flag_d1 == 1'b1) //do not toggle wrap-around conditions.
-    	ns_wrap_around_flag <= 0;
+      ns_wrap_around_flag <= 0;
     else
       ns_wrap_around_flag <= ns_wrap_around_flag_p1;
   end
@@ -134,11 +134,11 @@ module ptp_rtc (
     else if(clear_rtc_i == 1'b1)
       ns_counter <= 0;
     else if(offset_adjust == 1'b1)
-	  ns_counter <= ns_synced_rtc;
+      ns_counter <= ns_synced_rtc;
     else if(ns_wrap_around_flag == 1'b1)
-	  ns_counter <= ns_contrled_reg - SC2NS_shift;
+      ns_counter <= ns_contrled_reg - SC2NS_shift;
     else
-	  ns_counter <= ns_contrled_rtc;
+      ns_counter <= ns_contrled_rtc;
     //else
     //  ns_counter <= ns_counter_p1;
   end

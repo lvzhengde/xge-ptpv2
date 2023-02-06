@@ -110,7 +110,7 @@ module sync_io (
     else if((seconds_d1 != rtc_std_i[32]) && seconds_start !=1) begin           //for simulation purpose only
       counterxms <= 50'd0;
       trigxms    <= 0;
-    end	
+    end 
     else if(counterxms[`FNS_W+23:`FNS_W] > (intxms_period-1)) begin              //10^7-1 nanoseconds (10ms), reset to 0
       counterxms <= counterxms_p1 - intxms_period_shift;
       trigxms    <= 1;
