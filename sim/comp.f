@@ -5,6 +5,7 @@
 ../rtl/rtc/sync_io.v
 
 ../rtl/tsu/timestamp_unit.v
+../rtl/tsu/tsu_rgs.v
 
 ../rtl/cvt/gfe_cvt.v
 ../rtl/cvt/xgmii_dr2sr.v

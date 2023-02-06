@@ -46,6 +46,15 @@
 //timestamp unit addresses
 `define TSU_BLK_ADDR     (24'h00_0001)  //TSU block address
 
+`define TSU_CFG_ADDR     (8'h00)    //TSU configuration register {6'hxx, cf_from_pkt, one_step_from_pkt, 
+ // crc_validate, ptp_addr_chk, ptp_ver_chk, ptpVersion[3:0], ipv6_udp_chk, 8'hxx, ing_asym_en, eg_asym_en,
+ // emb_ingressTime, bypass, tc_offload, peer_dealy, tc, one_step}
+`define LINK_DELAY_ADDR  (8'h04)    //link delay setting for peer delay 
+`define IN_ASYM_ADDR     (8'h08)    //ingress asymmetry
+`define EG_ASYM_ADDR     (8'h0c)    //egress asymmetry
+`define LOC_MAC_ADDR0    (8'h10)    //local mac address {16'h0, [47:32]}
+`define LOC_MAC_ADDR1    (8'h14)    //local mac address [31:0]
+
 //tx direction
 `define TX_TS_ADDR0      (8'h20)    //tx timestamp second[47:16]
 `define TX_TS_ADDR1      (8'h24)    //tx timestamp {second[15:0], nanosecond[31:16]
