@@ -52,7 +52,7 @@
 `define LINK_DELAY_ADDR  (8'h04)    //link delay setting for peer delay 
 `define IN_ASYM_ADDR     (8'h08)    //ingress asymmetry
 `define EG_ASYM_ADDR     (8'h0c)    //egress asymmetry
-`define LOC_MAC_ADDR0    (8'h10)    //local mac address {16'h0, [47:32]}
+`define LOC_MAC_ADDR0    (8'h10)    //local mac address {tx_latency[15:0], [47:32]}
 `define LOC_MAC_ADDR1    (8'h14)    //local mac address [31:0]
 
 //tx direction

@@ -7,8 +7,7 @@
 
 module ptpv2_core (
   input               rtc_clk,
-  input               rtc_rst_n,              //_async. reset, active low
-     
+  input               rtc_rst_n,              //async. reset, active low
   input               dis_ptpv2_i,            //disable ptpv2
 
   //rx interface
@@ -79,7 +78,9 @@ module ptpv2_core (
   defparam rtc_unit_inst.BLK_ADDR = `RTC_BLK_ADDR;
 
   timestamp_unit timestamp_unit_inst(
-    .dis_ptpv2_i              (dis_ptpv2_i    ),         
+    .rtc_clk                  (rtc_clk),
+    .rtc_rst_n                (rtc_rst_n), 
+    .dis_ptpv2_i              (dis_ptpv2_i ),         
 
     //rx interface
     .rx_clk                   (rx_clk     ),

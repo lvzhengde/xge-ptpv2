@@ -40,6 +40,7 @@ module tsu_rgs (
   output reg [31:0]   link_delay_o,
   output reg [31:0]   ingress_asymmetry_o,
   output reg [31:0]   egress_asymmetry_o,
+  output reg [15:0]   tx_latency_o,
   output reg [47:0]   loc_mac_addr_o
 );
 
@@ -59,7 +60,7 @@ module tsu_rgs (
         `LINK_DELAY_ADDR:   ip2bus_data = link_delay_o;
         `IN_ASYM_ADDR:      ip2bus_data = ingress_asymmetry_o;
         `EG_ASYM_ADDR:      ip2bus_data = egress_asymmetry_o;
-        `LOC_MAC_ADDR0:     ip2bus_data = {16'h0, loc_mac_addr_o[47:32]};
+        `LOC_MAC_ADDR0:     ip2bus_data = {tx_latency_o[15:0], loc_mac_addr_o[47:32]};
         `LOC_MAC_ADDR1:     ip2bus_data = loc_mac_addr_o[31:0];
 
         `TX_TS_ADDR0:       ip2bus_data = tx_timestamp_i[79:48];
@@ -97,6 +98,7 @@ module tsu_rgs (
       link_delay_o        <= 32'h0;
       ingress_asymmetry_o <= 32'h0;
       egress_asymmetry_o  <= 32'h0;
+      tx_latency_o        <= 16'h0;
       loc_mac_addr_o      <= 48'h0;
     end
     else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i[31:8] == BLK_ADDR) begin   //deal with base address
@@ -105,7 +107,7 @@ module tsu_rgs (
         `LINK_DELAY_ADDR: link_delay_o          <= bus2ip_data_i[31:0];
         `IN_ASYM_ADDR:    ingress_asymmetry_o   <= bus2ip_data_i[31:0];
         `EG_ASYM_ADDR:    egress_asymmetry_o    <= bus2ip_data_i[31:0];
-        `LOC_MAC_ADDR0:   loc_mac_addr_o[47:32] <= bus2ip_data_i[15:0];
+        `LOC_MAC_ADDR0:   {tx_latency_o[15:0], loc_mac_addr_o[47:32]} <= bus2ip_data_i[31:0];
         `LOC_MAC_ADDR1:   loc_mac_addr_o[31:0]  <= bus2ip_data_i[31:0];
         default: ;
       endcase  

@@ -6,6 +6,9 @@
 
 ../rtl/tsu/timestamp_unit.v
 ../rtl/tsu/tsu_rgs.v
+../rtl/tsu/tsu_mx.v
+../rtl/tsu/rx_parse.v
+../rtl/tsu/tx_parse.v
 
 ../rtl/cvt/gfe_cvt.v
 ../rtl/cvt/xgmii_dr2sr.v

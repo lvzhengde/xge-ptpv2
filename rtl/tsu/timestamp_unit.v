@@ -4,6 +4,8 @@
 `include "ptpv2_defines.v"
 
 module timestamp_unit (
+  input               rtc_clk,                //fast clock used to lock signals
+  input               rtc_rst_n,              //async. reset, active low
   input               dis_ptpv2_i,            //disable ptpv2
 
   //rx interface
