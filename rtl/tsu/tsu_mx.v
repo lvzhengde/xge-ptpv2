@@ -156,14 +156,14 @@ module tsu_mx(
     end
   end
   
-  //instantiate rx parsing module
+  //instantiate rx timestamp engine 
   wire [63:0]       rxd_out;
   wire [7:0]        rxc_out;
 
   assign xge_rxd_o = (bypass_dp == 1'b1) ? xge_rxd_i : rxd_out;
   assign xge_rxc_o = (bypass_dp == 1'b1) ? xge_rxc_i : rxc_out;
 
-  rx_parse  rx_parse(
+  rx_tse  rx_tse(
     //xgmii i/f
     .rx_clk                  (rx_clk     ),
     .rx_rst_n                (rx_rst_n   ),
@@ -318,14 +318,14 @@ module tsu_mx(
     end
   end
 
-  //instantiate tx parsing module
+  //instantiate tx timestamp engine
   wire [63:0]       txd_out;
   wire [7:0]        txc_out;
 
   assign xge_txd_o = (bypass_dp == 1'b1) ? xge_txd_i : txd_out;
   assign xge_txc_o = (bypass_dp == 1'b1) ? xge_txc_i : txc_out;
 
-  tx_parse tx_parse(
+  tx_tse tx_tse(
     //xgmii interface
     .tx_clk                  (tx_clk     ),
     .tx_rst_n                (tx_rst_n   ),

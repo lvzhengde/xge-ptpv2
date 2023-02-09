@@ -1,11 +1,11 @@
 /*++
-//  rx frame parsing
-//  start of frame should be : S Dp Dp Dp Dp Dp Dp SFD
+//  rx timestamp engine
+//  including rx_parse, rx_emb_ts, rx_rcst
 --*/
 
 `include "ptpv2_defines.v"
 
-module rx_parse(
+module rx_tse(
   //xgmii interface
   input               rx_clk,
   input               rx_rst_n,
@@ -25,19 +25,19 @@ module rx_parse(
   input  [31:0]       ingress_asymmetry_i,
   
   //timestamp i/f, sync to rtc_clk
-  output reg          rxts_trig_o,
-  output reg          rxts_valid_o,
+  output              rxts_trig_o,
+  output              rxts_valid_o,
   
-  output reg [79:0]   rx_sourcePortIdentity_o,  
-  output reg [15:0]   rx_flagField_o,
-  output reg [15:0]   rx_seqId_o,                 
-  output reg [3:0]    rx_versionPTP_o,
-  output reg [3:0]    rx_minorVersionPTP_o,
-  output reg [3:0]    rx_messageType_o,  
-  output reg [3:0]    rx_majorSdoId_o,
+  output [79:0]       rx_sourcePortIdentity_o,  
+  output [15:0]       rx_flagField_o,
+  output [15:0]       rx_seqId_o,                 
+  output [3:0]        rx_versionPTP_o,
+  output [3:0]        rx_minorVersionPTP_o,
+  output [3:0]        rx_messageType_o,  
+  output [3:0]        rx_majorSdoId_o,
 
   //ptpv2 rx interrupt signal 
-  output reg          int_rx_ptp_o
+  output              int_rx_ptp_o
 );
 
 endmodule

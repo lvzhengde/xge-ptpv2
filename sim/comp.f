@@ -7,6 +7,8 @@
 ../rtl/tsu/timestamp_unit.v
 ../rtl/tsu/tsu_rgs.v
 ../rtl/tsu/tsu_mx.v
+../rtl/tsu/rx_tse.v
+../rtl/tsu/tx_tse.v
 ../rtl/tsu/rx_parse.v
 ../rtl/tsu/tx_parse.v
 
