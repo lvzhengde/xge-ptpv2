@@ -39,6 +39,13 @@ module rx_parse(
   //ptpv2 rx interrupt signal 
   output reg          int_rx_ptp_o
 );
+  parameter PTPETHPRIMAD  = 48'h011b_1900_0000;
+  parameter PTPETHPDELAD  = 48'h0180_C200_000E;
+  parameter PTPIPV4PRIMAD = {8'd224, 8'd0, 8'd1, 8'd129}; //PTP primary ipv4 address
+  parameter PTPIPV4PDELAD = {8'd224, 8'd0, 8'd1, 8'd107}; //PTP pdelay ipv4 address
+  //parameter PTPIPV6PRIMAD = 128'hff0x0000000000000000000000000181;
+  parameter PTPIPV6PDELAD = 128'hff02000000000000000000000000006b;
+
   genvar i;   
 
   //xgmii input delay line
@@ -294,7 +301,7 @@ module rx_parse(
       vlan1_length_type <= 16'h0;
       vlan2_length_type <= 16'h0;
     end
-    else begin
+    else if(rx_clk_en_i) begin
       mac_da <= `OR_LANE(mac_da_lane);
       mac_sa <= `OR_LANE(mac_sa_lane);
       length_type <= `OR_LANE(length_type_lane);
@@ -302,6 +309,357 @@ module rx_parse(
       vlan2_length_type <= `OR_LANE(vlan2_length_type_lane);
     end
   end
+
+  wire ptp_mac_addr_match = ((mac_da[47:0] == PTPETHPRIMAD) || (mac_da[47:0] == PTPETHPDELAD));
+
+  //get pppoe information-ppp_id, data input delay 2 samples
+  reg  [15:0]         ppp_pid;
+  reg  [15:0]         ppp_pid_lane[7:0];
+
+  generate
+    for(i = 0; i < 8; i = i+1) begin : PARSE_PPPID
+      reg [10:0] eth_count;
+      reg [7:0]  rxd_lane;
+
+      reg [15:0] ppp_pid_tmp;
+
+      always @(*) begin
+        rxd_lane = 8'h0;
+        eth_count = 0;
+
+        if(get_sfd_done_z1 == 1) begin
+          eth_count = eth_count_base_z1 + i;
+        end
+
+        rxd_lane = rxd_z2[8*i+7: 8*i];
+      end
+
+      always @(*) begin
+        ppp_pid_tmp = ppp_pid;
+
+        if((get_sfd_done_z1 == 1) && !rxc_z2[i]) begin
+          if(length_type == 16'h8864) begin      //no vlan
+            if(eth_count == 11'd28) ppp_pid_tmp[15:8]  = rxd_lane;
+            if(eth_count == 11'd29) ppp_pid_tmp[7:0]   = rxd_lane;
+          end
+          else if(length_type == 16'h8100 && vlan1_length_type == 16'h8864) begin     //single vlan
+            if(eth_count == 11'd32) ppp_pid_tmp[15:8]  = rxd_lane;
+            if(eth_count == 11'd33) ppp_pid_tmp[7:0]   = rxd_lane;
+          end 
+          else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+            || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type == 16'h8864) begin //double vlan
+            if(eth_count == 11'd36) ppp_pid_tmp[15:8]  = rxd_lane;
+            if(eth_count == 11'd37) ppp_pid_tmp[7:0]   = rxd_lane;     
+          end 
+        end 
+        else if(get_efd_done_z2 == 1) begin
+          ppp_pid_tmp = 16'h0;
+        end
+      end //always
+      
+      always @(*) begin
+        ppp_pid_lane[i] = ppp_pid_tmp;
+      end
+
+    end //for i
+  endgenerate
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) 
+      ppp_pid <= 16'h0;
+    else if(rx_clk_en_i)
+      ppp_pid <= `OR_LANE(ppp_pid_lane);
+  end
+
+  //get snap related attributes, data input delay 2 samples
+  reg  [7:0]      snap_dsap;
+  reg  [7:0]      snap_ssap;
+  reg  [15:0]     snap_length_type;
+  reg  [7:0]      snap_dsap_lane[7:0];
+  reg  [7:0]      snap_ssap_lane[7:0];
+  reg  [15:0]     snap_length_type_lane[7:0];
+
+  generate
+    for(i = 0; i < 8; i = i+1) begin : PARSE_SNAP
+      reg [10:0] eth_count;
+      reg [7:0]  rxd_lane;
+
+      reg [7:0]  snap_dsap_tmp;
+      reg [7:0]  snap_ssap_tmp;
+      reg [15:0] snap_length_type_tmp;
+
+      always @(*) begin
+        rxd_lane = 8'h0;
+        eth_count = 0;
+
+        if(get_sfd_done_z1 == 1) begin
+          eth_count = eth_count_base_z1 + i;
+        end
+
+        rxd_lane = rxd_z2[8*i+7: 8*i];
+      end
+
+      always @(*) begin
+        snap_dsap_tmp = snap_dsap;
+        snap_ssap_tmp = snap_ssap;
+        snap_length_type_tmp = snap_length_type;
+
+        if((get_sfd_done_z1 == 1) && !rxc_z2[i]) begin
+          if(length_type <= 1500) begin          //no vlan
+            if(eth_count == 11'd22)  snap_dsap_tmp = rxd_lane;
+            if(eth_count == 11'd23)  snap_ssap_tmp = rxd_lane;
+            if(eth_count == 11'd28)  snap_length_type_tmp[15:8] = rxd_lane;
+            if(eth_count == 11'd29)  snap_length_type_tmp[7:0]  = rxd_lane;
+          end 
+          else if(length_type == 16'h8100 && vlan1_length_type <= 1500) begin     //single vlan
+            if(eth_count == 11'd26)  snap_dsap_tmp = rxd_lane;                        
+            if(eth_count == 11'd27)  snap_ssap_tmp = rxd_lane;                        
+            if(eth_count == 11'd32)  snap_length_type_tmp[15:8] = rxd_lane;           
+            if(eth_count == 11'd33)  snap_length_type_tmp[7:0]  = rxd_lane;           
+          end  
+          else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+            || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type <= 1500) begin //double vlan  
+            if(eth_count == 11'd30)  snap_dsap_tmp = rxd_lane;                        
+            if(eth_count == 11'd31)  snap_ssap_tmp = rxd_lane;                        
+            if(eth_count == 11'd36)  snap_length_type_tmp[15:8] = rxd_lane;           
+            if(eth_count == 11'd37)  snap_length_type_tmp[7:0]  = rxd_lane;            
+          end 
+        end 
+        else if(get_efd_done_z2 == 1) begin
+          snap_dsap_tmp = 8'h0;
+          snap_ssap_tmp = 8'h0;
+          snap_length_type_tmp = 16'h0;
+        end
+      end //always
+      
+      always @(*) begin
+        snap_dsap_lane[i] = snap_dsap_tmp;
+        snap_ssap_lane[i] = snap_ssap_tmp;
+        snap_length_type_lane[i] = snap_length_type_tmp;
+      end
+    end //for i
+  endgenerate
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      snap_dsap        <= 8'h0;       
+      snap_ssap        <= 8'h0;       
+      snap_length_type <= 16'h0;
+    end
+    else if(rx_clk_en_i) begin 
+      snap_dsap <= `OR_LANE(snap_dsap_lane);
+      snap_ssap <= `OR_LANE(snap_ssap_lane);
+      snap_length_type <= `OR_LANE(snap_length_type_lane);
+    end
+  end
+
+  //++
+  //get ptpv2 related information
+  //--
+
+  //deal with ptp message over 802.3/ethernet
+  reg            ptp_eth_flag;
+  reg  [7:0]     eth_ptp_addr_base;
+
+  always @(*) begin
+    //default values
+    ptp_eth_flag      = 0;
+    eth_ptp_addr_base = 0;
+   
+    //native_ethernet-2 encapsulation
+    if(length_type == 16'h88f7) begin  //no vlan
+      ptp_eth_flag      = 1;
+      eth_ptp_addr_base = 22;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type == 16'h88f7) begin   //single vlan
+      ptp_eth_flag      = 1;
+      eth_ptp_addr_base = 26;
+          
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+      || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type == 16'h88f7) begin //double vlan
+      ptp_eth_flag      = 1;
+      eth_ptp_addr_base = 30;       
+    end
+
+    //802.3 snap layer2 encapsulation
+    if(length_type <= 1500 && snap_dsap == 8'haa && snap_ssap == 8'haa && snap_length_type == 16'h88f7) begin      //no vlan
+      ptp_eth_flag      = 1;
+      eth_ptp_addr_base = 30;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type <= 1500 && snap_dsap == 8'haa && snap_ssap == 8'haa 
+      && snap_length_type == 16'h88f7) begin    //single vlan
+      ptp_eth_flag      = 1;
+      eth_ptp_addr_base = 34;   
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+      || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type <=1500 && snap_dsap == 8'haa 
+      && snap_ssap == 8'haa && snap_length_type == 16'h88f7) begin //double vlan
+      ptp_eth_flag      = 1;
+      eth_ptp_addr_base = 38;   
+    end        
+  end
+
+  //deal with ptp message over ipv4/udp
+  reg          ipv4_flag;
+  reg  [7:0]   ipv4_addr_base;
+  
+  always @(*) begin
+    //default values
+    ipv4_flag      = 0;
+    ipv4_addr_base = 0;
+    
+    //normal situation
+    if(length_type == 16'h0800) begin      //no vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 22;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type == 16'h0800) begin   //single vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 26;   
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+      || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type == 16'h0800) begin //double vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 30;   
+    end
+    
+    //pppoe
+    if(length_type == 16'h8864 && ppp_pid == 16'h0021) begin      //no vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 30;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type == 16'h8864 && ppp_pid == 16'h0021) begin    //single vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 34;   
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+     ||length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type == 16'h8864 && ppp_pid == 16'h0021) begin //double vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 38;   
+    end  
+    
+    //snap
+    if(length_type <= 1500 && snap_dsap == 8'haa && snap_ssap == 8'haa && snap_length_type == 16'h0800) begin      //no vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 30;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type <= 1500 && snap_dsap == 8'haa && snap_ssap == 8'haa 
+      && snap_length_type == 16'h0800) begin    //single vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 34;   
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+      || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type <=1500 && snap_dsap == 8'haa 
+      && snap_ssap == 8'haa && snap_length_type == 16'h0800) begin //double vlan
+      ipv4_flag      = 1;
+      ipv4_addr_base = 38;   
+    end        
+  end
+
+  //add 1 pipeline stage
+  reg          ipv4_flag_z1;
+  reg  [7:0]   ipv4_addr_base_z1;
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      ipv4_flag_z1  <= 0;
+      ipv4_addr_base_z1[7:0] <= 8'h0;
+    end
+    else if(rx_clk_en_i) begin
+      ipv4_flag_z1  <= ipv4_flag;
+      ipv4_addr_base_z1[7:0] <= ipv4_addr_base[7:0];
+    end
+  end
+
+  //parse ipv4/udp header, use data input delayed 4 cycles
+  reg  [31:0]         ipv4_da;
+  reg  [7:0]          ipv4_layer4_protocol;
+  reg  [15:0]         ipv4_udp_port;
+  
+  reg  [31:0]         ipv4_da_lane[7:0];
+  reg  [7:0]          ipv4_layer4_protocol_lane[7:0];
+  reg  [15:0]         ipv4_udp_port_lane[7:0];
+
+  generate
+    for(i = 0; i < 8; i = i+1) begin : PARSE_IPV4_UDP
+      reg [10:0]   eth_count;
+      reg [7:0]    rxd_lane;
+      reg [10:0]   addr_base;
+
+      reg [31:0]   ipv4_da_tmp;
+      reg [7:0]    ipv4_layer4_protocol_tmp;
+      reg [15:0]   ipv4_udp_port_tmp;
+
+      always @(*) begin
+        rxd_lane  = 8'h0;
+        eth_count = 0;
+        addr_base = {3'b0, ipv4_addr_base_z1[7:0]};
+
+        if(get_sfd_done_z3 == 1) begin
+          eth_count = eth_count_base_z3 + i;
+        end
+        rxd_lane = rxd_z4[8*i+7: 8*i];
+      end
+      
+      always @(*) begin
+        ipv4_da_tmp = ipv4_da;
+        ipv4_layer4_protocol_tmp = ipv4_layer4_protocol;
+        ipv4_udp_port_tmp = ipv4_udp_port;
+
+        if(ipv4_flag_z1 == 1'b1 && !rxc_z4[i]) begin
+          if(eth_count == (addr_base+9))   ipv4_layer4_protocol_tmp = rxd_lane;
+            
+          if(eth_count == (addr_base+16))  ipv4_da_tmp[31:24]       = rxd_lane;
+          if(eth_count == (addr_base+17))  ipv4_da_tmp[23:16]       = rxd_lane;
+          if(eth_count == (addr_base+18))  ipv4_da_tmp[15:8]        = rxd_lane;
+          if(eth_count == (addr_base+19))  ipv4_da_tmp[7:0]         = rxd_lane;   
+          
+          if(eth_count == (addr_base+22))  ipv4_udp_port_tmp[15:8]  = rxd_lane;
+          if(eth_count == (addr_base+23))  ipv4_udp_port_tmp[7:0]   = rxd_lane;   
+        end
+        else if(get_efd_done_z4 == 1) begin
+          ipv4_da_tmp              = 32'h0;
+          ipv4_layer4_protocol_tmp = 8'h0;
+          ipv4_udp_port_tmp        = 16'h0;   
+        end
+      end //always
+
+      always @(*) begin
+        ipv4_da_lane[i]               = ipv4_da_tmp;
+        ipv4_layer4_protocol_lane[i]  = ipv4_layer4_protocol_tmp;
+        ipv4_udp_port_lane[i]         = ipv4_udp_port_tmp;
+      end
+    end //for i
+  endgenerate
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      ipv4_da              <= 32'h0;
+      ipv4_layer4_protocol <= 8'h0;
+      ipv4_udp_port        <= 16'h0;   
+    end
+    else if(rx_clk_en_i) begin
+      ipv4_da              <= `OR_LANE(ipv4_da_lane);
+      ipv4_layer4_protocol <= `OR_LANE(ipv4_layer4_protocol_lane);
+      ipv4_udp_port        <= `OR_LANE(ipv4_udp_port_lane);   
+    end
+  end
+
+  reg             ptp_ipv4_flag;
+  reg  [7:0]      ipv4_ptp_addr_base;
+
+  always @(*) begin
+    ptp_ipv4_flag      = 0;
+    ipv4_ptp_addr_base = 0;
+    
+    if(ipv4_flag == 1'b1 && ipv4_layer4_protocol == 8'd17 && (ipv4_udp_port == 16'd319 || ipv4_udp_port == 16'd320)) begin
+      ptp_ipv4_flag      = 1;
+      ipv4_ptp_addr_base = ipv4_addr_base + 28;
+    end  
+  end
+
+  wire ptp_ipv4_addr_match = ((ipv4_da[31:0] == PTPIPV4PRIMAD) || (ipv4_da[31:0] == PTPIPV4PDELAD));
 
 
 endmodule
