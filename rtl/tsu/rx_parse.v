@@ -91,9 +91,9 @@ module rx_parse(
   endgenerate
 
   reg    get_sfd_done_p1, get_sfd_done;
-  reg    get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4, get_sfd_done_z5;
-  reg    get_efd_done_p1, get_efd_done;
-  reg    get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4, get_efd_done_z5;
+  reg    get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4, get_sfd_done_z5, get_sfd_done_z6;
+  reg    get_efd_done_p1, get_efd_done;                                                                     
+  reg    get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4, get_efd_done_z5, get_efd_done_z6;
 
   //start of frame
   always @(*) begin
@@ -114,10 +114,10 @@ module rx_parse(
 
   always @(posedge rx_clk or negedge rx_rst_n) begin
     if(!rx_rst_n)
-      {get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4, get_sfd_done_z5} <= {5{1'b0}};
+      {get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4, get_sfd_done_z5, get_sfd_done_z6} <= {6{1'b0}};
     else if(rx_clk_en_i)
-      {get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4, get_sfd_done_z5} <= {get_sfd_done, 
-                        get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4}; 
+      {get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4, get_sfd_done_z5, get_sfd_done_z6} <= {get_sfd_done, 
+                        get_sfd_done_z1, get_sfd_done_z2, get_sfd_done_z3, get_sfd_done_z4, get_sfd_done_z5}; 
   end
   
   //end of frame
@@ -145,10 +145,10 @@ module rx_parse(
 
   always @(posedge rx_clk or negedge rx_rst_n) begin
     if(!rx_rst_n)
-      {get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4, get_efd_done_z5} <= {5{1'b0}};
+      {get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4, get_efd_done_z5, get_efd_done_z6} <= {6{1'b0}};
     else if(rx_clk_en_i)
-      {get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4, get_efd_done_z5} <= {get_efd_done, 
-                        get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4}; 
+      {get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4, get_efd_done_z5, get_efd_done_z6} <= {get_efd_done, 
+                        get_efd_done_z1, get_efd_done_z2, get_efd_done_z3, get_efd_done_z4, get_efd_done_z5}; 
   end
 
   //++
@@ -459,7 +459,7 @@ module rx_parse(
 
   //deal with ptp message over 802.3/ethernet
   reg            ptp_eth_flag;
-  reg  [7:0]     eth_ptp_addr_base;
+  reg  [10:0]    eth_ptp_addr_base;
 
   always @(*) begin
     //default values
@@ -502,7 +502,7 @@ module rx_parse(
 
   //deal with ptp message over ipv4/udp
   reg          ipv4_flag;
-  reg  [7:0]   ipv4_addr_base;
+  reg  [10:0]  ipv4_addr_base;
   
   always @(*) begin
     //default values
@@ -559,16 +559,16 @@ module rx_parse(
 
   //add 1 pipeline stage
   reg          ipv4_flag_z1;
-  reg  [7:0]   ipv4_addr_base_z1;
+  reg  [10:0]  ipv4_addr_base_z1;
 
   always @(posedge rx_clk or negedge rx_rst_n) begin
     if(!rx_rst_n) begin
-      ipv4_flag_z1  <= 0;
-      ipv4_addr_base_z1[7:0] <= 8'h0;
+      ipv4_flag_z1      <= 0;
+      ipv4_addr_base_z1 <= 11'h0;
     end
     else if(rx_clk_en_i) begin
-      ipv4_flag_z1  <= ipv4_flag;
-      ipv4_addr_base_z1[7:0] <= ipv4_addr_base[7:0];
+      ipv4_flag_z1      <= ipv4_flag;
+      ipv4_addr_base_z1 <= ipv4_addr_base;
     end
   end
 
@@ -585,7 +585,6 @@ module rx_parse(
     for(i = 0; i < 8; i = i+1) begin : PARSE_IPV4_UDP
       reg [10:0]   eth_count;
       reg [7:0]    rxd_lane;
-      reg [10:0]   addr_base;
 
       reg [31:0]   ipv4_da_tmp;
       reg [7:0]    ipv4_layer4_protocol_tmp;
@@ -594,7 +593,6 @@ module rx_parse(
       always @(*) begin
         rxd_lane  = 8'h0;
         eth_count = 0;
-        addr_base = {3'b0, ipv4_addr_base_z1[7:0]};
 
         if(get_sfd_done_z3 == 1) begin
           eth_count = eth_count_base_z3 + i;
@@ -608,15 +606,15 @@ module rx_parse(
         ipv4_udp_port_tmp = ipv4_udp_port;
 
         if(ipv4_flag_z1 == 1'b1 && !rxc_z4[i]) begin
-          if(eth_count == (addr_base+9))   ipv4_layer4_protocol_tmp = rxd_lane;
+          if(eth_count == (ipv4_addr_base_z1+9))   ipv4_layer4_protocol_tmp = rxd_lane;
             
-          if(eth_count == (addr_base+16))  ipv4_da_tmp[31:24]       = rxd_lane;
-          if(eth_count == (addr_base+17))  ipv4_da_tmp[23:16]       = rxd_lane;
-          if(eth_count == (addr_base+18))  ipv4_da_tmp[15:8]        = rxd_lane;
-          if(eth_count == (addr_base+19))  ipv4_da_tmp[7:0]         = rxd_lane;   
+          if(eth_count == (ipv4_addr_base_z1+16))  ipv4_da_tmp[31:24]       = rxd_lane;
+          if(eth_count == (ipv4_addr_base_z1+17))  ipv4_da_tmp[23:16]       = rxd_lane;
+          if(eth_count == (ipv4_addr_base_z1+18))  ipv4_da_tmp[15:8]        = rxd_lane;
+          if(eth_count == (ipv4_addr_base_z1+19))  ipv4_da_tmp[7:0]         = rxd_lane;   
           
-          if(eth_count == (addr_base+22))  ipv4_udp_port_tmp[15:8]  = rxd_lane;
-          if(eth_count == (addr_base+23))  ipv4_udp_port_tmp[7:0]   = rxd_lane;   
+          if(eth_count == (ipv4_addr_base_z1+22))  ipv4_udp_port_tmp[15:8]  = rxd_lane;
+          if(eth_count == (ipv4_addr_base_z1+23))  ipv4_udp_port_tmp[7:0]   = rxd_lane;   
         end
         else if(get_efd_done_z4 == 1) begin
           ipv4_da_tmp              = 32'h0;
@@ -647,7 +645,7 @@ module rx_parse(
   end
 
   reg             ptp_ipv4_flag;
-  reg  [7:0]      ipv4_ptp_addr_base;
+  reg  [10:0]     ipv4_ptp_addr_base;
 
   always @(*) begin
     ptp_ipv4_flag      = 0;
@@ -661,5 +659,396 @@ module rx_parse(
 
   wire ptp_ipv4_addr_match = ((ipv4_da[31:0] == PTPIPV4PRIMAD) || (ipv4_da[31:0] == PTPIPV4PDELAD));
 
+  //deal with ptp message over ipv6/udp
+  reg          ipv6_flag;
+  reg  [10:0]  ipv6_addr_base;
+  
+  always @(*) begin
+    //default values
+    ipv6_flag       = 0;
+    ipv6_addr_base  = 0;
+    
+    //normal situation
+    if(length_type == 16'h86dd) begin      //no vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 22;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type == 16'h86dd) begin   //single vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 26;   
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+      || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type == 16'h86dd) begin //double vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 30;   
+    end
+    
+    //pppoe
+    if(length_type == 16'h8864 && ppp_pid == 16'h0057) begin      //no vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 30;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type == 16'h8864 && ppp_pid == 16'h0057) begin    //single vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 34;   
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+     || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type == 16'h8864 && ppp_pid == 16'h0057) begin //double vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 38;   
+    end  
+    
+    //snap
+    if(length_type <= 1500 && snap_dsap == 8'haa && snap_ssap == 8'haa && snap_length_type == 16'h86dd) begin      //no vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 30;
+    end
+    else if(length_type == 16'h8100 && vlan1_length_type <= 1500 && snap_dsap == 8'haa && snap_ssap == 8'haa 
+      && snap_length_type == 16'h86dd) begin    //single vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 34;   
+    end 
+    else if((length_type == 16'h88a8 || length_type == 16'h9100 || length_type == 16'h9200 || length_type == 16'h9300 
+      || length_type == 16'h8100) && vlan1_length_type == 16'h8100 && vlan2_length_type <=1500 && snap_dsap == 8'haa && snap_ssap == 8'haa
+       && snap_length_type == 16'h86dd) begin  //double vlan
+      ipv6_flag      = 1;
+      ipv6_addr_base = 38;   
+    end       
+  end    
+
+  //add 1 pipeline stage
+  reg          ipv6_flag_z1;
+  reg  [10:0]  ipv6_addr_base_z1;
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      ipv6_flag_z1      <= 0;
+      ipv6_addr_base_z1 <= 11'h0;
+    end
+    else if(rx_clk_en_i) begin
+      ipv6_flag_z1      <= ipv6_flag;
+      ipv6_addr_base_z1 <= ipv6_addr_base;
+    end
+  end
+
+  //parse ipv6/udp header, use data input delayed 4 cycles
+  reg  [127:0]    ipv6_da;  
+  reg  [7:0]      ipv6_next_header;
+  reg  [15:0]     ipv6_udp_port;
+
+  reg  [127:0]    ipv6_da_lane[7:0];  
+  reg  [7:0]      ipv6_next_header_lane[7:0];
+  reg  [15:0]     ipv6_udp_port_lane[7:0];
+
+  generate
+    for(i = 0; i < 8; i = i+1) begin : PARSE_IPV6_UDP
+      reg [10:0]   eth_count;
+      reg [7:0]    rxd_lane;
+
+      reg  [127:0] ipv6_da_tmp;  
+      reg  [7:0]   ipv6_next_header_tmp;
+      reg  [15:0]  ipv6_udp_port_tmp;
+
+      always @(*) begin
+        rxd_lane = 8'h0;
+        eth_count = 0;
+
+        if(get_sfd_done_z3 == 1) begin
+          eth_count = eth_count_base_z3 + i;
+        end
+        rxd_lane = rxd_z4[8*i+7: 8*i];
+      end
+
+      always @(*) begin
+        ipv6_da_tmp = ipv6_da;  
+        ipv6_next_header_tmp = ipv6_next_header;
+        ipv6_udp_port_tmp    = ipv6_udp_port;
+
+        if(ipv6_flag_z1 == 1'b1 && !rxc_z4[i]) begin
+          if(eth_count == (ipv6_addr_base_z1+6))   ipv6_next_header_tmp    = rxd_lane;
+
+          if(eth_count == (ipv6_addr_base_z1+24))  ipv6_da_tmp[127:120]    = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+25))  ipv6_da_tmp[119:112]    = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+26))  ipv6_da_tmp[111:104]    = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+27))  ipv6_da_tmp[103:96]     = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+28))  ipv6_da_tmp[95:88]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+29))  ipv6_da_tmp[87:80]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+30))  ipv6_da_tmp[79:72]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+31))  ipv6_da_tmp[71:64]      = rxd_lane;          
+          if(eth_count == (ipv6_addr_base_z1+32))  ipv6_da_tmp[63:56]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+33))  ipv6_da_tmp[55:48]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+34))  ipv6_da_tmp[47:40]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+35))  ipv6_da_tmp[39:32]      = rxd_lane;          
+          if(eth_count == (ipv6_addr_base_z1+36))  ipv6_da_tmp[31:24]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+37))  ipv6_da_tmp[23:16]      = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+38))  ipv6_da_tmp[15:8]       = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+39))  ipv6_da_tmp[7:0]        = rxd_lane;          
+                                                                                                                         
+          if(eth_count == (ipv6_addr_base_z1+42))  ipv6_udp_port_tmp[15:8]  = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+43))  ipv6_udp_port_tmp[7:0]   = rxd_lane;    
+        end
+        else if(get_efd_done_z4 == 1)  begin
+          ipv6_da_tmp             = 128'h0;
+          ipv6_next_header_tmp    = 8'h0;
+          ipv6_udp_port_tmp       = 16'h0;            
+        end
+      end //always
+
+      always @(*) begin
+        ipv6_da_lane[i]          = ipv6_da_tmp;  
+        ipv6_next_header_lane[i] = ipv6_next_header_tmp;
+        ipv6_udp_port_lane[i]    = ipv6_udp_port_tmp;
+      end
+    end //for i
+  endgenerate
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      ipv6_da             <= 128'h0;
+      ipv6_next_header    <= 8'h0;
+      ipv6_udp_port       <= 16'h0;      
+    end
+    else if(rx_clk_en_i) begin
+      ipv6_da             <= `OR_LANE(ipv6_da_lane);
+      ipv6_next_header    <= `OR_LANE(ipv6_next_header_lane);
+      ipv6_udp_port       <= `OR_LANE(ipv6_udp_port_lane);      
+    end
+  end  
+
+  reg            ptp_ipv6_flag; 
+  reg  [10:0]    ipv6_ptp_addr_base; 
+
+  always @(*) begin
+    ptp_ipv6_flag       = 0;
+    ipv6_ptp_addr_base  = 0;
+    
+    if(ipv6_flag == 1'b1 && ipv6_next_header == 8'd17 && (ipv6_udp_port == 16'd319 || ipv6_udp_port == 16'd320)) begin
+      ptp_ipv6_flag      = 1;
+      ipv6_ptp_addr_base = ipv6_addr_base + 48;
+    end  
+  end
+
+  wire ptp_ipv6_addr_match = (((ipv6_da[127:116] == 12'hff0) && (ipv6_da[111:0] == 112'h0000000000000000000000000181)) ||
+                                 (ipv6_da[127:0] == PTPIPV6PDELAD));
+
+  //summarize all cases, ptp over 802.3/ethernet, ipv4/udp, ipv6/udp
+  reg              is_ptp_message_p1, is_ptp_message, is_ptp_message_z1, is_ptp_message_z2;
+  reg  [10:0]      ptp_addr_base_p1, ptp_addr_base;
+
+  always @(*) begin
+    is_ptp_message_p1 = is_ptp_message;
+    ptp_addr_base_p1  = ptp_addr_base;   
+    
+    if(ptp_eth_flag == 1'b1) begin
+      is_ptp_message_p1 = 1;
+      ptp_addr_base_p1  = eth_ptp_addr_base;
+    end
+    else if(ptp_ipv4_flag == 1'b1) begin
+      is_ptp_message_p1 = 1;
+      ptp_addr_base_p1  = ipv4_ptp_addr_base; 
+    end
+    else if(ptp_ipv6_flag == 1'b1) begin
+      is_ptp_message_p1 = 1;
+      ptp_addr_base_p1  = ipv6_ptp_addr_base;
+    end  
+
+    if(get_efd_done_z6 == 0 && get_efd_done_z5 == 1) begin
+      is_ptp_message_p1 = 0 ;
+      ptp_addr_base_p1  = 11'h80  ; 
+    end
+  end
+  
+ //add 1 stage pipeline registers
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      is_ptp_message  <= 0 ;
+      ptp_addr_base   <= 11'h80  ; //initial to a large value to avert error
+    end
+    else if(rx_clk_en_i) begin
+      is_ptp_message  <= is_ptp_message_p1 ;
+      ptp_addr_base   <= ptp_addr_base_p1  ;
+    end
+  end
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) 
+      {is_ptp_message_z1, is_ptp_message_z2} <= 2'b0;
+    else if(rx_clk_en_i) 
+      {is_ptp_message_z1, is_ptp_message_z2} <= {is_ptp_message, is_ptp_message_z1};
+  end
+
+  //deal with ptp messages, according to ieee1588-2019
+  reg  [3:0]      ptp_majorSdoId;
+  reg  [3:0]      ptp_messageType;
+  reg  [3:0]      ptp_minorVersionPTP;
+  reg  [3:0]      ptp_versionPTP;
+  reg  [15:0]     ptp_messageLength;
+  reg  [7:0]      ptp_domainNumber;
+  reg  [7:0]      ptp_minorSdoId;
+  reg  [15:0]     ptp_flagField;
+  reg  [63:0]     ptp_correctionField;
+  reg  [31:0]     ptp_messageTypeSpecific;
+  reg  [79:0]     ptp_sourcePortIdentity; 
+  reg  [15:0]     ptp_seqId;
+
+  reg  [3:0]      ptp_majorSdoId_lane[7:0];
+  reg  [3:0]      ptp_messageType_lane[7:0];
+  reg  [3:0]      ptp_minorVersionPTP_lane[7:0];
+  reg  [3:0]      ptp_versionPTP_lane[7:0];
+  reg  [15:0]     ptp_messageLength_lane[7:0];
+  reg  [7:0]      ptp_domainNumber_lane[7:0];
+  reg  [7:0]      ptp_minorSdoId_lane[7:0];
+  reg  [15:0]     ptp_flagField_lane[7:0];
+  reg  [63:0]     ptp_correctionField_lane[7:0];
+  reg  [31:0]     ptp_messageTypeSpecific_lane[7:0];
+  reg  [79:0]     ptp_sourcePortIdentity_lane[7:0]; 
+  reg  [15:0]     ptp_seqId_lane[7:0];
+
+  //use data input delayed 6 cycles
+  generate
+    for(i = 0; i < 8; i = i+1) begin : PARSE_PTP_MESSAGE
+      reg [10:0]   eth_count;
+      reg [7:0]    rxd_lane;
+
+      reg [3:0]    ptp_majorSdoId_tmp;
+      reg [3:0]    ptp_messageType_tmp;
+      reg [3:0]    ptp_minorVersionPTP_tmp;
+      reg [3:0]    ptp_versionPTP_tmp;
+      reg [15:0]   ptp_messageLength_tmp;
+      reg [7:0]    ptp_domainNumber_tmp;
+      reg [7:0]    ptp_minorSdoId_tmp;
+      reg [15:0]   ptp_flagField_tmp;
+      reg [63:0]   ptp_correctionField_tmp;
+      reg [31:0]   ptp_messageTypeSpecific_tmp;
+      reg [79:0]   ptp_sourcePortIdentity_tmp; 
+      reg [15:0]   ptp_seqId_tmp;
+
+      always @(*) begin
+        rxd_lane = 8'h0;
+        eth_count = 0;
+
+        if(get_sfd_done_z5 == 1) begin
+          eth_count = eth_count_base_z5 + i;
+        end
+        rxd_lane = rxd_z6[8*i+7: 8*i];
+      end
+
+      always @(*) begin
+        ptp_majorSdoId_tmp          = ptp_majorSdoId         ;
+        ptp_messageType_tmp         = ptp_messageType        ;
+        ptp_minorVersionPTP_tmp     = ptp_minorVersionPTP    ;
+        ptp_versionPTP_tmp          = ptp_versionPTP         ;
+        ptp_messageLength_tmp       = ptp_messageLength      ;
+        ptp_domainNumber_tmp        = ptp_domainNumber       ;
+        ptp_minorSdoId_tmp          = ptp_minorSdoId         ;
+        ptp_flagField_tmp           = ptp_flagField          ;
+        ptp_correctionField_tmp     = ptp_correctionField    ;
+        ptp_messageTypeSpecific_tmp = ptp_messageTypeSpecific;
+        ptp_sourcePortIdentity_tmp  = ptp_sourcePortIdentity ; 
+        ptp_seqId_tmp               = ptp_seqId              ;
+
+        if(is_ptp_message == 1'b1 && !rxc_z6[i]) begin
+          if(eth_count == ptp_addr_base)       {ptp_majorSdoId_tmp, ptp_messageType_tmp}     = rxd_lane;
+          if(eth_count == (ptp_addr_base+1))   {ptp_minorVersionPTP_tmp, ptp_versionPTP_tmp} = rxd_lane;
+            
+          if(eth_count == (ptp_addr_base+2))   ptp_messageLength_tmp[15:8]  = rxd_lane;
+          if(eth_count == (ptp_addr_base+3))   ptp_messageLength_tmp[7:0]   = rxd_lane;
+          if(eth_count == (ptp_addr_base+4))   ptp_domainNumber_tmp = rxd_lane;
+          if(eth_count == (ptp_addr_base+5))   ptp_minorSdoId_tmp   = rxd_lane;
+  
+          if(eth_count == (ptp_addr_base+6))   ptp_flagField_tmp[15:8] = rxd_lane;
+          if(eth_count == (ptp_addr_base+7))   ptp_flagField_tmp[7:0]  = rxd_lane;
+
+          if(eth_count == (ptp_addr_base+8))   ptp_correctionField_tmp[63:56] = rxd_lane;
+          if(eth_count == (ptp_addr_base+9))   ptp_correctionField_tmp[55:48] = rxd_lane;
+          if(eth_count == (ptp_addr_base+10))  ptp_correctionField_tmp[47:40] = rxd_lane;
+          if(eth_count == (ptp_addr_base+11))  ptp_correctionField_tmp[39:32] = rxd_lane;
+          if(eth_count == (ptp_addr_base+12))  ptp_correctionField_tmp[31:24] = rxd_lane;
+          if(eth_count == (ptp_addr_base+13))  ptp_correctionField_tmp[23:16] = rxd_lane;
+          if(eth_count == (ptp_addr_base+14))  ptp_correctionField_tmp[15:8]  = rxd_lane;
+          if(eth_count == (ptp_addr_base+15))  ptp_correctionField_tmp[7:0]   = rxd_lane;
+
+          if(eth_count == (ptp_addr_base+16))  ptp_messageTypeSpecific_tmp[31:24] = rxd_lane;
+          if(eth_count == (ptp_addr_base+17))  ptp_messageTypeSpecific_tmp[23:16] = rxd_lane;
+          if(eth_count == (ptp_addr_base+18))  ptp_messageTypeSpecific_tmp[15:8]  = rxd_lane;
+          if(eth_count == (ptp_addr_base+19))  ptp_messageTypeSpecific_tmp[7:0]   = rxd_lane;
+       
+          if(eth_count == (ptp_addr_base+20))  ptp_sourcePortIdentity_tmp[79:72] = rxd_lane;
+          if(eth_count == (ptp_addr_base+21))  ptp_sourcePortIdentity_tmp[71:64] = rxd_lane;
+          if(eth_count == (ptp_addr_base+22))  ptp_sourcePortIdentity_tmp[63:56] = rxd_lane;
+          if(eth_count == (ptp_addr_base+23))  ptp_sourcePortIdentity_tmp[55:48] = rxd_lane;          
+          if(eth_count == (ptp_addr_base+24))  ptp_sourcePortIdentity_tmp[47:40] = rxd_lane;
+          if(eth_count == (ptp_addr_base+25))  ptp_sourcePortIdentity_tmp[39:32] = rxd_lane;
+          if(eth_count == (ptp_addr_base+26))  ptp_sourcePortIdentity_tmp[31:24] = rxd_lane;
+          if(eth_count == (ptp_addr_base+27))  ptp_sourcePortIdentity_tmp[23:16] = rxd_lane;      
+          if(eth_count == (ptp_addr_base+28))  ptp_sourcePortIdentity_tmp[15:8]  = rxd_lane;
+          if(eth_count == (ptp_addr_base+29))  ptp_sourcePortIdentity_tmp[7:0]   = rxd_lane;   
+            
+          if(eth_count == (ptp_addr_base+30))  ptp_seqId_tmp[15:8] = rxd_lane;
+          if(eth_count == (ptp_addr_base+31))  ptp_seqId_tmp[7:0]  = rxd_lane; 
+        end
+        else if(get_efd_done_z6 == 1)  begin
+          ptp_majorSdoId_tmp          = 0;
+          ptp_messageType_tmp         = 0;
+          ptp_minorVersionPTP_tmp     = 0;
+          ptp_versionPTP_tmp          = 0;
+          ptp_messageLength_tmp       = 0;
+          ptp_domainNumber_tmp        = 0;
+          ptp_minorSdoId_tmp          = 0;
+          ptp_flagField_tmp           = 0;
+          ptp_correctionField_tmp     = 0;
+          ptp_messageTypeSpecific_tmp = 0;
+          ptp_sourcePortIdentity_tmp  = 0; 
+          ptp_seqId_tmp               = 0;
+        end
+      end //always
+
+      always @(*) begin
+        ptp_majorSdoId_lane[i]          = ptp_majorSdoId_tmp         ;
+        ptp_messageType_lane[i]         = ptp_messageType_tmp        ;
+        ptp_minorVersionPTP_lane[i]     = ptp_minorVersionPTP_tmp    ;
+        ptp_versionPTP_lane[i]          = ptp_versionPTP_tmp         ;
+        ptp_messageLength_lane[i]       = ptp_messageLength_tmp      ;
+        ptp_domainNumber_lane[i]        = ptp_domainNumber_tmp       ;
+        ptp_minorSdoId_lane[i]          = ptp_minorSdoId_tmp         ;
+        ptp_flagField_lane[i]           = ptp_flagField_tmp          ;
+        ptp_correctionField_lane[i]     = ptp_correctionField_tmp    ;
+        ptp_messageTypeSpecific_lane[i] = ptp_messageTypeSpecific_tmp;
+        ptp_sourcePortIdentity_lane[i]  = ptp_sourcePortIdentity_tmp ; 
+        ptp_seqId_lane[i]               = ptp_seqId_tmp              ;
+      end
+    end //for i
+  endgenerate
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      ptp_majorSdoId          <= 0;
+      ptp_messageType         <= 0;
+      ptp_minorVersionPTP     <= 0;
+      ptp_versionPTP          <= 0;
+      ptp_messageLength       <= 0;
+      ptp_domainNumber        <= 0;
+      ptp_minorSdoId          <= 0;
+      ptp_flagField           <= 0;
+      ptp_correctionField     <= 0;
+      ptp_messageTypeSpecific <= 0;
+      ptp_sourcePortIdentity  <= 0;
+      ptp_seqId               <= 0;
+    end
+    else if(rx_clk_en_i) begin 
+      ptp_majorSdoId          <= `OR_LANE(ptp_majorSdoId_lane         );
+      ptp_messageType         <= `OR_LANE(ptp_messageType_lane        );
+      ptp_minorVersionPTP     <= `OR_LANE(ptp_minorVersionPTP_lane    );
+      ptp_versionPTP          <= `OR_LANE(ptp_versionPTP_lane         );
+      ptp_messageLength       <= `OR_LANE(ptp_messageLength_lane      );
+      ptp_domainNumber        <= `OR_LANE(ptp_domainNumber_lane       );
+      ptp_minorSdoId          <= `OR_LANE(ptp_minorSdoId_lane         );
+      ptp_flagField           <= `OR_LANE(ptp_flagField_lane          );
+      ptp_correctionField     <= `OR_LANE(ptp_correctionField_lane    );
+      ptp_messageTypeSpecific <= `OR_LANE(ptp_messageTypeSpecific_lane);
+      ptp_sourcePortIdentity  <= `OR_LANE(ptp_sourcePortIdentity_lane );
+      ptp_seqId               <= `OR_LANE(ptp_seqId_lane              );
+    end
+  end
 
 endmodule
