@@ -1051,4 +1051,94 @@ module rx_parse(
     end
   end
 
+  //check ptp version or address matched or not
+  reg   ptp_version_match;
+  wire  ptp_ver_chk_en   = tsu_cfg_i[21];
+  wire [3:0] ptp_version_cfg = tsu_cfg_i[20:17]; 
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n)
+      ptp_version_match <= 0;
+    else if(rx_clk_en_i) begin
+      if(ptp_ver_chk_en == 1'b0)
+        ptp_version_match <= 1;
+      else if(get_sfd_done_z6 == 0 && get_sfd_done_z5 == 1)   //start of next frame.
+        ptp_version_match <= 0;
+      else if((ptp_versionPTP[3:0] == ptp_version_cfg[3:0]) && (eth_count_base_z5 > (ptp_addr_base+2)))
+        ptp_version_match <= 1;
+    end
+  end
+
+  reg   ptp_address_match;  
+  wire  ptp_addr_chk_en = tsu_cfg_i[22];
+
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n)
+      ptp_address_match <= 0;
+    else if(rx_clk_en_i) begin
+      if(ptp_addr_chk_en == 1'b0)
+        ptp_address_match <= 1;
+      else if(get_sfd_done_z6 == 0 && get_sfd_done_z5 == 1)   //start of next frame.
+        ptp_address_match <= 0;
+      else if((ptp_eth_flag & ptp_mac_addr_match) || (ptp_ipv4_flag & ptp_ipv4_addr_match) || (ptp_ipv6_flag & ptp_ipv6_addr_match))
+        ptp_address_match <= 1;
+    end
+  end
+
+  //generate ptpv2 identification outputs 
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n) begin
+      rxts_valid_o <= 0;
+  
+      rx_sourcePortIdentity_o = 0;  
+      rx_flagField_o          = 0;
+      rx_seqId_o              = 0;                 
+      rx_versionPTP_o         = 0;
+      rx_minorVersionPTP_o    = 0;
+      rx_messageType_o        = 4'hf;  
+      rx_majorSdoId_o         = 0;
+    end
+    else if(rx_clk_en_i) begin
+      if(ptp_messageType[3] == 1'b0 && ptp_version_match == 1'b1 && ptp_address_match == 1'b1) begin //event message
+        if(is_ptp_message == 1'b1 && eth_count_base_z5 >= (ptp_addr_base+32))  
+          rxts_valid_o <= 1;
+        else if(get_efd_done_z6 == 1)
+          rxts_valid_o <= 0;
+
+        rx_sourcePortIdentity_o = ptp_sourcePortIdentity;  
+        rx_flagField_o          = ptp_flagField         ;
+        rx_seqId_o              = ptp_seqId             ;                 
+        rx_versionPTP_o         = ptp_versionPTP        ;
+        rx_minorVersionPTP_o    = ptp_minorVersionPTP   ;
+        rx_messageType_o        = ptp_messageType       ;  
+        rx_majorSdoId_o         = ptp_majorSdoId        ;
+      end
+      else begin
+        rxts_valid_o <= 0;
+ 
+        if(get_sfd_done_z6 == 0 && get_sfd_done_z5 == 1) begin
+          rx_sourcePortIdentity_o = 0;  
+          rx_flagField_o          = 0;
+          rx_seqId_o              = 0;                 
+          rx_versionPTP_o         = 0;
+          rx_minorVersionPTP_o    = 0;
+          rx_messageType_o        = 4'hf;  
+          rx_majorSdoId_o         = 0;
+        end     
+      end
+    end
+  end
+  
+  //generate rx interrupt signal
+  always @(posedge rx_clk or negedge rx_rst_n) begin
+    if(!rx_rst_n)
+      int_rx_ptp_o <= 0;
+    else if(rx_clk_en_i) begin
+      if(is_ptp_message == 1'b1 && eth_count_base_z5 >= (ptp_addr_base+32) && ptp_version_match == 1'b1 && ptp_address_match == 1'b1)  
+        int_rx_ptp_o <= 1;
+      else if(get_sfd_done_z6 == 0 && get_sfd_done_z5 == 1)
+        int_rx_ptp_o <= 0;
+    end  
+  end
+  
 endmodule
