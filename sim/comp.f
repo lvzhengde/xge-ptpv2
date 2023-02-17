@@ -10,6 +10,7 @@
 ../rtl/tsu/rx_tse.v
 ../rtl/tsu/tx_tse.v
 ../rtl/tsu/rx_parse.v
+../rtl/tsu/rx_emb_ts.v
 ../rtl/tsu/tx_parse.v
 
 ../rtl/cvt/gfe_cvt.v

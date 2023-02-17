@@ -157,7 +157,8 @@ module rx_parse(
  reg  [10:0]   eth_count_base, eth_count_base_z1, eth_count_base_z2, eth_count_base_z3, 
                eth_count_base_z4, eth_count_base_z5;
  
-  //note: the eth_count of the first octet after SFD is set to 8 
+  //note: the eth_count of the first octet after SFD is set to 7 
+  //eth_count_base aligned with rxd_z1 due to one sample delay
   always @(posedge rx_clk or negedge rx_rst_n) begin
     if(!rx_rst_n)
       eth_count_base <= 0;
