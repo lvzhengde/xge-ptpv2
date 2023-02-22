@@ -102,7 +102,7 @@ module rx_emb_ts(
           if(eth_count == (ptp_addr_base_i+14)) rxd_lane = correctionField[15:8];  
           if(eth_count == (ptp_addr_base_i+15)) rxd_lane = correctionField[7:0];   
 
-          if(eth_count == (ptp_addr_base_i+16)) rxd_lane = sfd_timestamp_i[31:24];            //messageTypeSpecific field2, 4 octets
+          if(eth_count == (ptp_addr_base_i+16)) rxd_lane = sfd_timestamp_i[31:24];   //messageTypeSpecific, 4 octets
           if(eth_count == (ptp_addr_base_i+17)) rxd_lane = sfd_timestamp_i[23:16];
           if(eth_count == (ptp_addr_base_i+18)) rxd_lane = sfd_timestamp_i[15:8];
           if(eth_count == (ptp_addr_base_i+19)) rxd_lane = sfd_timestamp_i[7:0];

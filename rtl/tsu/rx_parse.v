@@ -10,19 +10,27 @@ module rx_parse(
   input               rx_clk,
   input               rx_rst_n,
   input               rx_clk_en_i,            //for adapting to gmii/mii
+
   input  [63:0]       rxd_i,
   input  [7:0]        rxc_i,
-  output [63:0]       rxd_o,
-  output [7:0]        rxc_o,
 
-  //timestamp input
-  input  [79:0]       sfd_timestamp_i,       //48 bits seconds + 32 bits nanoseconds
-  input  [15:0]       sfd_timestamp_frac_ns, //16 bit fractional nanoseconds 
+  //signals to rx_emb_ts
+  output [63:0]       rxd_emb_o,
+  output [7:0]        rxc_emb_o,
+
+  output  [10:0]      eth_count_base_o,      //aligned with rxd_i now
+  output  [10:0]      ptp_addr_base_o,
+  output  [3:0]       ptp_messageType_o,          
+  output  [63:0]      ptp_correctionField_o,
+  output              is_ptp_message_o,  
+  output              get_sfd_done_o,
+
+  //signals to rx_rcst
+  output [63:0]       rxd_crc_p3_o,
+  output [7:0]        rxc_crc_p3_o,
 
   //configuration register i/f
   input  [31:0]       tsu_cfg_i,
-  input  [31:0]       link_delay_i,
-  input  [31:0]       ingress_asymmetry_i,
   
   //timestamp i/f, sync to rtc_clk
   output reg          rxts_trig_o,
@@ -157,7 +165,7 @@ module rx_parse(
  reg  [10:0]   eth_count_base, eth_count_base_z1, eth_count_base_z2, eth_count_base_z3, 
                eth_count_base_z4, eth_count_base_z5;
  
-  //note: the eth_count of the first octet after SFD is set to 7 
+  //note: the eth_count of SFD is set to 7 
   //eth_count_base aligned with rxd_z1 due to one sample delay
   always @(posedge rx_clk or negedge rx_rst_n) begin
     if(!rx_rst_n)
@@ -1142,4 +1150,19 @@ module rx_parse(
     end  
   end
   
+  //signals to rx_emb_ts
+  assign rxd_emb_o = rxd_z6;
+  assign rxc_emb_o = rxc_z6;
+
+  assign eth_count_base_o      = eth_count_base_z5;      //aligned with rxd_i now
+  assign ptp_addr_base_o       = ptp_addr_base;
+  assign ptp_messageType_o     = ptp_messageType;           
+  assign ptp_correctionField_o = ptp_correctionField;
+  assign is_ptp_message_o      = is_ptp_message;  
+  assign get_sfd_done_o        = get_sfd_done_z6;
+
+  //signals to rx_rcst
+  assign rxd_crc_p3_o = rxd_z4;
+  assign rxc_crc_p3_o = rxc_z4;
+
 endmodule
