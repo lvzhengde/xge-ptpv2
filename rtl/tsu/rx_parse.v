@@ -793,8 +793,8 @@ module rx_parse(
           if(eth_count == (ipv6_addr_base_z1+38))  ipv6_da_tmp[15:8]       = rxd_lane;                           
           if(eth_count == (ipv6_addr_base_z1+39))  ipv6_da_tmp[7:0]        = rxd_lane;          
                                                                                                                          
-          if(eth_count == (ipv6_addr_base_z1+42))  ipv6_udp_port_tmp[15:8]  = rxd_lane;                           
-          if(eth_count == (ipv6_addr_base_z1+43))  ipv6_udp_port_tmp[7:0]   = rxd_lane;    
+          if(eth_count == (ipv6_addr_base_z1+42))  ipv6_udp_port_tmp[15:8] = rxd_lane;                           
+          if(eth_count == (ipv6_addr_base_z1+43))  ipv6_udp_port_tmp[7:0]  = rxd_lane;    
         end
         else if(get_efd_done_z4 == 1)  begin
           ipv6_da_tmp             = 128'h0;
@@ -1099,13 +1099,13 @@ module rx_parse(
     if(!rx_rst_n) begin
       rxts_valid_o <= 0;
   
-      rx_sourcePortIdentity_o = 0;  
-      rx_flagField_o          = 0;
-      rx_seqId_o              = 0;                 
-      rx_versionPTP_o         = 0;
-      rx_minorVersionPTP_o    = 0;
-      rx_messageType_o        = 4'hf;  
-      rx_majorSdoId_o         = 0;
+      rx_sourcePortIdentity_o <= 0;  
+      rx_flagField_o          <= 0;
+      rx_seqId_o              <= 0;                 
+      rx_versionPTP_o         <= 0;
+      rx_minorVersionPTP_o    <= 0;
+      rx_messageType_o        <= 4'hf;  
+      rx_majorSdoId_o         <= 0;
     end
     else if(rx_clk_en_i) begin
       if(ptp_messageType[3] == 1'b0 && ptp_version_match == 1'b1 && ptp_address_match == 1'b1) begin //event message
@@ -1114,25 +1114,25 @@ module rx_parse(
         else if(get_efd_done_z6 == 1)
           rxts_valid_o <= 0;
 
-        rx_sourcePortIdentity_o = ptp_sourcePortIdentity;  
-        rx_flagField_o          = ptp_flagField         ;
-        rx_seqId_o              = ptp_seqId             ;                 
-        rx_versionPTP_o         = ptp_versionPTP        ;
-        rx_minorVersionPTP_o    = ptp_minorVersionPTP   ;
-        rx_messageType_o        = ptp_messageType       ;  
-        rx_majorSdoId_o         = ptp_majorSdoId        ;
+        rx_sourcePortIdentity_o <= ptp_sourcePortIdentity;  
+        rx_flagField_o          <= ptp_flagField         ;
+        rx_seqId_o              <= ptp_seqId             ;                 
+        rx_versionPTP_o         <= ptp_versionPTP        ;
+        rx_minorVersionPTP_o    <= ptp_minorVersionPTP   ;
+        rx_messageType_o        <= ptp_messageType       ;  
+        rx_majorSdoId_o         <= ptp_majorSdoId        ;
       end
       else begin
         rxts_valid_o <= 0;
  
         if(get_sfd_done_z6 == 0 && get_sfd_done_z5 == 1) begin
-          rx_sourcePortIdentity_o = 0;  
-          rx_flagField_o          = 0;
-          rx_seqId_o              = 0;                 
-          rx_versionPTP_o         = 0;
-          rx_minorVersionPTP_o    = 0;
-          rx_messageType_o        = 4'hf;  
-          rx_majorSdoId_o         = 0;
+          rx_sourcePortIdentity_o <= 0;  
+          rx_flagField_o          <= 0;
+          rx_seqId_o              <= 0;                 
+          rx_versionPTP_o         <= 0;
+          rx_minorVersionPTP_o    <= 0;
+          rx_messageType_o        <= 4'hf;  
+          rx_majorSdoId_o         <= 0;
         end     
       end
     end
