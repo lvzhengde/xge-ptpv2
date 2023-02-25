@@ -14,6 +14,8 @@
 ../rtl/tsu/rx_rcst.v
 ../rtl/tsu/xge_crc.v
 ../rtl/tsu/tx_parse.v
+../rtl/tsu/tx_emb_ts.v
+../rtl/tsu/tx_rcst.v
 
 ../rtl/cvt/gfe_cvt.v
 ../rtl/cvt/xgmii_dr2sr.v

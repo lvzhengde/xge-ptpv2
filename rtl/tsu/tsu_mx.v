@@ -175,7 +175,7 @@ module tsu_mx(
 
     //timestamp input
     .sfd_timestamp_i         (rx_timestamp        ),       
-    .sfd_timestamp_frac_ns   (rx_timestamp_frac_ns), 
+    .sfd_timestamp_frac_ns_i (rx_timestamp_frac_ns), 
 
     //configuration register i/f
     .tsu_cfg_i               (tsu_cfg_i          ),
@@ -337,7 +337,7 @@ module tsu_mx(
   
     //timestamp input
     .sfd_timestamp_i         (corrected_tx_timestamp),       
-    .sfd_timestamp_frac_ns   (tx_timestamp_frac_ns), 
+    .sfd_timestamp_frac_ns_i (tx_timestamp_frac_ns), 
   
     //configuration register i/f
     .tsu_cfg_i               (tsu_cfg_i         ),

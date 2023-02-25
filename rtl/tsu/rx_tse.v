@@ -16,8 +16,8 @@ module rx_tse(
   output [7:0]        rxc_o,
 
   //timestamp input
-  input  [79:0]       sfd_timestamp_i,       //48 bits seconds + 32 bits nanoseconds
-  input  [15:0]       sfd_timestamp_frac_ns, //16 bit fractional nanoseconds 
+  input  [79:0]       sfd_timestamp_i,         //48 bits seconds + 32 bits nanoseconds
+  input  [15:0]       sfd_timestamp_frac_ns_i, //16 bit fractional nanoseconds 
 
   //configuration register i/f
   input  [31:0]       tsu_cfg_i,
