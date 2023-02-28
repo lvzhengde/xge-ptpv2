@@ -220,18 +220,37 @@ module tx_emb_ts(
     end //for i
   endgenerate
 
+  //delay outputs two samples to facilitate alteration of packet
+  reg  [7:0]  txc_tmp_z1;
+  reg  [63:0] txd_tmp_z1;
+
+  always @(posedge tx_clk or negedge tx_rst_n) begin  
+    if(!tx_rst_n) begin
+      txc_z1  <= 8'h0;
+      txd_z1  <= 64'h0;
+    end
+    else if(tx_clk_en_i) begin  
+      txc_z1  <= txc_tmp;
+      txd_z1  <= txd_tmp;
+    end
+  end
+
   always @(posedge tx_clk or negedge tx_rst_n) begin  
     if(!tx_rst_n) begin
       txc_o  <= 8'h0;
       txd_o  <= 64'h0;
+
+      eth_count_base_o <= 0;
+      get_sfd_done_o   <= 0;
     end
     else if(tx_clk_en_i) begin  
-      txc_o  <= txc_tmp;
-      txd_o  <= txd_tmp;
+      txc_o  <= txc_tmp_z1;
+      txd_o  <= txd_tmp_z1;
+
+      eth_count_base_o <= eth_count_base_z4;
+      get_sfd_done_o   <= get_sfd_done_z4;
     end
   end
 
-  assign eth_count_base_o = eth_count_base_z4;
-  assign get_sfd_done_o   = get_sfd_done_z4;
 
 endmodule

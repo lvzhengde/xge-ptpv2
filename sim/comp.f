@@ -16,6 +16,7 @@
 ../rtl/tsu/tx_parse.v
 ../rtl/tsu/tx_emb_ts.v
 ../rtl/tsu/tx_rcst.v
+../rtl/tsu/ipv6_udp_chksum.v
 
 ../rtl/cvt/gfe_cvt.v
 ../rtl/cvt/xgmii_dr2sr.v

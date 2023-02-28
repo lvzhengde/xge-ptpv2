@@ -81,8 +81,10 @@ module tx_rcst (
     else if(tx_clk_en_i) begin
       if(is_tc == 1'b0 && ptp_messageType_i[3:0] == 4'h0)    //ordinary or boundary clock, sync message
         correctionField <= $signed(correctionField_i) + $signed({48'h0, sfd_timestamp_frac_ns_i[15:0]});
-      else                   
+      else if(emb_ingressTime_en)                  
         correctionField <= $signed(correctionField_i) + $signed({{16{diff_time[31]}}, diff_time[31:0], 16'b0});
+      else
+        correctionField <= correctionField_i;
     end 
   end
 
@@ -96,8 +98,6 @@ module tx_rcst (
   //use data input delayed 6(parse)+4 cycles, from tx_emb_ts 
   reg  [63:0] txd_tmp1;
   reg  [7:0]  txc_tmp1;
-  reg  [63:0] txd_m1, txd_m2, txd_m3, txd_m4, txd_m5;
-  reg  [7:0]  txc_m1, txc_m2, txc_m3, txc_m4, txc_m5;
 
   generate
     for(i = 0; i < 8; i = i+1) begin : INSERT_TS_CF 
@@ -149,6 +149,9 @@ module tx_rcst (
     end //for i
   endgenerate
 
+  reg  [63:0] txd_m1, txd_m2, txd_m3, txd_m4;
+  reg  [7:0]  txc_m1, txc_m2, txc_m3, txc_m4;
+
   always @(posedge tx_clk or negedge tx_rst_n) begin  
     if(!tx_rst_n) begin
       {txd_m1, txd_m2, txd_m3} <= {3{64'h0}};
@@ -166,18 +169,10 @@ module tx_rcst (
   wire ptp_pkt_chg = (ptp_messageType_i[3:0] == 4'h0 || (ptp_messageType_i[3:0] == 4'h1 && is_tc) || 
        (ptp_messageType_i[3:0] == 4'h2 && is_tc) || ptp_messageType_i[3:0] == 4'h3) && one_step_flag  && is_ptp_message_i;
 
-  reg   get_sfd_done_z1;
   reg  [10:0] eth_count_base_z1, eth_count_base_z2, eth_count_base_z3;  
   wire        ipv6_padchg_flag;
   wire [10:0] chkpad_addr_base ;
   wire [15:0] chksum_pad       ;
-
-  always @ (posedge tx_clk or negedge tx_rst_n) begin
-    if(!tx_rst_n) 
-      get_sfd_done_z1 <= 0;
-    else if(tx_clk_en_i) 
-      get_sfd_done_z1 <= get_sfd_done_i;
-  end
 
   //eth_count_base delay line
   always @(posedge tx_clk or negedge tx_rst_n) begin
@@ -213,7 +208,94 @@ module tx_rcst (
     .chksum_pad_o        (chksum_pad)
   );
 
+  //change udp checksum (ptp over udp/ipv6 or udp/ipv4)
+  reg  [63:0] txd_tmp3;
+  reg  [7:0]  txc_tmp3;
 
+  generate
+    for(i = 0; i < 8; i = i+1) begin : CHG_UDP_CHKSUM 
+      reg [10:0]   eth_count;
+      reg [7:0]    txd_lane;
+
+      always @(*) begin
+        eth_count = eth_count_base_z3 + i;
+      end
+
+      always @(*) begin
+        txd_lane = txd_m3[8*i+7:8*i];
+
+        if(ipv6_padchg_flag == 1'b1 && ptp_pkt_chg == 1'b1) begin  //calculate udp checksum need 2 samples
+          if(eth_count == chkpad_addr_base)   txd_lane = chksum_pad[15:8];
+          if(eth_count == chkpad_addr_base+1) txd_lane = chksum_pad[7:0] ;
+        end
+        
+        //force ipv4 udp checksum to 0 for changed ptp event message
+        if(ipv4_flag_i == 1'b1 && ptp_pkt_chg == 1'b1) begin        
+          if(eth_count == (ipv4_addr_base_i+26)) txd_lane = 0;        
+          if(eth_count == (ipv4_addr_base_i+27)) txd_lane = 0;        
+        end 
+
+        txd_tmp3[8*i+7:8*i] = txd_lane;
+        txc_tmp3[i]         = txc_m3[i];
+      end  //always
+    end //for i
+  endgenerate
+
+  always @(posedge tx_clk or negedge tx_rst_n) begin  
+    if(!tx_rst_n) begin
+      txd_m4 <= 64'h0;
+      txc_m4 <= 8'h0;
+    end
+    else if(tx_clk_en_i) begin  
+      txd_m4 <= txd_tmp3;
+      txc_m4 <= txc_tmp3;
+    end
+  end
+
+  //re-calculate fcs. if frame modified, replace old crc.
+  //indicator used to replace crc
+  reg   get_sfd_done_z1;
+
+  always @ (posedge tx_clk or negedge tx_rst_n) begin
+    if(!tx_rst_n) 
+      get_sfd_done_z1 <= 0;
+    else if(tx_clk_en_i) 
+      get_sfd_done_z1 <= get_sfd_done_i;
+  end
+
+  reg rpl_crc, rpl_crc_m1, rpl_crc_m2, rpl_crc_m3, rpl_crc_m4;
+  always @(*) begin
+    rpl_crc = rpl_crc_m1;
+
+    if(get_sfd_done_i == 1 && get_sfd_done_z1 == 0) //start of frame detected
+      rpl_crc = 0;
+    else if(ptp_pkt_chg == 1'b1)   
+      rpl_crc = 1;
+  end
+
+  always @(posedge tx_clk or negedge tx_rst_n) begin
+    if(!tx_rst_n)
+      {rpl_crc_m1, rpl_crc_m2, rpl_crc_m3, rpl_crc_m4} <= 4'b0;
+    else if(tx_clk_en_i)
+      {rpl_crc_m1, rpl_crc_m2, rpl_crc_m3, rpl_crc_m4} <= {rpl_crc, rpl_crc_m1, rpl_crc_m2, rpl_crc_m3}; 
+  end
+
+  xge_crc tx_xge_crc(
+    .clk              (tx_clk),
+    .rst_n            (tx_rst_n),              
+    .clk_en_i         (tx_clk_en_i),
+    
+    .rpl_flag_i       (rpl_crc_m4),
+
+    .xd_p3_i          (txd_m1),
+    .xc_p3_i          (txc_m1),
+
+    .xd_i             (txd_m4),
+    .xc_i             (txc_m4),
+
+    .xd_o             (txd_o),
+    .xc_o             (txc_o)
+  );
 
 endmodule
 
