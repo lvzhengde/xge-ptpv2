@@ -48,7 +48,7 @@ module tx_tse(
   wire  [3:0]       ptp_messageType;          
   wire  [63:0]      ptp_correctionField;
   wire  [31:0]      ptp_messageTypeSpecific;
-  wire              is_ptp_messager  
+  wire              is_ptp_message;  
   wire  [15:0]      ptp_messageLength;
   wire  [15:0]      ptp_flagField; 
   
@@ -109,7 +109,7 @@ module tx_tse(
   wire [63:0]   emb_correctionField;     //ns * 2^16                               
   wire [31:0]   emb_ingress_time;        //32 bits ns  
   
-  wire [11:0]   emb_ptp_addr_base;
+  wire [10:0]   emb_ptp_addr_base;
   wire [3:0]    emb_ptp_messageType;          
   wire          emb_is_ptp_message;  
   wire [15:0]   emb_ptp_messageLength; 

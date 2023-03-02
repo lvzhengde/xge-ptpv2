@@ -37,7 +37,7 @@ module ipv6_udp_chksum(
       chkpad_addr_base_o <= 11'h0;
     else if(tx_clk_en_i) begin
       if(chksum_calc_en == 1'b1)
-        chkpad_addr_base_o <= ptp_addr_base_i + ptp_messageLength_i;
+        chkpad_addr_base_o <= ptp_addr_base_i + ptp_messageLength_i[10:0];
       else
         chkpad_addr_base_o <= 11'h0;
     end
@@ -212,7 +212,7 @@ module ipv6_udp_chksum(
           addend_tmp = 18'h0;
 
         //udp data, before reach the padding octets
-        if(eth_count >= ptp_addr_base_i && eth_count < (ptp_addr_base_i+ptp_messageLength_i)) 
+        if(eth_count >= ptp_addr_base_i && eth_count < (ptp_addr_base_i+ptp_messageLength_i[10:0])) 
           addend_tmp = {2'b0, txd_lane_z1, txd_lane};
       end //always
 
@@ -285,7 +285,7 @@ module ipv6_udp_chksum(
           add_valid[i] = ((!txc_i[i]) & add_toggle[i]);
 
         //udp data, before reach the padding octets
-        if(eth_count >= ptp_addr_base_i && eth_count < (ptp_addr_base_i+ptp_message_length_i)) 
+        if(eth_count >= ptp_addr_base_i && eth_count < (ptp_addr_base_i+ptp_messageLength_i[10:0])) 
           add_valid[i] = ((!txc_i[i]) & add_toggle[i]);
       end  //always-- add valid
 
@@ -315,7 +315,7 @@ module ipv6_udp_chksum(
   wire   [16:0] m_sum;
   wire   [15:0] chksum_pad_p1;
   
-  reg  [17:0] addend0, addend1, addend2, addend3;
+  reg  [31:0] addend0, addend1, addend2, addend3;
 
   always @(*) begin
     addend0 = (add_valid[0] == 1) ? addend_lane[0] :

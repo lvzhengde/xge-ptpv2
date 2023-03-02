@@ -62,8 +62,8 @@ module tx_rcst (
   wire signed [31:0] diff_time_p1;
   reg  signed [31:0] diff_time;
 
-  assign ingress_time = $signed(ingress_trig_time_i);
-  assign egress_time  = $signed(sfd_time_stamp_i[31:0]);
+  assign ingress_time = $signed(ingress_time_i);
+  assign egress_time  = $signed(sfd_timestamp_i[31:0]);
   assign diff_time_p1 = (egress_time > ingress_time) ? (egress_time - ingress_time) : (egress_time + $signed(`SC2NS) - ingress_time);
 
   //add 1 stage pipeline
@@ -115,16 +115,16 @@ module tx_rcst (
         if(ptp_messageType_i[3:0] == 4'h0 && one_step_flag == 1'b1 && is_ptp_message_i == 1'b1 && !txc_i[i]) begin  
           //origin_timestamp
           if(is_tc == 1'b0)  begin  //ordinary or boundary clock
-            if(eth_count == (ptp_addr_base_i+34))  txd_lane = sfd_time_stamp_i[79:72];    
-            if(eth_count == (ptp_addr_base_i+35))  txd_lane = sfd_time_stamp_i[71:64];          
-            if(eth_count == (ptp_addr_base_i+36))  txd_lane = sfd_time_stamp_i[63:56];    
-            if(eth_count == (ptp_addr_base_i+37))  txd_lane = sfd_time_stamp_i[55:48];    
-            if(eth_count == (ptp_addr_base_i+38))  txd_lane = sfd_time_stamp_i[47:40];    
-            if(eth_count == (ptp_addr_base_i+39))  txd_lane = sfd_time_stamp_i[39:32];    
-            if(eth_count == (ptp_addr_base_i+40))  txd_lane = sfd_time_stamp_i[31:24];    
-            if(eth_count == (ptp_addr_base_i+41))  txd_lane = sfd_time_stamp_i[23:16];    
-            if(eth_count == (ptp_addr_base_i+42))  txd_lane = sfd_time_stamp_i[15:8];     
-            if(eth_count == (ptp_addr_base_i+43))  txd_lane = sfd_time_stamp_i[7:0];  
+            if(eth_count == (ptp_addr_base_i+34))  txd_lane = sfd_timestamp_i[79:72];    
+            if(eth_count == (ptp_addr_base_i+35))  txd_lane = sfd_timestamp_i[71:64];          
+            if(eth_count == (ptp_addr_base_i+36))  txd_lane = sfd_timestamp_i[63:56];    
+            if(eth_count == (ptp_addr_base_i+37))  txd_lane = sfd_timestamp_i[55:48];    
+            if(eth_count == (ptp_addr_base_i+38))  txd_lane = sfd_timestamp_i[47:40];    
+            if(eth_count == (ptp_addr_base_i+39))  txd_lane = sfd_timestamp_i[39:32];    
+            if(eth_count == (ptp_addr_base_i+40))  txd_lane = sfd_timestamp_i[31:24];    
+            if(eth_count == (ptp_addr_base_i+41))  txd_lane = sfd_timestamp_i[23:16];    
+            if(eth_count == (ptp_addr_base_i+42))  txd_lane = sfd_timestamp_i[15:8];     
+            if(eth_count == (ptp_addr_base_i+43))  txd_lane = sfd_timestamp_i[7:0];  
           end  
         end
 
@@ -177,7 +177,7 @@ module tx_rcst (
   //eth_count_base delay line
   always @(posedge tx_clk or negedge tx_rst_n) begin
     if(!tx_rst_n) begin
-       {eth_count_base_z1, eth_count_base_z2, eth_count_base_z3} <= {5{11'h0}};
+       {eth_count_base_z1, eth_count_base_z2, eth_count_base_z3} <= {3{11'h0}};
     end
     else if(tx_clk_en_i) begin
        {eth_count_base_z1, eth_count_base_z2, eth_count_base_z3} <= {eth_count_base_i, eth_count_base_z1, eth_count_base_z2};

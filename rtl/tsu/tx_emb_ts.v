@@ -42,7 +42,7 @@ module tx_emb_ts(
   output reg [63:0]   correctionField_o,     //ns * 2^16                               
   output reg [31:0]   ingress_time_o,        //32 bits ns  
 
-  output reg [11:0]   ptp_addr_base_o,
+  output reg [10:0]   ptp_addr_base_o,
   output reg [3:0]    ptp_messageType_o,          
   output reg          is_ptp_message_o,  
   output reg [15:0]   ptp_messageLength_o, 
