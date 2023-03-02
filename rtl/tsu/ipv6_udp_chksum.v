@@ -312,7 +312,7 @@ module ipv6_udp_chksum(
   wire   [15:0] c_p1;
   wire   [15:0] c_p1_inv;
   wire   [15:0] udp_chksum_inv;
-  wire   [16:0] temp_sum;
+  wire   [16:0] m_sum;
   wire   [15:0] chksum_pad_p1;
   
   reg  [17:0] addend0, addend1, addend2, addend3;
@@ -358,8 +358,8 @@ module ipv6_udp_chksum(
   assign c_p1_inv[15:0] = ~c_p1[15:0];
 
   assign udp_chksum_inv[15:0] = ~udp_chksum[15:0];
-  assign temp_sum[16:0] = {1'b0, udp_chksum_inv[15:0]} + {1'b0, c_p1_inv[15:0]};
-  assign chksum_pad_p1[15:0] = temp_sum[15:0] + {15'b0, temp_sum[16]};
+  assign m_sum[16:0] = {1'b0, udp_chksum_inv[15:0]} + {1'b0, c_p1_inv[15:0]};
+  assign chksum_pad_p1[15:0] = m_sum[15:0] + {15'b0, m_sum[16]};
 
   always @(posedge tx_clk or negedge tx_rst_n) begin
     if(!tx_rst_n) 

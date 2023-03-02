@@ -18,7 +18,7 @@ module rx_parse(
   output [63:0]       rxd_emb_o,
   output [7:0]        rxc_emb_o,
 
-  output  [10:0]      eth_count_base_o,      //aligned with rxd_i now
+  output  [10:0]      eth_count_base_o,      
   output  [10:0]      ptp_addr_base_o,
   output  [3:0]       ptp_messageType_o,          
   output  [63:0]      ptp_correctionField_o,
@@ -1154,7 +1154,7 @@ module rx_parse(
   assign rxd_emb_o = rxd_z6;
   assign rxc_emb_o = rxc_z6;
 
-  assign eth_count_base_o      = eth_count_base_z5;      //aligned with rxd_i now
+  assign eth_count_base_o      = eth_count_base_z5;      
   assign ptp_addr_base_o       = ptp_addr_base;
   assign ptp_messageType_o     = ptp_messageType;           
   assign ptp_correctionField_o = ptp_correctionField;

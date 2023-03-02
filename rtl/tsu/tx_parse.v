@@ -10,18 +10,31 @@ module tx_parse(
   input               tx_clk,
   input               tx_rst_n,
   input               tx_clk_en_i,            //for adapting to gmii/mii
+
   input  [63:0]       txd_i,
   input  [7:0]        txc_i,
-  output [63:0]       txd_o,
-  output [7:0]        txc_o,
 
-  //timestamp input
-  input  [79:0]       sfd_timestamp_i,       //48 bits seconds + 32 bits nanoseconds
-  input  [15:0]       sfd_timestamp_frac_ns, //16 bit fractional nanoseconds 
+  //signals to tx_emb_ts
+  output [63:0]       txd_emb_o,
+  output [7:0]        txc_emb_o,
+
+  output              get_sfd_done_o,
+  output  [10:0]      eth_count_base_o,      
+  output  [10:0]      ptp_addr_base_o,
+  output  [3:0]       ptp_messageType_o,          
+  output  [63:0]      ptp_correctionField_o,
+  output  [31:0]      ptp_messageTypeSpecific_o,
+  output              is_ptp_message_o,  
+  output  [15:0]      ptp_messageLength_o,
+  output  [15:0]      ptp_flagField_o, 
+
+  output              ipv6_flag_o,
+  output  [10:0]      ipv6_addr_base_o,
+  output              ipv4_flag_o,
+  output  [10:0]      ipv4_addr_base_o,
 
   //configuration register i/f
   input  [31:0]       tsu_cfg_i,
-  input  [31:0]       egress_asymmetry_i,
   
   //timestamp i/f, sync to rtc_clk
   output reg          txts_trig_o,
@@ -1112,6 +1125,24 @@ module tx_parse(
     end  
   end
   
+  //signals to tx_emb_ts
+  assign txd_emb_o = txd_z6;
+  assign txc_emb_o = txc_z6;
+
+  assign get_sfd_done_o            = get_sfd_done_z6;
+  assign eth_count_base_o          = eth_count_base_z5;      
+  assign ptp_addr_base_o           = ptp_addr_base;
+  assign ptp_messageType_o         = ptp_messageType;           
+  assign ptp_correctionField_o     = ptp_correctionField;
+  assign ptp_messageTypeSpecific_o = ptp_messageTypeSpecific;
+  assign is_ptp_message_o          = is_ptp_message;  
+  assign ptp_messageLength_o       = ptp_messageLength;
+  assign ptp_flagField_o           = ptp_flagField; 
+
+  assign ipv6_flag_o      = ipv6_flag_z1;     
+  assign ipv6_addr_base_o = ipv6_addr_base_z1;
+  assign ipv4_flag_o      = ipv4_flag_z1;      
+  assign ipv4_addr_base_o = ipv4_addr_base_z1; 
 
 endmodule
 
