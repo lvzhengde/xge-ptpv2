@@ -35,6 +35,7 @@
 
 //testcase files
 ../tc/tc_rtc.v
+../tc/tc_rapid_ptp_test.v
 
 //include files
 +incdir+../rtl/inc

@@ -22,8 +22,8 @@ module tx_rcst (
   input  [79:0]       sfd_timestamp_i,         //48 bits seconds + 32 bits nanoseconds
   input  [15:0]       sfd_timestamp_frac_ns_i, //16 bit fractional nanoseconds 
 
-  output [63:0]       correctionField_i,       //ns * 2^16                               
-  output [31:0]       ingress_time_i,          //32 bits ns  
+  input  [63:0]       correctionField_i,       //ns * 2^16                               
+  input  [31:0]       ingress_time_i,          //32 bits ns  
   
   input  [10:0]       ptp_addr_base_i,
   input               is_ptp_message_i,  
