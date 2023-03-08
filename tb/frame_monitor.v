@@ -37,7 +37,7 @@ module frame_monitor (
 
   initial begin
     #1;
-    logfile  = $fopen("./ptpv2_frame_dump.dat") ;  
+    logfile  = $fopen("./xge-ptpv2-frame.dat") ;  
     broadcast = logfile;   //1 | logfile; 
 
     frame_len = 0 ;

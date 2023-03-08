@@ -226,12 +226,12 @@ module tx_emb_ts(
 
   always @(posedge tx_clk or negedge tx_rst_n) begin  
     if(!tx_rst_n) begin
-      txc_z1  <= 8'h0;
-      txd_z1  <= 64'h0;
+      txc_tmp_z1  <= 8'h0;
+      txd_tmp_z1  <= 64'h0;
     end
     else if(tx_clk_en_i) begin  
-      txc_z1  <= txc_tmp;
-      txd_z1  <= txd_tmp;
+      txc_tmp_z1  <= txc_tmp;
+      txd_tmp_z1  <= txd_tmp;
     end
   end
 

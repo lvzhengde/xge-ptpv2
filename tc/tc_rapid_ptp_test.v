@@ -3,7 +3,7 @@
 --*/
 
 `include "ptpv2_defines.v"
-`define WAVE_DUMP_FILE "./ptpv2.fst"
+`define WAVE_DUMP_FILE "./xge-ptpv2.fst"
 
 module tc_rapid_ptp_test;
 
@@ -27,13 +27,13 @@ module tc_rapid_ptp_test;
   integer     bcst;
   reg         dmp_fin;
 
-  integer     clk_ctl = 1;      //{peer_delay, tc, one_step}       
-  integer     bypass  = 0;            
-  integer     ecsl_mode = 0;    //0: ether2; 1: ipv4/udp; 2: ipv6/udp; 3: pppoe/ipv4/udp; 4: pppoe/ipv6/udp; 
+  wire [4:0]  clk_ctl = 1;      //{peer_delay/e2e, tc/bc, one_step/two-step}       
+  wire        bypass  = 0;            
+  wire [2:0]  ecsl_mode = 0;    //0: ether2; 1: ipv4/udp; 2: ipv6/udp; 3: pppoe/ipv4/udp; 4: pppoe/ipv6/udp; 
                                 //5: snap/ipv4/udp; 6: snap/ipv6/udp; 7: snap/802.3 
-  integer     vlan_tag  = 0;    //0: no vlan tag; 1: single vlan tag; 2: double vlan tag
+  wire [15:0] vlan_tag  = 0;    //0: no vlan tag; 1: single vlan tag; 2: double vlan tag
   
-  reg [2:0]   r_clk_ctl;         
+  reg [4:0]   r_clk_ctl;         
   reg         r_bypass;            
   reg [2:0]   r_ecsl_mode ; 
   reg [1:0]   r_vlan_tag           ; 
@@ -43,7 +43,7 @@ module tc_rapid_ptp_test;
   
   initial
   begin: test_procedure
-    flog  = $fopen("./xge_ptpv2_log.dat") ;   
+    flog  = $fopen("./xge-ptpv2-log.dat") ;   
 
     dmp_fin = 0;
     bcst = 1 | flog;
@@ -132,7 +132,7 @@ module tc_rapid_ptp_test;
         harness.lp_ptpv2_endpoint.clkgen.reset; 
       join       
       
-      #200;
+      #1000;
 
       //slave settings
       force harness.ptpv2_endpoint.ptp_agent.clk_ctl[1:0] = r_clk_ctl[1:0];
@@ -177,12 +177,12 @@ module tc_rapid_ptp_test;
        
             
       for(i = 0; i < 5; i = i+1) begin
-        #(3*harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.rtc_unit_inst.sync_io_inst.INT10MS+1000);
+        #(2*harness.ptpv2_endpoint.ptpv2_core_wrapper.ptpv2_core_inst.rtc_unit_inst.sync_io_inst.INT10MS+1000);
 
         $fdisplay(bcst, "i = %d", i);
-        $fdisplay(bcst, "ptpv2 slave rtc time = %h", slv_rtc);
-        $fdisplay(bcst, "ptpv2 master rtc time = %h", msr_rtc );
-        $fdisplay(bcst, "time difference between slave and master   = %h", rtc_diff);  
+        $fdisplay(bcst, "ptpv2 slave rtc value = %h", slv_rtc);
+        $fdisplay(bcst, "ptpv2 master rtc value = %h", msr_rtc );
+        $fdisplay(bcst, "rtc value difference between slave and master   = %h", rtc_diff);  
         
         if(i == 3 && rtc_diff > 20) begin
           $fdisplay(bcst, "error: time not match. xge-ptpv2 simulation end!");
@@ -212,8 +212,8 @@ module tc_rapid_ptp_test;
   begin
     $dumpfile(`WAVE_DUMP_FILE);
     $dumpvars(0, tc_rapid_ptp_test.harness.lp_ptpv2_endpoint);
-    //$dumpon;
-    $dumpoff;
+    $dumpon;
+    //$dumpoff;
   end
 
   //++

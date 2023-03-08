@@ -58,7 +58,7 @@ module ptp_agent (
   reg          mii_mode;
 `endif
 
-  integer      tx_vlan_tag;
+  reg  [15:0]  tx_vlan_tag;
   reg  [15:0]  tx_length_type;
   reg  [15:0]  tx_ether2_type;
   reg  [15:0]  tx_udp_dport;
@@ -469,7 +469,7 @@ module ptp_agent (
   //++
   //task for sending ptpv2 messages
   //--
-  task ptpv2_send_message(input [15:0] length_type, input [15:0] ether2_type, input integer vlan_tag, input [15:0] udp_dport,
+  task ptpv2_send_message(input [15:0] length_type, input [15:0] ether2_type, input [15:0] vlan_tag, input [15:0] udp_dport,
                     input [3:0] messageType, input [79:0] timestamp, input [15:0] sequenceId, input [4:0] vclk_ctl);
     integer j;
     integer h_l;
@@ -851,7 +851,7 @@ module ptp_agent (
   //++
   // assemble all kinds of frames
   //--
-  function integer assemble_frame(input [15:0] length_type, input [15:0] ether2_type, input integer vlan_tag, input [15:0] udp_dport,
+  function integer assemble_frame(input [15:0] length_type, input [15:0] ether2_type, input [15:0] vlan_tag, input [15:0] udp_dport,
                     input [3:0] messageType, input [79:0] timestamp, input [15:0] sequenceId, input [4:0] vclk_ctl);
     integer len;
     integer m;
