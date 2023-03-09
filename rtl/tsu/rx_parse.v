@@ -1162,7 +1162,7 @@ module rx_parse(
   assign get_sfd_done_o        = get_sfd_done_z6;
 
   //signals to rx_rcst
-  assign rxd_crc_p3_o = rxd_z4;
-  assign rxc_crc_p3_o = rxc_z4;
+  assign rxd_crc_p3_o = rxd_z5;
+  assign rxc_crc_p3_o = rxc_z5;
 
 endmodule

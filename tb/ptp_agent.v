@@ -47,7 +47,7 @@ module ptp_agent (
 
   parameter    CLOCK_MS = 0;     //0: ptp slave, others: ptp master;
 
-  reg  [4:0]   clk_ctl;
+  reg  [5:0]   clk_ctl;
 
   reg   [7:0]  frame_mem[255:0];
   integer      frame_len;
@@ -1003,7 +1003,7 @@ module ptp_agent (
       frame_mem[len+0] = timestamp[31:24]; frame_mem[len+1] = timestamp[23:16]; frame_mem[len+2] = timestamp[15:8]; frame_mem[len+3] = timestamp[7:0];
       len = len + 4;
 
-      if(messageType == 4'h2 || messageType == 4'h3) begin
+      if(messageType == 4'h2 || messageType == 4'h3 || messageType == 4'h9 || messageType == 4'ha) begin
         frame_mem[len+0] = 8'h00; frame_mem[len+1] = 8'h00;
         len = len + 2;
         frame_mem[len+0] = 8'h00; frame_mem[len+1] = 8'h00; frame_mem[len+2] = 8'h00; frame_mem[len+3] = 8'h00;

@@ -9,8 +9,8 @@ ARG_NUM=1
 if [ $# -ne $ARG_NUM ]; then
   echo -e "\nargument number error: $#"
   echo "the number of arguments should be :$ARG_NUM"
-  echo "usage: runcase.sh tc_name"
-  echo -e "for example: runcase.sh tc_rtc\n"
+  echo "usage: ./runcase.sh tc_name"
+  echo -e "for example: ./runcase.sh tc_rapid_ptp_test\n"
   exit 1
 fi
 

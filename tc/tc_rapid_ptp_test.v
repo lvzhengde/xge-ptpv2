@@ -27,16 +27,17 @@ module tc_rapid_ptp_test;
   integer     bcst;
   reg         dmp_fin;
 
-  wire [4:0]  clk_ctl = 1;      //{peer_delay/e2e, tc/bc, one_step/two-step}       
+  wire [5:0]  clk_ctl = 6'b100101; //{emb_ingressTime, bypass, tc_offload, peer_delay/delay_req-response, tc/bc, one_step/two-step}       
+  //wire [5:0]  clk_ctl = 6'b0; 
   wire        bypass  = 0;            
   wire [2:0]  ecsl_mode = 0;    //0: ether2; 1: ipv4/udp; 2: ipv6/udp; 3: pppoe/ipv4/udp; 4: pppoe/ipv6/udp; 
                                 //5: snap/ipv4/udp; 6: snap/ipv6/udp; 7: snap/802.3 
   wire [15:0] vlan_tag  = 0;    //0: no vlan tag; 1: single vlan tag; 2: double vlan tag
   
-  reg [4:0]   r_clk_ctl;         
+  reg [5:0]   r_clk_ctl;         
   reg         r_bypass;            
-  reg [2:0]   r_ecsl_mode ; 
-  reg [1:0]   r_vlan_tag           ; 
+  reg [2:0]   r_ecsl_mode; 
+  reg [1:0]   r_vlan_tag; 
 
   reg [15:0]  length_type;
   reg [15:0]  ether2_type;
@@ -150,8 +151,8 @@ module tc_rapid_ptp_test;
 
 
       fork
-        harness.ptpv2_endpoint.ptp_agent.write_reg({`TSU_BLK_ADDR, `TSU_CFG_ADDR}, {27'b0, bypass, 1'b0, r_clk_ctl[2:0]});
-        harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`TSU_BLK_ADDR, `TSU_CFG_ADDR}, {27'b0, bypass, 1'b0, r_clk_ctl[2:0]});
+        harness.ptpv2_endpoint.ptp_agent.write_reg({`TSU_BLK_ADDR, `TSU_CFG_ADDR}, {26'b0, r_clk_ctl[5:0]});
+        harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`TSU_BLK_ADDR, `TSU_CFG_ADDR}, {26'b0, r_clk_ctl[5:0]});
       join
 
 
@@ -170,8 +171,8 @@ module tc_rapid_ptp_test;
       //set ns offset
       harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `NS_OFST_ADDR}, 32'h1234_5678);
       //set second offset
-      harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, 16'h3ccc});
-      harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, 32'hcccc_cccc);
+      harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR0}, {16'b0, 16'h3abc});
+      harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `SC_OFST_ADDR1}, 32'hdefc_7956);
       //adjustment take effect
       harness.lp_ptpv2_endpoint.ptp_agent.write_reg({`RTC_BLK_ADDR, `RTC_CTL_ADDR}, 32'h1);
        
@@ -211,7 +212,7 @@ module tc_rapid_ptp_test;
   initial
   begin
     $dumpfile(`WAVE_DUMP_FILE);
-    $dumpvars(0, tc_rapid_ptp_test.harness.lp_ptpv2_endpoint);
+    $dumpvars(0, tc_rapid_ptp_test);
     $dumpon;
     //$dumpoff;
   end
