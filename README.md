@@ -23,7 +23,7 @@
 
 项目根目录下几个子目录的内容如下:<br>
 <blockquote>
-esl: SystemC TLM平台及软件设计
+esl: SystemC TLM平台及软件设计<br>
 rtl: RTL设计文件<br>
 tb: 测试平台设计文件<br>
 tc: 测试用例文件<br>
