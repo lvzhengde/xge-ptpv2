@@ -72,23 +72,23 @@ module rx_emb_ts(
 
   
   //input delay
-  reg  [63:0]    rxd_z1;
-  reg  [7:0]     rxc_z1;
-  reg            get_sfd_done_z1;
-  reg  [10:0]    eth_count_base_z1;
+  reg  [63:0]    rxd_z1, rxd_z2;
+  reg  [7:0]     rxc_z1, rxc_z2;
+  reg            get_sfd_done_z1, get_sfd_done_z2;
+  reg  [10:0]    eth_count_base_z1, eth_count_base_z2;
   
   always @(posedge rx_clk or negedge rx_rst_n) begin
     if(!rx_rst_n) begin
-       rxd_z1 <= 64'h0;
-       rxc_z1 <= 8'h0;
-       eth_count_base_z1 <= 11'b0;
-       get_sfd_done_z1 = 0;
+       {rxd_z1, rxd_z2} <= {2{64'h0}};
+       {rxc_z1, rxc_z2} <= {2{8'h0}};
+       {eth_count_base_z1, eth_count_base_z2} <= {2{11'b0}};
+       {get_sfd_done_z1, get_sfd_done_z2} = 2'b0;
     end
     else if(rx_clk_en_i) begin
-       rxd_z1 <= rxd_i; 
-       rxc_z1 <= rxc_i; 
-       eth_count_base_z1 <= eth_count_base_i;
-       get_sfd_done_z1 = get_sfd_done_i;
+       {rxd_z1, rxd_z2} <= {rxd_i, rxd_z1}; 
+       {rxc_z1, rxc_z2} <= {rxc_i, rxc_z1}; 
+       {eth_count_base_z1, eth_count_base_z2} <= {eth_count_base_i, eth_count_base_z1};
+       {get_sfd_done_z1, get_sfd_done_z2} = {get_sfd_done_i, get_sfd_done_z1};
     end
   end
 
@@ -104,13 +104,13 @@ module rx_emb_ts(
       reg [7:0]    rxd_lane;
 
       always @(*) begin
-        eth_count = eth_count_base_z1 + i;
+        eth_count = eth_count_base_z2 + i;
       end
 
       always @(*) begin
-        rxd_lane = rxd_z1[8*i+7:8*i];
+        rxd_lane = rxd_z2[8*i+7:8*i];
 
-        if(embed_enable == 1'b1 && !rxc_z1[i]) begin
+        if(embed_enable == 1'b1 && !rxc_z2[i]) begin
           if(eth_count == (ptp_addr_base_i+8))  rxd_lane = correctionField[63:56];
           if(eth_count == (ptp_addr_base_i+9))  rxd_lane = correctionField[55:48];
           if(eth_count == (ptp_addr_base_i+10)) rxd_lane = correctionField[47:40];
@@ -126,7 +126,7 @@ module rx_emb_ts(
           if(eth_count == (ptp_addr_base_i+19)) rxd_lane = sfd_timestamp_i[7:0];
         end
 
-        rxc_tmp[i]         = rxc_z1[i];
+        rxc_tmp[i]         = rxc_z2[i];
         rxd_tmp[8*i+7:8*i] = rxd_lane;
       end  //always
     end //for i
@@ -142,8 +142,8 @@ module rx_emb_ts(
     else if(rx_clk_en_i) begin
       rxc_o            <= rxc_tmp;
       rxd_o            <= rxd_tmp;
-      eth_count_base_o <= eth_count_base_z1;
-      get_sfd_done_o   <= get_sfd_done_z1;
+      eth_count_base_o <= eth_count_base_z2;
+      get_sfd_done_o   <= get_sfd_done_z2;
     end
   end
 
