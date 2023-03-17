@@ -1,4 +1,3 @@
-
 /*++
 // interrupt controller for xge-ptpv2 core 
 --*/
@@ -21,7 +20,7 @@ module ptp_int_ctl (
   //combined interrupt output
   output reg          int_ptp_o
 );
-  parameter INT_BASE_ADDR = 32'h0;
+  parameter INT_BASE_ADDR = 32'h300;
 
   //delay interrupt inputs
   reg  intxms_z1, intxms_z2, intxms_z3;

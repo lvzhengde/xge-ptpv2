@@ -47,7 +47,7 @@ module rx_ptp_buf (
           rcvd_frame[eth_count[8:0]] = 8'h55;
           eth_count = eth_count + 1;
         end
-        else if(xge_rxc_i[i] == 0  && eth_count < 255) begin
+        else if(xge_rxc_i[i] == 0  && eth_count < 512) begin
           rcvd_frame[eth_count[8:0]] = xge_rxd_i[i*8+7-:8];      
           eth_count = eth_count + 1;
         end
