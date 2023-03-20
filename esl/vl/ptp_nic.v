@@ -45,7 +45,7 @@ module ptp_nic (
   //clocked bus output
   always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
     if(!bus2ip_rst_n) 
-      ip2bus_data <= 0
+      ip2bus_data <= 0;
     else 
       ip2bus_data <= intc_ip2bus_data | txb_ip2bus_data | rxb_ip2bus_data;
   end

@@ -25,7 +25,7 @@ module rx_ptp_buf (
   parameter RX_BUF_BADDR = 32'h1000;
   reg  [7:0]  rcvd_frame[511:0];
   reg  [31:0] rd_buf[127:0]; //buffer to bus
-  reg  [8:0]  eth_count;
+  reg  [9:0]  eth_count;
   reg  [8:0]  frm_len;
   reg         wr_fin, wr_fin_z1, wr_fin_z2;
 
@@ -47,12 +47,12 @@ module rx_ptp_buf (
           rcvd_frame[eth_count[8:0]] = 8'h55;
           eth_count = eth_count + 1;
         end
-        else if(xge_rxc_i[i] == 0  && eth_count < 512) begin
+        else if(xge_rxc_i[i] == 0  && eth_count <= 511) begin
           rcvd_frame[eth_count[8:0]] = xge_rxd_i[i*8+7-:8];      
           eth_count = eth_count + 1;
         end
         else if(xge_rxc_i[i] == 1 && xge_rxd_i[i*8+7-:8] == `TERMINATE) begin
-          frm_len   = eth_count - 8;
+          frm_len   = eth_count[8:0] - 8;
           wr_fin    = 1;
           eth_count = 0;
         end

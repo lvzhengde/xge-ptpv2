@@ -5,7 +5,7 @@
 
 `include "ptpv2_defines.v"
 
-ptp_top ptp_top (
+module ptp_top (
   //tx interface
   input               tx_clk,
   input               tx_rst_n,
