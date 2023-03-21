@@ -95,7 +95,7 @@ module tx_ptp_buf (
     if(!tx_rst_n) 
       cstate <= TX_IDLE;
     else 
-      nstate <= cstate;
+      cstate <= nstate;
   end
 
   //next state switch

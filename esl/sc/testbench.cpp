@@ -16,5 +16,6 @@ void testbench::say_hello()
 void testbench::clean()
 {
     pTop->final();
+    pChannel->final();
 }
 
