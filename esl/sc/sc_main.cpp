@@ -12,6 +12,9 @@
 // Include testbench header
 #include "testbench.h"
 
+#define REPORT_DEFINE_GLOBALS
+#include "reporting.h"  // reporting utilities
+
 int sc_main(int argc, char* argv[]) 
 {
   // Prevent unused variable warnings
