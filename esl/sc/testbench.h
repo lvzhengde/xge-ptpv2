@@ -1,6 +1,8 @@
 #include <systemc.h> 
 #include <verilated.h>
 
+#include "MyBus.h"
+
 // Include model header, generated from Verilating "ptp_top.v"
 #include "Vptp_top.h"
 #include "Vchannel_model.h"
