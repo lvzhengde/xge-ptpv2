@@ -3,7 +3,7 @@
  */
 
 #include "MyTarget.h"                      // our header
-#include "reporting.h"                            // reporting macros
+#include "reporting.h"                     // reporting macros
 
 using namespace  std;
 
@@ -21,7 +21,7 @@ MyTarget::MyTarget
 , m_accept_delay          (accept_delay)            /// init accept delay
 {
 
-  m_memory_socket.register_b_transport(this, &MyTarget::custom_b_transport);
+  m_target_socket.register_b_transport(this, &MyTarget::custom_b_transport);
 
   // register thread process
   SC_THREAD(reset_pbus);           
@@ -106,27 +106,106 @@ MyTarget::custom_b_transport
 , sc_core::sc_time          &delay_time             // delay time
 )
 {
+  /// Access the required attributes from the payload
+  sc_dt::uint64    address   = payload.get_address();     // memory address
+  tlm::tlm_command command   = payload.get_command();     // memory command
+  unsigned char    *data     = payload.get_data_ptr();    // data pointer
+  unsigned  int     length   = payload.get_data_length(); // data length
 
   std::ostringstream  msg;
   msg.str("");
-  sc_core::sc_time      mem_op_time;
+  tlm::tlm_response_status response_status = tlm::TLM_OK_RESPONSE;
 
-  //m_target_memory.operation(payload, mem_op_time);
+  if (payload.get_byte_enable_ptr())
+    response_status = tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE;
+  else if (payload.get_streaming_width() != payload.get_data_length())
+    response_status = tlm::TLM_BURST_ERROR_RESPONSE;
 
-  delay_time = delay_time + m_accept_delay + mem_op_time;
+  switch (command)
+  {
+    /// Setup a TLM_WRITE_COMMAND Informational Message and Write the Data from
+    /// the Generic Payload Data pointer to peripheral registers
+    case tlm::TLM_WRITE_COMMAND:
+    {
+      if (response_status == tlm::TLM_OK_RESPONSE)
+      {
+        for (unsigned int i = 0; i < length; i += 4)
+        {
+          uint32_t wr_addr = address + i; 
+          uint32_t wr_data = 0; 
+
+          if((i+4) <= length)
+            wr_data = (data[i+3]<<24) | (data[i+2]<<16) | (data[i+1]<<8) | data[i];
+          else if((i+3) == length)
+            wr_data = (data[i+2]<<16) | (data[i+1]<<8) | data[i];
+          else if((i+2) == length)
+            wr_data = (data[i+1]<<8) | data[i];
+          else if((i+1) == length)
+            wr_data = data[i];
+
+          write_reg(wr_addr, wr_data);   //write to register
+        }
+        delay_time = delay_time + m_accept_delay;
+        report::print(m_ID, payload, filename);
+      }
+      break;
+    }
+
+    /// Setup a TLM_READ_COMMAND Informational Message and read the Data from
+    /// the peripheral registers to Generic Payload Data pointer
+    case tlm::TLM_READ_COMMAND:
+    {
+      if (response_status == tlm::TLM_OK_RESPONSE)
+      {
+        for (unsigned int i = 0; i < length; i += 4)
+        {
+            uint32_t rd_addr = address + i; 
+            uint32_t rd_data = 0; 
+
+            read_reg(rd_addr, rd_data);  //read from register
+
+            if((i+4) <= length)
+            {
+              data[i] = rd_data & 0xff;
+              data[i+1] = (rd_data >> 8) & 0xff;
+              data[i+2] = (rd_data >> 16) & 0xff;
+              data[i+3] = (rd_data >> 24) & 0xff;
+            }
+            else if((i+3) == length)
+            {
+              data[i] = rd_data & 0xff;
+              data[i+1] = (rd_data >> 8) & 0xff;
+              data[i+2] = (rd_data >> 16) & 0xff;
+            }
+            else if((i+2) == length)
+            {
+              data[i] = rd_data & 0xff;
+              data[i+1] = (rd_data >> 8) & 0xff;
+            }
+            else if((i+1) == length)
+            {
+              data[i] = rd_data & 0xff;
+            }
+        }
+        delay_time = delay_time + m_accept_delay;
+        report::print(m_ID, payload, filename);
+      }
+      break;
+    }
+    default:
+    {
+      msg << "Target: " << m_ID
+          << " Unsupported Command Extension";
+      REPORT_INFO(filename, __FUNCTION__, msg.str());
+      response_status = tlm::TLM_COMMAND_ERROR_RESPONSE;
+      delay_time = sc_core::SC_ZERO_TIME;
+    }
+  } // end switch
+
+  payload.set_response_status(response_status);
 
   msg << "Target: " << m_ID
-      << " Forcing a synch in a temporal decoupled initiator with wait( "
-      << delay_time << "),";
-  REPORT_INFO(filename,  __FUNCTION__, msg.str());
-
-  //wait(delay_time);
-
-  //delay_time = sc_core::SC_ZERO_TIME;
-
-  msg.str("");
-  msg << "Target: " << m_ID
-      << " return from wait will return a delay of "
+      << " Access peripheral registers through Mybus, access delay =  "
       << delay_time;
   REPORT_INFO(filename,  __FUNCTION__, msg.str());
 

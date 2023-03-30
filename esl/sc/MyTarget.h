@@ -60,7 +60,7 @@ class MyTarget
 
   typedef tlm::tlm_generic_payload  *gp_ptr;		///< generic payload pointer
 
-  tlm_utils::simple_target_socket<MyTarget>  m_memory_socket; ///<  target socket
+  tlm_utils::simple_target_socket<MyTarget>  m_target_socket; ///<  target socket
 
   private:
 
