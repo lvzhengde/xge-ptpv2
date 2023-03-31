@@ -17,6 +17,7 @@ MyTarget::MyTarget
 , const sc_core::sc_time    accept_delay            // accept delay (SC_TIME)
 )
 : sc_module               (module_name)             /// init module name
+, m_target_socket         ("m_target_socket")
 , m_ID                    (ID)                      /// init target ID
 , m_accept_delay          (accept_delay)            /// init accept delay
 {

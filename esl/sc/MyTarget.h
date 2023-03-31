@@ -1,4 +1,4 @@
-/*****************************************************************************
+/*
  * special LT target to illustrate bus access to memory mapped peripheral
  * adapted from SystemC TLM example
  */
