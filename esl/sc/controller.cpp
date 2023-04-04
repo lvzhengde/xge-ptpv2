@@ -65,7 +65,34 @@ void controller::isr_thread (void)
 // manipulate transaction through sc_fifo in/out interface
 void controller::transaction_manip(tlm::tlm_generic_payload *ptxn)
 {
+  std::ostringstream  msg;                      ///< log message
+  tlm::tlm_generic_payload  *transaction_ptr;  
 
+  msg.str ("");
+  msg << "Controller: " << m_ID << " Starting Bus Traffic";
+  REPORT_INFO(filename, __FUNCTION__, msg.str());
+
+  // lock sc_fifo interface
+  m_bus_mutex.lock();
+
+  // send I/O access request
+  request_out_port->write(ptxn);
+
+  // get response
+  response_in_port->read(transaction_ptr);
+
+  // unlock sc_fifo interface
+  m_bus_mutex.unlock();
+
+  // check validation
+  if ((transaction_ptr ->get_response_status() != tlm::TLM_OK_RESPONSE)
+      || (transaction_ptr ->get_command() != ptxn->get_command())
+      || (transaction_ptr ->get_address() != ptxn->get_address()))
+  {
+    msg.str ("");
+    msg << m_ID << "Transaction ERROR";
+    REPORT_FATAL(filename, __FUNCTION__, msg.str());   
+  }
 }
 
 // emulate memory I/O for application SW
