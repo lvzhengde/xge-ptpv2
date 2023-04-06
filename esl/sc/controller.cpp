@@ -27,11 +27,14 @@ controller::controller
 
   // build transaction pool 
   m_ptxn = new tlm::tlm_generic_payload;
+  m_data_ptr = new unsigned char [512];
+  m_ptxn->set_data_ptr(m_data_ptr);
 }
 
 /// Destructor
 controller::~controller()
 {
+  delete [] m_data_ptr;
   delete m_ptxn;
 }
 
@@ -72,17 +75,11 @@ void controller::transaction_manip(tlm::tlm_generic_payload *ptxn)
   msg << "Controller: " << m_ID << " Starting Bus Traffic";
   REPORT_INFO(filename, __FUNCTION__, msg.str());
 
-  // lock sc_fifo interface
-  m_bus_mutex.lock();
-
   // send I/O access request
   request_out_port->write(ptxn);
 
   // get response
   response_in_port->read(transaction_ptr);
-
-  // unlock sc_fifo interface
-  m_bus_mutex.unlock();
 
   // check validation
   if ((transaction_ptr ->get_response_status() != tlm::TLM_OK_RESPONSE)
@@ -98,6 +95,24 @@ void controller::transaction_manip(tlm::tlm_generic_payload *ptxn)
 // emulate memory I/O for application SW
 void controller::reg_read(const uint32_t addr, uint32_t &data)
 {
+  //lock shared resources(gp and fifo)
+  m_bus_mutex.lock();
+
+  //set transaction
+  m_ptxn->set_command          ( tlm::TLM_READ_COMMAND        );
+  m_ptxn->set_address          ( addr                  );
+  m_ptxn->set_data_length      ( 4              );
+  m_ptxn->set_streaming_width  ( 4              );
+  m_ptxn->set_response_status  ( tlm::TLM_INCOMPLETE_RESPONSE );
+
+  //access bus through sc_fifo
+  transaction_manip(m_ptxn);
+
+  //convert data
+  data = (m_data_ptr[3]<<24) | (m_data_ptr[2]<<16) | (m_data_ptr[1]<<8) | m_data_ptr[0];
+
+  //unlock shared resources
+  m_bus_mutex.unlock();
 
 }
 

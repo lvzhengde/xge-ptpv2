@@ -54,6 +54,8 @@ class controller                       	// controller
 
   tlm::tlm_generic_payload *m_ptxn;                 // pointer to the unique transaction generic payload
 
+  unsigned char *m_data_ptr;                        // data buffer pointer for transaction, allocated large enough
+
   sc_mutex m_bus_mutex;                             // mutex to bus access through sc_fifo
 
   public:
