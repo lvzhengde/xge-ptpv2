@@ -113,20 +113,97 @@ void controller::reg_read(const uint32_t addr, uint32_t &data)
 
   //unlock shared resources
   m_bus_mutex.unlock();
-
 }
 
 void controller::reg_write(const uint32_t addr, const uint32_t data)
 {
+  //lock shared resources(gp and fifo)
+  m_bus_mutex.lock();
 
+  //set transaction
+  m_ptxn->set_command          ( tlm::TLM_WRITE_COMMAND        );
+  m_ptxn->set_address          ( addr                  );
+  m_ptxn->set_data_length      ( 4              );
+  m_ptxn->set_streaming_width  ( 4              );
+  m_ptxn->set_response_status  ( tlm::TLM_INCOMPLETE_RESPONSE );
+
+  //convert write data
+  m_data_ptr[0] = data & 0xff;
+  m_data_ptr[1] = (data >> 8) & 0xff;
+  m_data_ptr[2] = (data >> 16) & 0xff;
+  m_data_ptr[3] = (data >> 24) & 0xff;
+
+  //access bus through sc_fifo
+  transaction_manip(m_ptxn);
+
+  //unlock shared resources
+  m_bus_mutex.unlock();
 }
 
 void controller::burst_read(const uint32_t addr, unsigned char *data, const unsigned  int length)
 {
+  std::ostringstream  msg;
+  msg.str("");
+  if (length > 512)
+  {
+    msg << "Burst read length > 512 is not supported: " << m_ID;
+    REPORT_WARNING(filename, __FUNCTION__, msg.str());
+    return;
+  }
 
+  //lock shared resources(gp and fifo)
+  m_bus_mutex.lock();
+
+  //set transaction
+  m_ptxn->set_command          ( tlm::TLM_READ_COMMAND        );
+  m_ptxn->set_address          ( addr                  );
+  m_ptxn->set_data_length      ( length              );
+  m_ptxn->set_streaming_width  ( length              );
+  m_ptxn->set_response_status  ( tlm::TLM_INCOMPLETE_RESPONSE );
+
+  //access bus through sc_fifo
+  transaction_manip(m_ptxn);
+
+  //convert data
+  for (unsigned int i = 0; i < length; i++)
+  {
+    data[i] = m_data_ptr[i];         // move data to read buffer
+  }  
+
+  //unlock shared resources
+  m_bus_mutex.unlock();
 }
 
 void controller::burst_write(const uint32_t addr, const unsigned char *data, const unsigned  int length) 
 {
+  std::ostringstream  msg;
+  msg.str("");
+  if (length > 512)
+  {
+    msg << "Burst write length > 512 is not supported: " << m_ID;
+    REPORT_WARNING(filename, __FUNCTION__, msg.str());
+    return;
+  }
 
+  //lock shared resources(gp and fifo)
+  m_bus_mutex.lock();
+
+  //set transaction
+  m_ptxn->set_command          ( tlm::TLM_WRITE_COMMAND        );
+  m_ptxn->set_address          ( addr                  );
+  m_ptxn->set_data_length      ( length              );
+  m_ptxn->set_streaming_width  ( length              );
+  m_ptxn->set_response_status  ( tlm::TLM_INCOMPLETE_RESPONSE );
+
+  //convert data
+  for (unsigned int i = 0; i < length; i++)
+  {
+    m_data_ptr[i] = data[i];         // move data to the generic payload data array
+  }  
+
+  //access bus through sc_fifo
+  transaction_manip(m_ptxn);
+
+  //unlock shared resources
+  m_bus_mutex.unlock();
 }
