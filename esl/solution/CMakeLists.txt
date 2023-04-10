@@ -28,6 +28,7 @@ find_package(SystemCLanguage CONFIG REQUIRED)
 #include_directories(./ $ENV{SYSTEMC_INCLUDE})
 include_directories(
   ../sc 
+  ../sw
   $ENV{SYSTEMC_INCLUDE}
   )
 aux_source_directory(../sc SRC)

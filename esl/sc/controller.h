@@ -7,6 +7,7 @@
 
 #include <systemc.h>
 #include "tlm.h"                        // TLM headers
+#include "ptp_memmap.h"
 
 class controller                       	// controller
 : public sc_core::sc_module             // sc_module
@@ -57,6 +58,14 @@ class controller                       	// controller
   unsigned char *m_data_ptr;                        // data buffer pointer for transaction, allocated large enough
 
   sc_mutex m_bus_mutex;                             // mutex to bus access through sc_fifo
+
+  public:
+
+  sc_event m_ev_xms;    //event for xms interrupt
+
+  sc_event m_ev_rx;     //event for ptp rx interrupt
+
+  sc_event m_ev_tx;     //event for ptp tx interrupt
 
   public:
 
