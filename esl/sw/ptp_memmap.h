@@ -77,6 +77,18 @@
 #define TX_BUF_BADDR    (0x2000)   //ptp tx buffer base address
 #define TX_FLEN_OFT     (0x200)    //tx frame length offset address {16'b0, tx_start, 6'b0, frm_len[8:0]}
 
+//register access interface
+#ifdef CONTROLLER_ITSELF
+#define REG_READ(x, y)        reg_read(x, y)
+#define REG_WRITE(x, y)       reg_write(x, y)
+#define BURST_READ(x, y, z)   burst_read(x, y, z)
+#define BURST_WRITE(x, y, z)  burst_write(x, y, z)
+#else
+#define REG_READ(x, y)        this->m_pController->reg_read(x, y)
+#define REG_WRITE(x, y)       this->m_pController->reg_write(x, y)
+#define BURST_READ(x, y, z)   this->m_pController->burst_read(x, y, z)
+#define BURST_WRITE(x, y, z)  this->m_pController->burst_write(x, y, z)
+#endif
 
 #endif /* __PTP_MEMMAP_H__ */
 

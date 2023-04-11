@@ -3,6 +3,8 @@
  */
 
 #include "reporting.h"               	 // reporting macros
+
+#define CONTROLLER_ITSELF              // it's controller itself
 #include "controller.h"                // controller declarations
 
 using namespace std;
@@ -62,7 +64,24 @@ void controller::controller_thread(void)
 //interrupt service routine thread 
 void controller::isr_thread (void)
 {
+  for(;;)
+  {
+    wait();
 
+    uint32_t addr = INT_BASE_ADDR + INT_STS_OFT;
+    uint32_t data = 0;
+    REG_READ(addr, data);
+
+    uint32_t mask = 1;
+    if(data & mask)        //notify tx interrupt
+      m_ev_tx.notify();
+
+    if(data & (mask << 1)) //notify rx interrupt
+      m_ev_rx.notify();
+
+    if(data & (mask << 2)) //notify xms interrupt
+      m_ev_xms.notify();
+  }
 } 
 
 // manipulate transaction through sc_fifo in/out interface

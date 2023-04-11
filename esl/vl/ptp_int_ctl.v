@@ -92,7 +92,7 @@ module ptp_int_ctl (
 
   always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
     if(!bus2ip_rst_n)
-      int_mask[2:0] <= 3'b0;
+      int_mask[2:0] <= 3'b111;
     else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i == (INT_BASE_ADDR+1))
       int_mask[2:0] <= bus2ip_data_i[2:0];
   end
