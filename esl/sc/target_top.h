@@ -12,32 +12,32 @@ class target_top
 :     public sc_core::sc_module           	    // inherit from SC module base clase
 {
 public:
-    // PORTS
-    sc_in<bool> bus2ip_clk;
-    sc_in<bool> bus2ip_rst_n;
+  // PORTS
+  sc_in<bool> bus2ip_clk;
+  sc_in<bool> bus2ip_rst_n;
 
-    sc_in<bool> tx_clk;
-    sc_in<bool> tx_rst_n;
-    sc_out<uint32_t> xge_txc_o;
-    sc_out<uint64_t> xge_txd_o;
+  sc_in<bool> tx_clk;
+  sc_in<bool> tx_rst_n;
+  sc_out<uint32_t> xge_txc_o;
+  sc_out<uint64_t> xge_txd_o;
 
-    sc_in<bool> rx_clk;
-    sc_in<bool> rx_rst_n;
-    sc_in<uint32_t> xge_rxc_i;
-    sc_in<uint64_t>  xge_rxd_i;
-    
-    sc_in<bool> rtc_clk;
-    sc_in<bool> rtc_rst_n;
-    sc_out<bool> int_ptp_o;
-    sc_in<bool>  pps_i;
-    sc_out<bool> pps_o;
+  sc_in<bool> rx_clk;
+  sc_in<bool> rx_rst_n;
+  sc_in<uint32_t> xge_rxc_i;
+  sc_in<uint64_t> xge_rxd_i;
+  
+  sc_in<bool> rtc_clk;
+  sc_in<bool> rtc_rst_n;
+  sc_out<bool> int_ptp_o;
+  sc_in<bool>  pps_i;
+  sc_out<bool> pps_o;
 
-    // connection signals
-    sc_signal<bool> bus2ip_rd_ce;
-    sc_signal<bool> bus2ip_wr_ce;
-    sc_signal<uint32_t> bus2ip_addr;
-    sc_signal<uint32_t> bus2ip_data;
-    sc_signal<uint32_t>  ip2bus_data;
+  // connection signals
+  sc_signal<bool> bus2ip_rd_ce;
+  sc_signal<bool> bus2ip_wr_ce;
+  sc_signal<uint32_t> bus2ip_addr;
+  sc_signal<uint32_t> bus2ip_data;
+  sc_signal<uint32_t>  ip2bus_data;
 
 public:
   // Constructor for LT target top

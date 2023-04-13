@@ -17,10 +17,12 @@ SC_HAS_PROCESS(controller);
 controller::controller            
 ( sc_core::sc_module_name name                  // instance name
 , const unsigned int    ID                      // initiator ID
+, const unsigned int    sw_type                 // software type, 0: loopback test; 1: PTPd protocol test
 )
 
 : sc_module           ( name              )     /// instance name
 , m_ID                ( ID                )     /// initiator ID
+, m_sw_type           ( sw_type           )     /// software type
 { 
   SC_THREAD(controller_thread);
   

@@ -21,6 +21,7 @@ class controller                       	// controller
   controller                                
   ( sc_core::sc_module_name name            	///< module name for SC
   , const unsigned int  ID               	    ///< initiator ID
+  , const unsigned int  sw_type               ///< software type, 0: loopback test; 1: PTPd protocol test
   );
 
   // destructor
@@ -52,6 +53,8 @@ class controller                       	// controller
   typedef tlm::tlm_generic_payload  *gp_ptr;   	    // pointer to a generic payload
   
   const unsigned int  m_ID;                   	    // initiator ID
+
+  const unsigned int  m_sw_type;                    // 0: loopback test; 1: PTPd protocol test
 
   tlm::tlm_generic_payload *m_ptxn;                 // pointer to the unique transaction generic payload
 

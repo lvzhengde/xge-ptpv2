@@ -15,20 +15,21 @@ static const char *filename = "initiator_top.cpp"; ///< filename for reporting
 initiator_top::initiator_top    		       
 ( sc_core::sc_module_name name                    
 , const unsigned int    ID                        
+, const unsigned int    sw_type          // software type, 0: loopback test; 1: PTPd protocol test
 ) 
   :sc_module           (name) 	         // module instance name
   ,top_initiator_socket                  // Init the socket
-      ("top_initiator_socket")             
+    ("top_initiator_socket")             
   ,m_ID                (ID)              // initiator ID
   ,m_initiator                           // Init initiator
     ("m_initiator"                                            
     ,ID                                  // ID for reporting                                        
     )
   ,m_controller                          // Init controller
-    ("m_traffic_gen"                              
+    ("m_controller"                              
     ,ID                                  // ID for reporting
+    ,sw_type                             // software type
     )
-
 {
   /// Bind ports to m_request_fifo between m_initiator and m_controller
   m_controller.request_out_port   (m_request_fifo);
@@ -44,6 +45,4 @@ initiator_top::initiator_top
   /// Bind int_ptp_i to int_ptp_i hierarchical connection
   m_controller.int_ptp_i(int_ptp_i);
 }
-
-
 
