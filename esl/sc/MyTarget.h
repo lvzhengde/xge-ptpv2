@@ -13,6 +13,7 @@
 
 class MyTarget
 :     public sc_core::sc_module           	    // inherit from SC module base clase
+, virtual public tlm::tlm_fw_transport_if<>   	/// inherit from TLM "forward interface"
 {
   public:
   
@@ -49,10 +50,41 @@ class MyTarget
 
   // b_transport() - Blocking Transport
   void                                                // returns nothing
-  custom_b_transport
+  b_transport
   ( tlm::tlm_generic_payload  &payload                // ref to payload
   , sc_core::sc_time          &delay_time             // delay time
   );
+ 
+  /// Not implemented for this example but required by interface
+  tlm::tlm_sync_enum                                // sync status
+   nb_transport_fw                    
+   ( tlm::tlm_generic_payload &gp                    ///< generic payoad pointer
+   , tlm::tlm_phase           &phase                 ///< transaction phase
+   , sc_core::sc_time         &delay_time            ///< time taken for transport
+   )
+   {
+     return tlm::TLM_COMPLETED;
+   }
+
+  /// Not implemented for this example but required by interface
+  bool                                              // success / failure
+  get_direct_mem_ptr                       
+  ( tlm::tlm_generic_payload   &payload,            // address + extensions
+    tlm::tlm_dmi               &dmi_data            // DMI data
+  )
+  {
+    return false;
+  }
+
+  
+  /// Not implemented for this example but required by interface
+  unsigned int                                      // result
+  transport_dbg                            
+  ( tlm::tlm_generic_payload  &payload              // debug payload
+  )
+  {
+    return 0;
+  }
 
   // Member Variables ===================================================
 
@@ -60,7 +92,9 @@ class MyTarget
 
   typedef tlm::tlm_generic_payload  *gp_ptr;		///< generic payload pointer
 
-  tlm_utils::simple_target_socket<MyTarget>  m_target_socket; ///<  target socket
+  //for hierarchical parent-to-child binding, simple_target_socket is not allowed
+  //tlm_utils::simple_target_socket<MyTarget>  m_target_socket; ///<  target socket
+  tlm::tlm_target_socket<>  m_target_socket; ///<  target socket
 
   private:
 

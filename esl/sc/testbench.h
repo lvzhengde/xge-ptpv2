@@ -1,89 +1,51 @@
-#include <systemc.h> 
-#include <verilated.h>
-
-#include "MyBus.h"
-
-// Include model header, generated from Verilating "ptp_top.v"
-#include "Vptp_top.h"
+/*
+ * Testbench instantiate the ptp_instances and delay channels
+ * according to the setting of m_sw_type. 
+*/
+#include "ptp_instance.h"
 #include "Vchannel_model.h"
 
-SC_MODULE(testbench)
+class testbench
+:     public sc_core::sc_module           	    // inherit from SC module base clase
 { 
-  Vptp_top* pTop;
-  Vchannel_model* pChannel;
+public:
 
-  sc_clock clk; //{"clk", 10, SC_NS, 0.5, 3, SC_NS, true};	
+  ///pointers to the instantiated modules
+  ptp_instance    *pInstance;
+  ptp_instance    *pInstance_lp;
+  Vchannel_model  *pChannel;
+  Vchannel_model  *pChannel_lp;
 
-  sc_clock* ptx_clk;
-  sc_signal<bool> tx_rst_n;
+  ///connection signals
+  sc_clock clk{"clk", 6.4, SC_NS, 0.5, 2, SC_NS, true};       
+  sc_clock clk_lp{"clk_lp", 6.4, SC_NS, 0.5, 2, SC_NS, true}; 
+  sc_signal<bool> rst_n;
+  sc_signal<bool> lp_rst_n;
+
   sc_signal<uint64_t> xge_txd;
   sc_signal<uint32_t> xge_txc;
-
-  sc_clock* prx_clk;
-  sc_signal<bool> rx_rst_n;
   sc_signal<uint64_t> xge_rxd;
   sc_signal<uint32_t> xge_rxc;
-
-  sc_clock* pbus2ip_clk;
-  sc_signal<bool> bus2ip_rst_n;
-  sc_signal<uint32_t> bus2ip_addr;
-  sc_signal<uint32_t> bus2ip_data;
-  sc_signal<bool> bus2ip_rd_ce; 
-  sc_signal<bool> bus2ip_wr_ce; 
-  sc_signal<uint32_t> ip2bus_data;   
-
-  sc_signal<bool> int_ptp;
-  sc_clock* prtc_clk;
-  sc_signal<bool> rtc_rst_n;
   sc_signal<bool> pps_in;
   sc_signal<bool> pps_out;
 
-  SC_CTOR(testbench):
-	clk("clk", 6.4, SC_NS, 0.5, 2, SC_NS, true)
-	{ 
-    //clock decision
-    ptx_clk = &clk;
-    prx_clk = &clk;
-    pbus2ip_clk = &clk;
-    prtc_clk = &clk;
+  ///constructor
+  testbench 
+  ( sc_core::sc_module_name name
+  , const unsigned int  sw_type                  ///< software type, 0: loopback test; 1: PTPd protocol test
+  ); 
 
-    // Construct the Verilated model, from Vptp_top.h generated from Verilating "ptp_top.v"
-    pTop = new Vptp_top{"ptp_top"};
-    pTop->tx_clk(*ptx_clk);
-    pTop->tx_rst_n(tx_rst_n);
-    pTop->xge_txd_o(xge_txd);
-    pTop->xge_txc_o(xge_txc);
+  ///destructor
+  ~testbench();
 
-    pTop->rx_clk(*prx_clk);
-    pTop->rx_rst_n(rx_rst_n);
-    pTop->xge_rxd_i(xge_rxd);
-    pTop->xge_rxc_i(xge_rxc);
+  ///threads
+  void reset_gen();
 
-    pTop->bus2ip_clk(*pbus2ip_clk);   
-    pTop->bus2ip_rst_n(bus2ip_rst_n); 
-    pTop->bus2ip_addr_i(bus2ip_addr);
-    pTop->bus2ip_data_i(bus2ip_data);
-    pTop->bus2ip_rd_ce_i(bus2ip_rd_ce);   
-    pTop->bus2ip_wr_ce_i(bus2ip_wr_ce);  
-    pTop->ip2bus_data_o(ip2bus_data);   
+  void lp_reset_gen();
 
-    pTop->int_ptp_o(int_ptp);
-    pTop->rtc_clk(*prtc_clk);
-    pTop->rtc_rst_n(rtc_rst_n);    
-    pTop->pps_i(pps_in);        
-    pTop->pps_o(pps_out);         
+private:
+  ///member variables
+  const unsigned int  m_sw_type;
 
-    pChannel = new Vchannel_model("delay_channel");
-    pChannel->clk(*ptx_clk);
-    pChannel->xge_rxc_i(xge_txc);
-    pChannel->xge_rxd_i(xge_txd);
-    pChannel->xge_txc_o(xge_rxc);
-    pChannel->xge_txd_o(xge_rxd);
-    
-    SC_THREAD(say_hello); 
-  } 
- 
-  void say_hello();
-	void clean();
 };  
 

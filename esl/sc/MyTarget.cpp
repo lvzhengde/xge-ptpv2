@@ -22,7 +22,9 @@ MyTarget::MyTarget
 , m_accept_delay          (accept_delay)            /// init accept delay
 {
 
-  m_target_socket.register_b_transport(this, &MyTarget::custom_b_transport);
+  //m_target_socket.register_b_transport(this, &MyTarget::custom_b_transport);
+  /// Bind the socket's export to the interface
+  m_target_socket.bind(*this);
 
   // register thread process
   SC_THREAD(reset_pbus);           
@@ -34,6 +36,8 @@ MyTarget::MyTarget
 //--
 
 // thread to initialize and reset peripheral bus
+// set environment variable: export SC_SIGNAL_WRITE_CHECK=DISABLE
+// to disable error "sc_signal cannot have more than one driver"
 void MyTarget::reset_pbus(void)
 {
   //initialize
@@ -102,7 +106,7 @@ void MyTarget::read_reg(const uint32_t addr, uint32_t &data)
 //
 //=============================================================================
 void
-MyTarget::custom_b_transport
+MyTarget::b_transport
 ( tlm::tlm_generic_payload  &payload                // ref to  Generic Payload
 , sc_core::sc_time          &delay_time             // delay time
 )

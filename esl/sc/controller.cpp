@@ -66,13 +66,23 @@ void controller::controller_thread(void)
 //interrupt service routine thread 
 void controller::isr_thread (void)
 {
+  std::ostringstream  msg;                      ///< log message
+
   for(;;)
   {
     wait();
 
+    msg.str ("");
+    msg << "Initiator: " << m_ID << "  Interrupt received! ";
+    REPORT_INFO(filename, __FUNCTION__, msg.str());
+
     uint32_t addr = INT_BASE_ADDR + INT_STS_OFT;
     uint32_t data = 0;
     REG_READ(addr, data);
+
+    msg.str ("");
+    msg << "Initiator: " << m_ID << "  Interrupt status register value =  " << data;
+    REPORT_INFO(filename, __FUNCTION__, msg.str());
 
     uint32_t mask = 1;
     if(data & mask)        //notify tx interrupt
