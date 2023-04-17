@@ -93,7 +93,6 @@ class MyTarget
   typedef tlm::tlm_generic_payload  *gp_ptr;		///< generic payload pointer
 
   //for hierarchical parent-to-child binding, simple_target_socket is not allowed
-  //tlm_utils::simple_target_socket<MyTarget>  m_target_socket; ///<  target socket
   tlm::tlm_target_socket<>  m_target_socket; ///<  target socket
 
   private:

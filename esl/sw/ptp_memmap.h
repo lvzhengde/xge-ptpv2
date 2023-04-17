@@ -77,6 +77,8 @@
 #define TX_BUF_BADDR    (0x2000)   //ptp tx buffer base address
 #define TX_FLEN_OFT     (0x200)    //tx frame length offset address {16'b0, tx_start, 6'b0, frm_len[8:0]}
 
+#define RESET_ADDR      (0xffff)   //write this address to reset peripheral bus
+
 //register access interface
 #ifdef CONTROLLER_ITSELF
 #define REG_READ(x, y)        reg_read(x, y)

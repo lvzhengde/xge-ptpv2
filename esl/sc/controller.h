@@ -62,6 +62,8 @@ class controller                       	// controller
 
   sc_mutex m_bus_mutex;                             // mutex to bus access through sc_fifo
 
+  bool m_has_reset;                                 // has reset or not
+
   public:
 
   sc_event m_ev_xms;    //event for xms interrupt
@@ -72,7 +74,10 @@ class controller                       	// controller
 
   public:
 
-  // Port for interrupt request input
+  /// port for resetting the processor, active low
+  sc_in<bool> proc_rst_n;
+
+  /// Port for interrupt request input
   sc_in<bool> int_ptp_i;
 
   /// Port for requests to the initiator

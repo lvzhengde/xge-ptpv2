@@ -51,5 +51,8 @@ ptp_instance::ptp_instance
   ///connect interrupt signal
   m_target_top.int_ptp_o    (int_ptp);
   m_initiator_top.int_ptp_i (int_ptp);
+
+  /// Bind proc_rst_n to proc_rst_n hierarchical connection
+  m_initiator_top.proc_rst_n(proc_rst_n);
 }
 

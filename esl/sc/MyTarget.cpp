@@ -4,6 +4,7 @@
 
 #include "MyTarget.h"                      // our header
 #include "reporting.h"                     // reporting macros
+#include "ptp_memmap.h"                    // note: use memory address map only
 
 using namespace  std;
 
@@ -21,43 +22,26 @@ MyTarget::MyTarget
 , m_ID                    (ID)                      /// init target ID
 , m_accept_delay          (accept_delay)            /// init accept delay
 {
-
-  //m_target_socket.register_b_transport(this, &MyTarget::custom_b_transport);
   /// Bind the socket's export to the interface
   m_target_socket.bind(*this);
-
-  // register thread process
-  SC_THREAD(reset_pbus);           
-  sensitive << bus2ip_rst_n.neg();
 }
 
 //++
 //peripheral bus operation functions
 //--
 
-// thread to initialize and reset peripheral bus
-// set environment variable: export SC_SIGNAL_WRITE_CHECK=DISABLE
-// to disable error "sc_signal cannot have more than one driver"
+// reset peripheral bus
 void MyTarget::reset_pbus(void)
 {
-  //initialize
   bus2ip_rd_ce_o.write(0);
   bus2ip_wr_ce_o.write(0);
   bus2ip_addr_o.write(0);
   bus2ip_data_o.write(0);
 
-  //reset process
-  for(;;)
-  {
-    wait();   //Resume on negative edge of bus2ip_rst_n
-    if(bus2ip_rst_n.read() == 0)
-    {
-      bus2ip_rd_ce_o.write(0);
-      bus2ip_wr_ce_o.write(0);
-      bus2ip_addr_o.write(0);
-      bus2ip_data_o.write(0);
-    }
-  }
+  std::ostringstream  msg;                      ///< log message
+  msg.str ("");
+  msg << "target: " << m_ID << " Reset Peripheral Bus!";
+  REPORT_INFO(filename, __FUNCTION__, msg.str());
 }
 
 // task to write register
@@ -134,21 +118,28 @@ MyTarget::b_transport
     {
       if (response_status == tlm::TLM_OK_RESPONSE)
       {
-        for (unsigned int i = 0; i < length; i += 4)
+        if(address == RESET_ADDR)
         {
-          uint32_t wr_addr = address + i; 
-          uint32_t wr_data = 0; 
+          reset_pbus();
+        }
+        else
+        {
+          for (unsigned int i = 0; i < length; i += 4)
+          {
+            uint32_t wr_addr = address + i; 
+            uint32_t wr_data = 0; 
 
-          if((i+4) <= length)
-            wr_data = (data[i+3]<<24) | (data[i+2]<<16) | (data[i+1]<<8) | data[i];
-          else if((i+3) == length)
-            wr_data = (data[i+2]<<16) | (data[i+1]<<8) | data[i];
-          else if((i+2) == length)
-            wr_data = (data[i+1]<<8) | data[i];
-          else if((i+1) == length)
-            wr_data = data[i];
+            if((i+4) <= length)
+              wr_data = (data[i+3]<<24) | (data[i+2]<<16) | (data[i+1]<<8) | data[i];
+            else if((i+3) == length)
+              wr_data = (data[i+2]<<16) | (data[i+1]<<8) | data[i];
+            else if((i+2) == length)
+              wr_data = (data[i+1]<<8) | data[i];
+            else if((i+1) == length)
+              wr_data = data[i];
 
-          write_reg(wr_addr, wr_data);   //write to register
+            write_reg(wr_addr, wr_data);   //write to register
+          }
         }
         delay_time = delay_time + m_accept_delay;
         report::print(m_ID, payload, filename);

@@ -30,7 +30,7 @@ target_top::target_top
 {
 
   // Bind target-socket to target-socket hierarchical connection 
-  // m_target.m_target_socket(top_target_socket); //error! binding direction must be parent-to-child
+  // binding direction must be parent-to-child
   top_target_socket.bind(m_target.m_target_socket);
 
   // port connections for m_target

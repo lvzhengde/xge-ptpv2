@@ -23,9 +23,10 @@ controller::controller
 : sc_module           ( name              )     /// instance name
 , m_ID                ( ID                )     /// initiator ID
 , m_sw_type           ( sw_type           )     /// software type
+, m_has_reset         ( false             )     /// reset state or not
 { 
   SC_THREAD(controller_thread);
-  
+
   SC_THREAD(isr_thread);
   sensitive << int_ptp_i.pos();
 
@@ -52,9 +53,22 @@ void controller::controller_thread(void)
   msg << "Initiator: " << m_ID << " Starting PTPd Application";
   REPORT_INFO(filename, __FUNCTION__, msg.str());
   
-  tlm::tlm_generic_payload  *transaction_ptr;   ///< transaction pointer
-  unsigned char             *data_buffer_ptr;   ///< data buffer pointer
-  
+  for(;;)
+  {
+    if(m_has_reset == false) 
+    {
+      uint32_t addr = RESET_ADDR;
+      uint32_t data = 0;
+
+      wait(proc_rst_n.negedge_event()); //wait for activate
+      REG_WRITE(addr, data);            //reset peripheral bus
+      wait(proc_rst_n.posedge_event()); //wait for release
+
+      m_has_reset = true;
+    }
+
+	  wait(10, SC_NS);
+  }
 
   msg.str ("");
   msg << "Controller : " << m_ID << endl 
@@ -118,7 +132,7 @@ void controller::transaction_manip(tlm::tlm_generic_payload *ptxn)
       || (transaction_ptr ->get_address() != ptxn->get_address()))
   {
     msg.str ("");
-    msg << m_ID << "Transaction ERROR";
+    msg << m_ID << " Transaction ERROR";
     REPORT_FATAL(filename, __FUNCTION__, msg.str());   
   }
 }

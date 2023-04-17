@@ -56,7 +56,6 @@ public:
 
   //for hierarchical parent-to-child binding refer to standard SystemC-1666-2011 16.1.1.2
   //and example in page 462 (section 13.2.5)
-  //tlm_utils::simple_target_socket<MyTarget>  top_target_socket; ///<  target socket
   tlm::tlm_target_socket<>  top_target_socket; ///<  target socket
 
 private:

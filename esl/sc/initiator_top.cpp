@@ -44,5 +44,8 @@ initiator_top::initiator_top
 
   /// Bind int_ptp_i to int_ptp_i hierarchical connection
   m_controller.int_ptp_i(int_ptp_i);
+
+  /// Bind proc_rst_n to proc_rst_n hierarchical connection
+  m_controller.proc_rst_n(proc_rst_n);
 }
 

@@ -28,6 +28,9 @@ public:
   
   tlm::tlm_initiator_socket< > top_initiator_socket;
 
+  /// port for resetting the processor, active low
+  sc_in<bool> proc_rst_n;
+
   // Port for interrupt request input
   sc_in<bool> int_ptp_i;
 

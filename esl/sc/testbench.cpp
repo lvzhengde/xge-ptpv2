@@ -41,7 +41,8 @@ testbench::testbench
     pInstance->rtc_rst_n     (rst_n);
     pInstance->pps_i         (pps_in);
     pInstance->pps_o         (pps_out);
-  
+    pInstance->proc_rst_n    (rst_n);
+
     //bind delay channel ports
     pChannel->clk(clk);
     pChannel->xge_rxc_i(xge_txc);

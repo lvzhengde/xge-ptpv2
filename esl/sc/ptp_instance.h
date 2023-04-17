@@ -40,6 +40,9 @@ public:
   sc_in<bool>  pps_i;
   sc_out<bool> pps_o;
 
+  /// port for resetting the processor, active low
+  sc_in<bool> proc_rst_n;
+
   sc_signal<bool> int_ptp;
 
 //Member Variables  ===========================================================
