@@ -42,7 +42,7 @@ void MyInitiator::initiator_thread(void)        ///< initiator thread
   while (true) 
   {
 //=============================================================================
-// Read FIFO to Get new transaction GP from the traffic generator 
+// Read FIFO to Get new transaction GP from the controller
 //=============================================================================
     transaction_ptr = request_in_port->read();  // get request from input fifo
     

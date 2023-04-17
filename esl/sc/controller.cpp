@@ -55,6 +55,8 @@ void controller::controller_thread(void)
   
   for(;;)
   {
+    //don't use (async_)reset_signal_is()
+    //to prevent chaos caused by sc_mutex in the same thread
     if(m_has_reset == false) 
     {
       uint32_t addr = RESET_ADDR;
