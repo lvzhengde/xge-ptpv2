@@ -23,7 +23,7 @@ testbench::testbench
 
   if(sw_type == 0)
   {
-    pInstance = new ptp_instance("ptp_instance", m_sw_type);
+    pInstance = new ptp_instance("ptp_instance", m_sw_type, 1);
     pChannel  = new Vchannel_model("delay_channel");
   
     //bind ptp_instance ports

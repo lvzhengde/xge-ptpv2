@@ -13,12 +13,13 @@ SC_HAS_PROCESS(MyInitiator);
 MyInitiator::MyInitiator                          // constructor
 ( sc_module_name name                             // module name
 , const unsigned int  ID                          // initiator ID
+, const unsigned int  clock_id                    // corresponding to clockIdentity
 )
 : sc_module           (name)                      // initialize module name
 , initiator_socket    ("initiator_socket")        // initiator socket
 , m_delay             (0,sc_core::SC_NS)
 , m_ID                (ID)                        // initialize initiator ID
-
+, m_clock_id          (clock_id)                  // Clock ID
 {                
   tlm_utils::tlm_quantumkeeper::set_global_quantum(sc_core::sc_time(500,sc_core::SC_NS));
   // register thread process
@@ -50,7 +51,8 @@ void MyInitiator::initiator_thread(void)        ///< initiator thread
 
     m_delay = m_quantum_keeper.get_local_time();
     
-    msg << "Initiator: " << m_ID               
+    msg << "Clock ID: " << m_clock_id
+        << " Initiator: " << m_ID               
         << " b_transport(GP, " 
         << m_delay << ")";
     REPORT_INFO(filename,  __FUNCTION__, msg.str());
@@ -62,31 +64,35 @@ void MyInitiator::initiator_thread(void)        ///< initiator thread
     if(gp_status == tlm::TLM_OK_RESPONSE)
     {
        msg.str("");
-       msg << "Initiator: " << m_ID               
-          << " b_transport returned delay = " 
-          << m_delay << " and quantum keeper to be set"
-          << endl << "      ";
+       msg << "Clock ID: " << m_clock_id
+           << " Initiator: " << m_ID               
+           << " b_transport returned delay = " 
+           << m_delay << " and quantum keeper to be set"
+           << endl << "      ";
        REPORT_INFO(filename, __FUNCTION__, msg.str());
  
        m_quantum_keeper.set(m_delay);
        if(m_quantum_keeper.need_sync())
          {
            msg.str("");
-           msg << "Initiator: " << m_ID               
+           msg << "Clock ID: " << m_clock_id
+               << " Initiator: " << m_ID               
                << " the quantum keeper needs synching";
            REPORT_INFO(filename, __FUNCTION__, msg.str());  
            
            m_quantum_keeper.sync();
            
            msg.str("");
-           msg << "Initiator: " << m_ID               
+           msg << "Clock ID: " << m_clock_id
+               << " Initiator: " << m_ID               
                << " return from quantum keeper synch";
            REPORT_INFO(filename, __FUNCTION__, msg.str());
          }
     }
     else
     {
-      msg << "Initiator: " << m_ID               
+      msg << "Clock ID: " << m_clock_id
+          << " Initiator: " << m_ID               
           << " Bad GP status returned = " << gp_status;
        REPORT_WARNING(filename,  __FUNCTION__, msg.str());
     }

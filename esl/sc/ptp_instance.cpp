@@ -8,22 +8,29 @@
 ptp_instance::ptp_instance  
 ( sc_core::sc_module_name name             
   , const unsigned int  sw_type             ///< software type, 0: loopback test; 1: PTPd protocol test
+  , const unsigned int  clock_id            ///< corresponding to clockIdentity
 )
   : sc_core::sc_module                      /// Init SC base
     ( name                                 
+    )
+  , m_clock_id
+    (
+     clock_id
     )
   , m_bus                                   /// Init Simple Bus
     ( "m_bus"                              
     )
   , m_target_top                            /// Initiatlize at/lt target
-    ( "m_target_top"                        // module instance name
-    , 201                                   // Target ID is 201
-    , sc_core::sc_time(20, sc_core::SC_NS)  // accept delay
+    ( "m_target_top"                        /// module instance name
+    , 201                                   /// Target ID is 201, also used as port id 
+    , clock_id                              /// clockIdentity
+    , sc_core::sc_time(20, sc_core::SC_NS)  /// accept delay
     )
   , m_initiator_top                         /// Init Instance 1 of LT initiator
-    ( "m_initiator_top"                     // module instance name
-    , 101                                   // Initiator ID is 101
-    , sw_type                               // software type
+    ( "m_initiator_top"                     /// module instance name
+    , 101                                   /// Initiator ID is 101
+    , sw_type                               /// software type
+    , clock_id                              /// clockIdentity
     )
 {
   /// bind TLM2 initiators to TLM2 target sockets on MyBus

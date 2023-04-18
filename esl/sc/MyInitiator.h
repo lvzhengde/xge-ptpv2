@@ -19,7 +19,8 @@ public:
 // Constructor ================================================================= 
     MyInitiator                                   // constructor
     ( sc_core::sc_module_name name                // module name
-    , const unsigned int  ID                      // < initiator ID
+    , const unsigned int  ID                      // initiator ID
+    , const unsigned int  clock_id                // corresponding to clockIdentity
     );
      
 // Method Declarations =========================================================
@@ -51,6 +52,7 @@ public:
 private:
   tlm::tlm_response_status gp_status;
   unsigned int            m_ID;                     // initiator ID
+  const unsigned int      m_clock_id;               // corresponding to clockIdentity
   sc_core::sc_time        m_end_rsp_delay;          // end response delay
   tlm_utils::tlm_quantumkeeper m_quantum_keeper;
   

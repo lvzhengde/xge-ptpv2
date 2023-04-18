@@ -15,20 +15,24 @@ static const char *filename = "initiator_top.cpp"; ///< filename for reporting
 initiator_top::initiator_top    		       
 ( sc_core::sc_module_name name                    
 , const unsigned int    ID                        
-, const unsigned int    sw_type          // software type, 0: loopback test; 1: PTPd protocol test
+, const unsigned int    sw_type          /// software type, 0: loopback test; 1: PTPd protocol test
+, const unsigned int    clock_id         ///< corresponding to clockIdentity
 ) 
-  :sc_module           (name) 	         // module instance name
-  ,top_initiator_socket                  // Init the socket
+  :sc_module           (name) 	         /// module instance name
+  ,top_initiator_socket                  /// Init the socket
     ("top_initiator_socket")             
-  ,m_ID                (ID)              // initiator ID
-  ,m_initiator                           // Init initiator
+  ,m_ID                (ID)              /// initiator ID
+  ,m_clock_id          (clock_id)        /// Clock ID
+  ,m_initiator                           /// Init initiator
     ("m_initiator"                                            
-    ,ID                                  // ID for reporting                                        
+    ,ID                                  /// ID for reporting                                        
+    ,clock_id
     )
-  ,m_controller                          // Init controller
+  ,m_controller                          /// Init controller
     ("m_controller"                              
-    ,ID                                  // ID for reporting
-    ,sw_type                             // software type
+    ,ID                                  /// ID for reporting
+    ,sw_type                             /// software type
+    ,clock_id                            /// Clock ID 
     )
 {
   /// Bind ports to m_request_fifo between m_initiator and m_controller

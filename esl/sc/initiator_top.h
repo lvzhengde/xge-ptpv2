@@ -19,6 +19,7 @@ public:
   ( sc_core::sc_module_name name                 ///< module name
   , const unsigned int  ID                       ///< initiator ID
   , const unsigned int  sw_type                  ///< software type, 0: loopback test; 1: PTPd protocol test
+  , const unsigned int  clock_id                 ///< corresponding to clockIdentity
   );
 
   
@@ -42,6 +43,7 @@ private:
   sc_core::sc_fifo <gp_ptr>  m_response_fifo;  ///< response SC FIFO
   
   const unsigned int         m_ID;             ///< initiator ID
+  const unsigned int         m_clock_id;       ///< corresponding to clockIdentity
 
   MyInitiator                m_initiator;      ///< TLM initiator instance
   controller                 m_controller;     ///< controller instance

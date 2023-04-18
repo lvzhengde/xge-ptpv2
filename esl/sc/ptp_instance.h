@@ -19,6 +19,7 @@ public:
   ptp_instance 
   ( sc_core::sc_module_name name
   , const unsigned int  sw_type                  ///< software type, 0: loopback test; 1: PTPd protocol test
+  , const unsigned int  clock_id                 ///< corresponding to clockIdentity
   ); 
 
 //ports and signals
@@ -50,6 +51,8 @@ public:
   MyBus<1, 1>             m_bus;                  ///< my simple bus
   target_top              m_target_top;           ///< combined target and ptp hardware top
   initiator_top           m_initiator_top;        ///< initiator emulate processor
+
+  const unsigned int      m_clock_id;             ///< corresponding to clockIdentity
 };
 #endif /*__PTP_INSTANCE_H_ */
 

@@ -18,11 +18,13 @@ controller::controller
 ( sc_core::sc_module_name name                  // instance name
 , const unsigned int    ID                      // initiator ID
 , const unsigned int    sw_type                 // software type, 0: loopback test; 1: PTPd protocol test
+, const unsigned int    clock_id                // corresponding to clockIdentity
 )
 
 : sc_module           ( name              )     /// instance name
 , m_ID                ( ID                )     /// initiator ID
 , m_sw_type           ( sw_type           )     /// software type
+, m_clock_id          ( clock_id          )     /// Clock ID
 , m_has_reset         ( false             )     /// reset state or not
 { 
   SC_THREAD(controller_thread);
@@ -50,7 +52,8 @@ void controller::controller_thread(void)
   std::ostringstream  msg;                      ///< log message
   
   msg.str ("");
-  msg << "Initiator: " << m_ID << " Starting PTPd Application";
+  msg << "Clock ID: " << m_clock_id
+      << " Controller: " << m_ID << " Starting PTPd Application";
   REPORT_INFO(filename, __FUNCTION__, msg.str());
   
   for(;;)
@@ -73,9 +76,10 @@ void controller::controller_thread(void)
   }
 
   msg.str ("");
-  msg << "Controller : " << m_ID << endl 
-  << "=========================================================" << endl 
-  << "            ####  PTPd Application Complete  #### ";
+  msg << "Clock ID: " << m_clock_id
+      << " Controller : " << m_ID << endl 
+      << "=========================================================" << endl 
+      << "            ####  PTPd Application Complete  #### ";
   REPORT_INFO(filename, __FUNCTION__, msg.str());
 } // end controller_thread
 
@@ -89,7 +93,8 @@ void controller::isr_thread (void)
     wait();
 
     msg.str ("");
-    msg << "Initiator: " << m_ID << "  Interrupt received! ";
+    msg << "Clock ID: " << m_clock_id
+        << " Controller: " << m_ID << "  Interrupt received! ";
     REPORT_INFO(filename, __FUNCTION__, msg.str());
 
     uint32_t addr = INT_BASE_ADDR + INT_STS_OFT;
@@ -97,7 +102,8 @@ void controller::isr_thread (void)
     REG_READ(addr, data);
 
     msg.str ("");
-    msg << "Initiator: " << m_ID << "  Interrupt status register value =  " << data;
+    msg << "Clock ID: " << m_clock_id
+        << " Controller: " << m_ID << "  Interrupt status register value =  " << data;
     REPORT_INFO(filename, __FUNCTION__, msg.str());
 
     uint32_t mask = 1;
@@ -119,7 +125,8 @@ void controller::transaction_manip(tlm::tlm_generic_payload *ptxn)
   tlm::tlm_generic_payload  *transaction_ptr;  
 
   msg.str ("");
-  msg << "Controller: " << m_ID << " Starting Bus Traffic";
+  msg << "Clock ID: " << m_clock_id
+      << " Controller: " << m_ID << " Starting Bus Traffic";
   REPORT_INFO(filename, __FUNCTION__, msg.str());
 
   // send I/O access request
@@ -134,7 +141,8 @@ void controller::transaction_manip(tlm::tlm_generic_payload *ptxn)
       || (transaction_ptr ->get_address() != ptxn->get_address()))
   {
     msg.str ("");
-    msg << m_ID << " Transaction ERROR";
+    msg << "Clock ID: " << m_clock_id
+        << " Controller: " << m_ID << " Transaction ERROR";
     REPORT_FATAL(filename, __FUNCTION__, msg.str());   
   }
 }
@@ -193,7 +201,9 @@ void controller::burst_read(const uint32_t addr, unsigned char *data, const unsi
   msg.str("");
   if (length > 512)
   {
-    msg << "Burst read length > 512 is not supported: " << m_ID;
+    msg << "Clock ID: " << m_clock_id
+        << " Controller: " << m_ID 
+        << " Burst read length > 512 is not supported";
     REPORT_WARNING(filename, __FUNCTION__, msg.str());
     return;
   }
@@ -227,7 +237,9 @@ void controller::burst_write(const uint32_t addr, const unsigned char *data, con
   msg.str("");
   if (length > 512)
   {
-    msg << "Burst write length > 512 is not supported: " << m_ID;
+    msg << "Clock ID: " << m_clock_id
+        << " Controller: " << m_ID 
+        << " Burst write length > 512 is not supported";
     REPORT_WARNING(filename, __FUNCTION__, msg.str());
     return;
   }

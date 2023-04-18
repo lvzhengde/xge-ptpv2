@@ -44,6 +44,7 @@ public:
   target_top
   ( sc_core::sc_module_name   module_name           ///< SC module name
   , const unsigned int        ID                    ///< target ID
+  , const unsigned int        clock_id              ///< corresponding to clockIdentity
   , const sc_core::sc_time    accept_delay          ///< accept delay (SC_TIME, SC_NS)
   );
 
@@ -64,6 +65,7 @@ private:
   Vptp_top m_ptp_top;
 
   const unsigned int        m_ID;                   ///< target ID
+  const unsigned int        m_clock_id;             ///< corresponding to clockIdentity
   const sc_core::sc_time    m_accept_delay;         ///< accept delay
 };
 

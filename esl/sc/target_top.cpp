@@ -15,15 +15,18 @@ static const char *filename = "target_top.cpp"; ///< filename for reporting
 target_top::target_top    		       
 ( sc_core::sc_module_name name                    
   , const unsigned int        ID                    ///< target ID
+  , const unsigned int        clock_id              ///< corresponding to clockIdentity
   , const sc_core::sc_time    accept_delay          ///< accept delay (SC_TIME, SC_NS)
 ) 
   :sc_module           (name) 	         // module instance name
   ,top_target_socket   ("top_target_socket")
   ,m_ID                (ID)              // target ID
+  ,m_clock_id          (clock_id)
   ,m_accept_delay      (accept_delay)
   ,m_target
      ("m_target"
       ,ID
+      ,clock_id
       ,accept_delay
      )
   ,m_ptp_top           ("m_ptp_top")

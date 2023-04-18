@@ -14,12 +14,14 @@ SC_HAS_PROCESS(MyTarget);
 ///Constructor
 MyTarget::MyTarget
 ( sc_core::sc_module_name module_name               // module name
-, const unsigned int        ID                      // target ID
+, const unsigned int        ID                      // target ID, corresponding to port id in fact
+, const unsigned int        clock_id                ///< corresponding to clockIdentity
 , const sc_core::sc_time    accept_delay            // accept delay (SC_TIME)
 )
 : sc_module               (module_name)             /// init module name
 , m_target_socket         ("m_target_socket")
 , m_ID                    (ID)                      /// init target ID
+, m_clock_id              (clock_id)
 , m_accept_delay          (accept_delay)            /// init accept delay
 {
   /// Bind the socket's export to the interface
@@ -40,7 +42,8 @@ void MyTarget::reset_pbus(void)
 
   std::ostringstream  msg;                      ///< log message
   msg.str ("");
-  msg << "target: " << m_ID << " Reset Peripheral Bus!";
+  msg << "Clock ID: " << m_clock_id
+      << " Target: " << m_ID << " Reset Peripheral Bus!";
   REPORT_INFO(filename, __FUNCTION__, msg.str());
 }
 
@@ -190,7 +193,8 @@ MyTarget::b_transport
     }
     default:
     {
-      msg << "Target: " << m_ID
+      msg << "Clock ID: " << m_clock_id
+          << " Target: " << m_ID
           << " Unsupported Command Extension";
       REPORT_INFO(filename, __FUNCTION__, msg.str());
       response_status = tlm::TLM_COMMAND_ERROR_RESPONSE;
@@ -200,7 +204,8 @@ MyTarget::b_transport
 
   payload.set_response_status(response_status);
 
-  msg << "Target: " << m_ID
+  msg << "Clock ID: " << m_clock_id
+      << " Target: " << m_ID
       << " Access peripheral registers through Mybus, access delay =  "
       << delay_time;
   REPORT_INFO(filename,  __FUNCTION__, msg.str());
