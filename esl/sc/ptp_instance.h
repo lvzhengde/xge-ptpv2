@@ -47,7 +47,7 @@ public:
   sc_signal<bool> int_ptp;
 
 //Member Variables  ===========================================================
-  private:
+  public:
   MyBus<1, 1>             m_bus;                  ///< my simple bus
   target_top              m_target_top;           ///< combined target and ptp hardware top
   initiator_top           m_initiator_top;        ///< initiator emulate processor

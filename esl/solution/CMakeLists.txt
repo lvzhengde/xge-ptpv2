@@ -38,7 +38,7 @@ add_executable (${CMAKE_PROJECT_NAME} ${SRC})
 target_link_libraries (${CMAKE_PROJECT_NAME} SystemC::systemc)
 
 # Add the Verilated circuit to the target
-verilate(${CMAKE_PROJECT_NAME} SYSTEMC #COVERAGE TRACE
+verilate(${CMAKE_PROJECT_NAME} SYSTEMC #TRACE #COVERAGE
   TOP_MODULE ptp_top
   VERILATOR_ARGS -f ./vlog.f -x-assign fast #--timing  
   SOURCES ../vl/ptp_top.v

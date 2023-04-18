@@ -59,8 +59,6 @@ public:
   //and example in page 462 (section 13.2.5)
   tlm::tlm_target_socket<>  top_target_socket; ///<  target socket
 
-private:
-
   MyTarget m_target;
   Vptp_top m_ptp_top;
 
