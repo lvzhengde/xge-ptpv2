@@ -6,46 +6,61 @@
 // SystemC global header
 #include <systemc.h>
 
-// Include common routines
-#include <verilated.h>
-// for waveform tracing, refer to CMakeLists.txt
-// add "TRACE" option in verilate command
-#if VM_TRACE
-#include <verilated_vcd_sc.h>
-#endif                                                                                                  
-
 // Include testbench header
 #include "testbench.h"
 
 #define REPORT_DEFINE_GLOBALS
 #include "reporting.h"  // reporting utilities
 
+#define TLM_TRACE 1     // dump vcd waveform or not
+
 int sc_main(int argc, char* argv[]) 
 {
   // Prevent unused variable warnings
   if (false && argc && argv) {}
 
-  // Create logs/ directory in case we have traces to put under it
-  Verilated::mkdir("logs");
-
   REPORT_ENABLE_ALL_REPORTING ();
-  
+
   // Construct the testbench model
   unsigned int  sw_type = 0;
 	testbench* pTb = new testbench("tb", sw_type);
 
-  // do one evaluation before enabling waves, in order to allow
-  // SystemC to interconnect everything for testing.
-  sc_start(SC_ZERO_TIME);
-
-#if VM_TRACE
-  cout << "Enabling waves into logs/ptpv2_tlm.vcd...\n";
-  Verilated::traceEverOn(true);
-  VerilatedVcdSc* tfp = new VerilatedVcdSc;
+#if TLM_TRACE
   Vptp_top* pVtop = &pTb->pInstance->m_target_top.m_ptp_top;
-  pVtop->trace(tfp, 99); // Trace 99 levels of hierarchy
-  tfp->open("logs/ptpv2_tlm.vcd");
+  
+	//检查logs目录是否存在，不存在则创建
+	if(access("logs", 0) != 0)
+		system("mkdir logs");
+
+  sc_trace_file *fp = sc_create_vcd_trace_file("logs/ptpv2_tlm");
+
+  sc_trace(fp, pVtop->tx_clk   , "tx_clk"   );
+  sc_trace(fp, pVtop->tx_rst_n , "tx_rst_n" );
+  sc_trace(fp, pVtop->xge_txd_o, "xge_txd_o");
+  sc_trace(fp, pVtop->xge_txc_o, "xge_txc_o");
+
+  sc_trace(fp, pVtop->rx_clk   , "rx_clk"   );
+  sc_trace(fp, pVtop->rx_rst_n , "rx_rst_n" );
+  sc_trace(fp, pVtop->xge_rxd_i, "xge_rxd_i");
+  sc_trace(fp, pVtop->xge_rxc_i, "xge_rxc_i");
+
+  sc_trace(fp, pVtop->bus2ip_clk    , "bus2ip_clk"    );   
+  sc_trace(fp, pVtop->bus2ip_rst_n  , "bus2ip_rst_n"  ); 
+  sc_trace(fp, pVtop->bus2ip_rd_ce_i, "bus2ip_rd_ce_i");   
+  sc_trace(fp, pVtop->bus2ip_wr_ce_i, "bus2ip_wr_ce_i");  
+  sc_trace(fp, pVtop->bus2ip_addr_i , "bus2ip_addr_i" );
+  sc_trace(fp, pVtop->bus2ip_data_i , "bus2ip_data_i" );
+  sc_trace(fp, pVtop->ip2bus_data_o , "ip2bus_data_o" );   
+
+  sc_trace(fp, pVtop->rtc_clk  , "rtc_clk"  );
+  sc_trace(fp, pVtop->rtc_rst_n, "rtc_rst_n");    
+  sc_trace(fp, pVtop->int_ptp_o, "int_ptp_o");
+  sc_trace(fp, pVtop->pps_i    , "pps_i"    );        
+  sc_trace(fp, pVtop->pps_o    , "pps_o"    );           
 #endif
+
+  //Initialize SystemC
+  sc_start(SC_ZERO_TIME);
 
   //sc_start(); // Run until no more activity
   sc_start(1, SC_MS); 
@@ -55,12 +70,9 @@ int sc_main(int argc, char* argv[])
       sc_stop();
   }
 
-#if VM_TRACE
-  if (tfp) {
-      tfp->close();
-      tfp = nullptr;
-  }
-#endif  
+#if TLM_TRACE
+  sc_close_vcd_trace_file(fp);
+#endif
 
   // Return good completion status
   return 0;
