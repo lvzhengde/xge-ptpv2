@@ -31,10 +31,15 @@ include_directories(
   ../sw
   $ENV{SYSTEMC_INCLUDE}
   )
-aux_source_directory(../sc SRC)
+aux_source_directory(../sc SYSC_TLM)
+aux_source_directory(../sw SW_TOP)
 
 # Create a new executable target that will contain all your sources
-add_executable (${CMAKE_PROJECT_NAME} ${SRC})
+add_executable (
+  ${CMAKE_PROJECT_NAME} 
+  ${SYSC_TLM}
+  ${SW_TOP}
+  )
 target_link_libraries (${CMAKE_PROJECT_NAME} SystemC::systemc)
 
 # Add the Verilated circuit to the target

@@ -48,16 +48,17 @@ class controller                       	// controller
   
 //=============================================================================
 // Member Variables 
-	
-  private:
-	  
-  typedef tlm::tlm_generic_payload  *gp_ptr;   	    // pointer to a generic payload
-  
+  public:	
   const unsigned int  m_ID;                   	    // initiator ID
 
   const unsigned int  m_sw_type;                    // 0: loopback test; 1: PTPd protocol test
 
   const unsigned int  m_clock_id;                   // corresponding to clockIdentity
+
+  private:
+	  
+  typedef tlm::tlm_generic_payload  *gp_ptr;   	    // pointer to a generic payload
+  
 
   tlm::tlm_generic_payload *m_ptxn;                 // pointer to the unique transaction generic payload
 

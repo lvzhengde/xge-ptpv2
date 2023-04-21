@@ -2,6 +2,7 @@
  * controller.cpp
  */
 
+#include "loop_back.h"
 #include "reporting.h"               	 // reporting macros
 
 #define CONTROLLER_ITSELF              // it's controller itself
@@ -50,37 +51,32 @@ controller::~controller()
 void controller::controller_thread(void)
 {
   std::ostringstream  msg;                      ///< log message
+
+  MyApp *pApp = NULL;
   
-  msg.str ("");
-  msg << "Clock ID: " << m_clock_id
-      << " Controller: " << m_ID << " Starting PTPd Application";
-  REPORT_INFO(filename, __FUNCTION__, msg.str());
+  if(m_sw_type == 0) //loop back test
+    pApp = new loop_back(this);
   
-  for(;;)
+  //don't use (async_)reset_signal_is()
+  //to prevent chaos caused by sc_mutex in the same thread
+  if(m_has_reset == false) 
   {
-    //don't use (async_)reset_signal_is()
-    //to prevent chaos caused by sc_mutex in the same thread
-    if(m_has_reset == false) 
-    {
-      uint32_t addr = RESET_ADDR;
-      uint32_t data = 0;
+    uint32_t addr = RESET_ADDR;
+    uint32_t data = 0;
 
-      wait(proc_rst_n.negedge_event()); //wait for activate
-      REG_WRITE(addr, data);            //reset peripheral bus
-      wait(proc_rst_n.posedge_event()); //wait for release
+    wait(proc_rst_n.negedge_event()); //wait for activate
+    REG_WRITE(addr, data);            //reset peripheral bus
+    wait(proc_rst_n.posedge_event()); //wait for release
 
-      m_has_reset = true;
-    }
-
-	  wait(10, SC_NS);
+    m_has_reset = true;
   }
 
-  msg.str ("");
-  msg << "Clock ID: " << m_clock_id
-      << " Controller : " << m_ID << endl 
-      << "=========================================================" << endl 
-      << "            ####  PTPd Application Complete  #### ";
-  REPORT_INFO(filename, __FUNCTION__, msg.str());
+  pApp->exec();
+
+  wait(11, SC_MS);
+
+  sc_stop();
+
 } // end controller_thread
 
 //interrupt service routine thread 

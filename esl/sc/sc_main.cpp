@@ -12,7 +12,7 @@
 #define REPORT_DEFINE_GLOBALS
 #include "reporting.h"  // reporting utilities
 
-#define TLM_TRACE 1     // dump vcd waveform or not
+#define TLM_TRACE 0     // dump vcd waveform or not
 
 int sc_main(int argc, char* argv[]) 
 {
@@ -62,8 +62,8 @@ int sc_main(int argc, char* argv[])
   //Initialize SystemC
   sc_start(SC_ZERO_TIME);
 
-  //sc_start(); // Run until no more activity
-  sc_start(1, SC_MS); 
+  sc_start(); // Run until no more activity
+  //sc_start(1, SC_MS); 
 
   if (sc_get_status() == SC_PAUSED) {
       SC_REPORT_INFO("", "sc_stop called to terminate a paused simulation");
