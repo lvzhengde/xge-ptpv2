@@ -5,7 +5,11 @@
 #ifndef _MY_APP_H__
 #define _MY_APP_H__
 
+#include <string>
+
 class controller;
+
+using namespace std;
 
 class MyApp
 {
@@ -26,6 +30,8 @@ class MyApp
   //member variables
   protected:
     controller *m_pController;
+
+    string m_cpu_str;
 };
 
 #endif // _MY_APP_H__

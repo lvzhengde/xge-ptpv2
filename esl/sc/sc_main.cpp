@@ -21,8 +21,34 @@ int sc_main(int argc, char* argv[])
 
   REPORT_ENABLE_ALL_REPORTING ();
 
+  unsigned int  sw_type;
+
+  // Select the application to run
+  char func_sel;
+  cout << "\r\n";
+  cout << "Select the Application" << "\r\n";
+  cout << "0 : Loop Back Test for Local Device" << "\r\n";
+  cout << "1 : PTPv2 Protocol Test" << "\r\n";
+  cout << "Please Input the Selection: "; 
+  cin >> func_sel;
+
+  if(func_sel == '0')
+  {
+    sw_type = 0;
+  }
+  else if(func_sel == '1')
+  {
+    sw_type = 1;
+    cout << "Not Supported Now, Exit!" << "\r\n";
+    exit(1);
+  }
+  else 
+  {
+    cout << "Input Error, Exit!" << "\r\n";
+    exit(1);
+  }
+
   // Construct the testbench model
-  unsigned int  sw_type = 0;
 	testbench* pTb = new testbench("tb", sw_type);
 
 #if TLM_TRACE

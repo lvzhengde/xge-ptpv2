@@ -1,11 +1,6 @@
 #include "loop_back.h"
 #include "controller.h"
 #include "ptp_memmap.h"
-#include "reporting.h"               	 // reporting macros
-
-using namespace std;
-
-static const char *filename = "loop_back.cpp";  ///< filename for reporting
 
 //constructor
 loop_back::loop_back(controller *pController)
@@ -23,12 +18,8 @@ loop_back::~loop_back()
 //initialize related variables
 void loop_back::init()
 {
-  std::ostringstream  msg;                      ///< log message
-  
-  msg.str ("");
-  msg << "Clock ID: " << m_pController->m_clock_id
-      << " Controller: " << m_pController->m_ID << " Starting Loop Back Test!";
-  REPORT_INFO(filename, __FUNCTION__, msg.str());
+  m_cpu_str = "Clock ID: " + to_string(m_pController->m_clock_id) + " Controller: " + to_string(m_pController->m_ID);
+  cout << "\r\n  " << m_cpu_str << " Starting Loop Back Test!" << "\r\n";
   
   wait(200, SC_NS);
 }
@@ -49,14 +40,9 @@ void loop_back::exit()
 {
   wait(200, SC_NS);
 
-  std::ostringstream  msg;                      ///< log message
-
-  msg.str ("");
-  msg << "Clock ID: " << m_pController->m_clock_id
-      << " Controller : " << m_pController->m_ID << endl 
-      << "=========================================================" << endl 
-      << "            ####  Loop Back Test Complete!  #### ";
-  REPORT_INFO(filename, __FUNCTION__, msg.str());
+  cout << "\r\n          "<< m_cpu_str  << "\r\n"
+       << "=========================================================" << "\r\n" 
+       << "            ####  Loop Back Test Complete!  #### " << "\r\n";
 }
 
 //test register read/write
@@ -81,7 +67,7 @@ void loop_back::register_test()
   REG_WRITE(addr, data);
 
   addr = base + RTC_CTL_ADDR;
-  data = 0x1;
+  data = 0x5; //adjust rtc and set timer interval to 7.8125ms //0x1;
   REG_WRITE(addr, data);
   
   //tick increment value
@@ -104,27 +90,27 @@ void loop_back::register_test()
   addr = base + CUR_TM_ADDR0;
   data = 0;
   REG_READ(addr, data);
-  printf("Read from address : %#x, value : %#x \r\n", addr, data);
   second = data;
-  printf("second =  %#x \r\n", second);
 
   addr = base + CUR_TM_ADDR1;
   data = 0;
   REG_READ(addr, data);
-  printf("Read from address : %#x, value : %#x \r\n", addr, data);
   second = (second << 16) + ((data & 0xffff0000) >> 16);
-  printf("second =  %#x \r\n", second);
   nanosecond = data & 0x0000ffff;
-  printf("nanosecond = %#x \r\n", nanosecond);
 
   addr = base + CUR_TM_ADDR2;
   data = 0;
   REG_READ(addr, data);
-  printf("Read from address : %#x, value : %#x \r\n", addr, data);
   nanosecond = (nanosecond << 16) + ((data & 0xffff0000) >> 16);
-  printf("nanosecond =  %#x  \r\n", nanosecond);
+  
+  //print uint64_t using format "%#llx"
+  printf("Current RTC value second = %#llx, nanosecond = %#x \r\n", second, nanosecond);
 
-  printf("Current RTC value second = %#x, nanosecond = %#x \r\n", second, nanosecond);
+  wait(100, SC_NS);
+
+  //wait xms timer event
+  wait(m_pController->m_ev_xms);
+  cout << "\r\n" << "xms timer event received in loop back test!" << "\r\n";
 }
 
 //test frame tx/rx

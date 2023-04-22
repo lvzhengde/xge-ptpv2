@@ -9,8 +9,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(ptpv2_tlm CXX)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_STANDARD 11)  #SystemC may be compiled by C++20
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(verilator HINTS $ENV{VERILATOR_ROOT} ${VERILATOR_ROOT})
 if (NOT verilator_FOUND)
@@ -41,6 +41,13 @@ add_executable (
   ${SW_TOP}
   )
 target_link_libraries (${CMAKE_PROJECT_NAME} SystemC::systemc)
+
+#the C++ standard may be C++11 or C++20
+#The below statement should follow add_executable and target_link_libraries
+set_property(
+  TARGET ${CMAKE_PROJECT_NAME}
+  PROPERTY CXX_STANDARD ${SystemC_CXX_STANDARD}
+)
 
 # Add the Verilated circuit to the target
 verilate(${CMAKE_PROJECT_NAME} SYSTEMC #TRACE #COVERAGE

@@ -56,6 +56,8 @@ void controller::controller_thread(void)
   
   if(m_sw_type == 0) //loop back test
     pApp = new loop_back(this);
+  else
+    sc_stop();
   
   //don't use (async_)reset_signal_is()
   //to prevent chaos caused by sc_mutex in the same thread
@@ -71,10 +73,16 @@ void controller::controller_thread(void)
     m_has_reset = true;
   }
 
+  //run application
   pApp->exec();
 
-  wait(11, SC_MS);
+  //wait for finish
+  wait(100, SC_NS);
 
+  //delete application instance
+  delete pApp;
+
+  //stop simulation
   sc_stop();
 
 } // end controller_thread
@@ -104,13 +112,34 @@ void controller::isr_thread (void)
 
     uint32_t mask = 1;
     if(data & mask)        //notify tx interrupt
+    {
       m_ev_tx.notify();
 
+      msg.str ("");
+      msg << "Clock ID: " << m_clock_id
+          << " Controller: " << m_ID << " PTP TX  Interrupt received! ";
+      REPORT_INFO(filename, __FUNCTION__, msg.str());
+    }
+
     if(data & (mask << 1)) //notify rx interrupt
+    {
       m_ev_rx.notify();
 
+      msg.str ("");
+      msg << "Clock ID: " << m_clock_id
+          << " Controller: " << m_ID << " PTP RX  Interrupt received! ";
+      REPORT_INFO(filename, __FUNCTION__, msg.str());
+    }
+
     if(data & (mask << 2)) //notify xms interrupt
+    {
       m_ev_xms.notify();
+
+      msg.str ("");
+      msg << "Clock ID: " << m_clock_id
+          << " Controller: " << m_ID << " xms Timer Interrupt received! ";
+      REPORT_INFO(filename, __FUNCTION__, msg.str());
+    }
   }
 } 
 
