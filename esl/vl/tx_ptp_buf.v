@@ -88,7 +88,7 @@ module tx_ptp_buf (
 
   reg  [8:0]  eth_count;
   wire [8:0]  tx_octets = (eth_count >= 8) ? eth_count - 8 : 0;
-  wire last_p = ((tx_octets+16) >= frm_len) ? 1 : 0;
+  wire last_p = ((tx_octets+16) > frm_len) ? 1 : 0;
 
   //state transition
   always @(posedge tx_clk or negedge tx_rst_n) begin
@@ -105,12 +105,12 @@ module tx_ptp_buf (
       TX_IDLE:
         if(start_pul == 1'b1)
           nstate = TX_FIRST;
-      TX_FIRST:
+      TX_FIRST:               //transmit START code
         nstate = TX_DATA;
-      TX_DATA:
+      TX_DATA:                //transmit normal data
         if(last_p == 1'b1)
           nstate = TX_LAST;
-      TX_LAST:
+      TX_LAST:                //transmit TERMINATE code
         nstate = TX_IDLE;
     endcase
   end
