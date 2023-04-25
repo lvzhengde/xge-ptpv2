@@ -868,8 +868,7 @@ module ptp_agent (
      
       //destination address
       frame_mem[len+0] = 8'h01;  frame_mem[len+1] = 8'h1b;  frame_mem[len+2] = 8'h19;  frame_mem[len+3] = 8'h00;
-      frame_mem[len+4] = 8'h00;  frame_mem[len+5] = 8'h00;  //correct ptpv2 multicast mac address
-      //frame_mem[len+4] = 8'hff;  frame_mem[len+5] = 8'hff;    //incorrect ptpv2 multicast mac address
+      frame_mem[len+4] = 8'h00;  frame_mem[len+5] = 8'h00;  
       len = len + 6;
 
       //source address
@@ -918,8 +917,7 @@ module ptp_agent (
         len = len + 4;
         frame_mem[len+0] = 192;    frame_mem[len+1] = 168;    frame_mem[len+2] = 1;      frame_mem[len+3] = 11;
         len = len + 4;
-        frame_mem[len+0] = 224;    frame_mem[len+1] = 0;      frame_mem[len+2] = 1;      frame_mem[len+3] = 129; //correct ipv4 multicast address
-        //frame_mem[len+0] = 132;    frame_mem[len+1] = 9;      frame_mem[len+2] = 1;      frame_mem[len+3] = 111; //incorrect ipv4 multicast address
+        frame_mem[len+0] = 224;    frame_mem[len+1] = 0;      frame_mem[len+2] = 1;      frame_mem[len+3] = 129; 
         len = len + 4;
       end
 
@@ -943,8 +941,7 @@ module ptp_agent (
         len = len + 4;
         frame_mem[len+0] = 8'h00;  frame_mem[len+1] = 8'h00;  frame_mem[len+2] = 8'h00;  frame_mem[len+3] = 8'h00;
         len = len + 4;
-        frame_mem[len+0] = 8'h00;  frame_mem[len+1] = 8'h00;  frame_mem[len+2] = 8'h01;  frame_mem[len+3] = 8'h81; //correct ipv6 multicast address
-        //frame_mem[len+0] = 8'hff;  frame_mem[len+1] = 8'hff;  frame_mem[len+2] = 8'hff;  frame_mem[len+3] = 8'hff; //incorrect ipv6 multicast address
+        frame_mem[len+0] = 8'h00;  frame_mem[len+1] = 8'h00;  frame_mem[len+2] = 8'h01;  frame_mem[len+3] = 8'h81; 
         len = len + 4;
       end
 
@@ -1117,7 +1114,6 @@ module ptp_agent (
       release bus2ip_addr_o ;
     end
   endtask
-
 
 endmodule
 
