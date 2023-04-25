@@ -70,6 +70,8 @@ class controller                       	// controller
 
   public:
 
+  sc_event m_ev_rx_all; //event for all received except ptp messages 
+
   sc_event m_ev_xms;    //event for xms interrupt
 
   sc_event m_ev_rx;     //event for ptp rx interrupt

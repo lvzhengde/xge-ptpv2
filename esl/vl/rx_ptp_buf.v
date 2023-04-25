@@ -13,6 +13,8 @@ module rx_ptp_buf (
   input  [63:0]       xge_rxd_i,
   input  [7:0]        xge_rxc_i,
 
+  output              int_rx_all_o,           //received frame besides PTP messages
+
   //32 bits on chip bus access interface
   input               bus2ip_clk   ,
   input               bus2ip_rst_n  ,
@@ -89,5 +91,6 @@ module rx_ptp_buf (
       ip2bus_data_o[31:0] = 32'h0;
   end
 
+  assign int_rx_all_o = wr_fin_z1;
 endmodule
 

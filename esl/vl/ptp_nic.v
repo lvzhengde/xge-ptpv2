@@ -42,6 +42,8 @@ module ptp_nic (
   wire [31:0]         rxb_ip2bus_data;   
   reg  [31:0]         ip2bus_data;   
 
+  wire                int_rx_all;           //received frame besides PTP messages
+
   //clocked bus output
   always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
     if(!bus2ip_rst_n) 
@@ -62,6 +64,7 @@ module ptp_nic (
     .ip2bus_data_o         (intc_ip2bus_data ),  
   
     //interrupt inputs
+    .int_rx_all_i          (int_rx_all  ),
     .intxms_i              (intxms_i    ),
     .int_rx_ptp_i          (int_rx_ptp_i),
     .int_tx_ptp_i          (int_tx_ptp_i),
@@ -78,6 +81,8 @@ module ptp_nic (
                                      
     .xge_rxd_i             (xge_rxd_i),
     .xge_rxc_i             (xge_rxc_i),
+
+    .int_rx_all_o          (int_rx_all),
   
     //32 bits on chip bus access interface
     .bus2ip_clk            (bus2ip_clk    ),

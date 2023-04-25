@@ -12,7 +12,7 @@
 #define REPORT_DEFINE_GLOBALS
 #include "reporting.h"  // reporting utilities
 
-#define TLM_TRACE 1     // dump vcd waveform or not
+#define TLM_TRACE 0     // dump vcd waveform or not
 
 int sc_main(int argc, char* argv[]) 
 {
@@ -20,6 +20,8 @@ int sc_main(int argc, char* argv[])
   if (false && argc && argv) {}
 
   REPORT_ENABLE_ALL_REPORTING ();
+  
+  //REPORT_DISABLE_INFO_REPORTING();
 
   unsigned int  sw_type;
 

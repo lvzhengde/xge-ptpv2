@@ -13,6 +13,7 @@ module ptp_int_ctl (
   output reg [31:0]   ip2bus_data_o ,  
 
   //interrupt inputs
+  input               int_rx_all_i,
   input               intxms_i,
   input               int_rx_ptp_i,
   input               int_tx_ptp_i,
@@ -23,17 +24,20 @@ module ptp_int_ctl (
   parameter INT_BASE_ADDR = 32'h300;
 
   //delay interrupt inputs
+  reg  int_rx_all_z1, int_rx_all_z2, int_rx_all_z3;
   reg  intxms_z1, intxms_z2, intxms_z3;
   reg  int_rx_ptp_z1, int_rx_ptp_z2, int_rx_ptp_z3;
   reg  int_tx_ptp_z1, int_tx_ptp_z2, int_tx_ptp_z3;
 
   always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
     if(!bus2ip_rst_n) begin
+      {int_rx_all_z1, int_rx_all_z2, int_rx_all_z3} <= 3'b0;
       {intxms_z1, intxms_z2, intxms_z3} <= 3'b0;
       {int_rx_ptp_z1, int_rx_ptp_z2, int_rx_ptp_z3} <= 3'b0;
       {int_tx_ptp_z1, int_tx_ptp_z2, int_tx_ptp_z3} <= 3'b0;
     end
     else begin
+      {int_rx_all_z1, int_rx_all_z2, int_rx_all_z3} <= {int_rx_all_i, int_rx_all_z1, int_rx_all_z2};
       {intxms_z1, intxms_z2, intxms_z3} <= {intxms_i, intxms_z1, intxms_z2};
       {int_rx_ptp_z1, int_rx_ptp_z2, int_rx_ptp_z3} <= {int_rx_ptp_i, int_rx_ptp_z1, int_rx_ptp_z2};
       {int_tx_ptp_z1, int_tx_ptp_z2, int_tx_ptp_z3} <= {int_tx_ptp_i, int_tx_ptp_z1, int_tx_ptp_z2};
@@ -73,14 +77,15 @@ module ptp_int_ctl (
   end
 
   //interrupt status register
-  reg  [2:0]  int_status;
+  reg  [3:0]  int_status;
 
   always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
     if(!bus2ip_rst_n)
-      int_status[2:0] <= 3'b0;
+      int_status[3:0] <= 4'b0;
     else if(read_clear_pulse == 1'b1 && bus2ip_addr_z2[31:0] == INT_BASE_ADDR) 
-      int_status[2:0] <= 3'b0;
+      int_status[3:0] <= 4'b0;
     else begin
+      if(int_rx_all_z2 &(~int_rx_all_z3) )   int_status[3] <= 1'b1;
       if(intxms_z2 & (~intxms_z3))           int_status[2] <= 1'b1;
       if(int_rx_ptp_z2 &(~int_rx_ptp_z3) )   int_status[1] <= 1'b1;
       if(int_tx_ptp_z2 &(~int_tx_ptp_z3) )   int_status[0] <= 1'b1;
@@ -88,21 +93,21 @@ module ptp_int_ctl (
   end
 
   //interrupt mask register
-  reg  [2:0]  int_mask;
+  reg  [3:0]  int_mask;
 
   always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
     if(!bus2ip_rst_n)
-      int_mask[2:0] <= 3'b111;
+      int_mask[3:0] <= 4'b1111;
     else if(bus2ip_wr_ce_i == 1'b1 && bus2ip_addr_i == (INT_BASE_ADDR+1))
-      int_mask[2:0] <= bus2ip_data_i[2:0];
+      int_mask[3:0] <= bus2ip_data_i[3:0];
   end
 
   //bus read operation
   always @(*) begin
     if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i == INT_BASE_ADDR)
-      ip2bus_data_o[31:0] = {29'b0, int_status[2:0]};
+      ip2bus_data_o[31:0] = {28'b0, int_status[3:0]};
     else if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i == (INT_BASE_ADDR+1))
-      ip2bus_data_o[31:0] = {29'b0, int_mask[2:0]};
+      ip2bus_data_o[31:0] = {28'b0, int_mask[3:0]};
     else
       ip2bus_data_o[31:0] = 32'h0;
   end
@@ -112,7 +117,7 @@ module ptp_int_ctl (
     if(!bus2ip_rst_n)
       int_ptp_o <= 1'b0;
     else
-      int_ptp_o <= |(int_status[2:0] & int_mask[2:0]);
+      int_ptp_o <= |(int_status[3:0] & int_mask[3:0]);
   end
 
 endmodule

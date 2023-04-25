@@ -19,8 +19,11 @@ loop_back::~loop_back()
 void loop_back::init()
 {
   m_cpu_str = "Clock ID: " + to_string(m_pController->m_clock_id) + " Controller: " + to_string(m_pController->m_ID);
-  cout << "\r\n  " << m_cpu_str << " Starting Loop Back Test!" << "\r\n";
   
+  cout << "\r\n            "<< m_cpu_str  << "\r\n"
+       << "=========================================================" << "\r\n" 
+       << "            ####  Loop Back Test Start!  #### " << "\r\n" << "\r\n";
+
   wait(200, SC_NS);
 }
 
@@ -43,7 +46,7 @@ void loop_back::exit()
 {
   wait(200, SC_NS);
 
-  cout << "\r\n          "<< m_cpu_str  << "\r\n"
+  cout << "\r\n            "<< m_cpu_str  << "\r\n"
        << "=========================================================" << "\r\n" 
        << "            ####  Loop Back Test Complete!  #### " << "\r\n";
 }
@@ -213,7 +216,7 @@ void loop_back::frame_test()
   printf("Tx messageType = 0x%x, sequenceId = 0x%x \r\n", messageType, sequenceId);
 
   //RX direction test
-  wait(1000, SC_NS, m_pController->m_ev_rx);
+  wait(1000, SC_NS, m_pController->m_ev_rx | m_pController->m_ev_rx_all);
 
   base = RX_BUF_BADDR;
   addr = base + RX_FLEN_OFT;
@@ -237,6 +240,8 @@ void loop_back::frame_test()
       if((i+1) % 4 == 0) printf("\r\n");
     }
     cout << "\r\nthe rx frame length = " << rx_frm_len << "\r\n";
+
+    delete [] rx_frm_data;
 
     //read RX timestamp and identification
     base = TSU_BLK_ADDR << 8;

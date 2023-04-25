@@ -106,8 +106,9 @@ void controller::isr_thread (void)
     REG_READ(addr, data);
 
     msg.str ("");
-    msg << "Clock ID: " << m_clock_id
-        << " Controller: " << m_ID << "  Interrupt status register value =  " << data;
+    msg << "Clock ID: " << dec << m_clock_id
+        << " Controller: " << m_ID << "  Interrupt status register value =  0x" 
+        << hex << data;
     REPORT_INFO(filename, __FUNCTION__, msg.str());
 
     uint32_t mask = 1;
@@ -116,17 +117,20 @@ void controller::isr_thread (void)
       m_ev_tx.notify();
 
       msg.str ("");
-      msg << "Clock ID: " << m_clock_id
+      msg << "Clock ID: " << dec << m_clock_id
           << " Controller: " << m_ID << " PTP TX  Interrupt received! ";
       REPORT_INFO(filename, __FUNCTION__, msg.str());
     }
 
+    bool ptp_rcved = false;
     if(data & (mask << 1)) //notify rx interrupt
     {
       m_ev_rx.notify();
 
+      ptp_rcved = true;
+
       msg.str ("");
-      msg << "Clock ID: " << m_clock_id
+      msg << "Clock ID: " << dec << m_clock_id
           << " Controller: " << m_ID << " PTP RX  Interrupt received! ";
       REPORT_INFO(filename, __FUNCTION__, msg.str());
     }
@@ -136,8 +140,18 @@ void controller::isr_thread (void)
       m_ev_xms.notify();
 
       msg.str ("");
-      msg << "Clock ID: " << m_clock_id
+      msg << "Clock ID: " << dec << m_clock_id
           << " Controller: " << m_ID << " xms Timer Interrupt received! ";
+      REPORT_INFO(filename, __FUNCTION__, msg.str());
+    }
+
+    if((data & (mask << 3)) && ptp_rcved == false)  //notify normal frame excep ptp message received interrupt
+    {
+      m_ev_rx_all.notify();
+
+      msg.str ("");
+      msg << "Clock ID: " << dec << m_clock_id
+          << " Controller: " << m_ID << " Normal Frame Interrupt received! ";
       REPORT_INFO(filename, __FUNCTION__, msg.str());
     }
   }
