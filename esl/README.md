@@ -1,10 +1,10 @@
 # 基于SystemC TLM平台的XGE-PTPv2软件设计
 
 #### 使用说明
-在home目录的.bashrc文件中设置以下环境变量<br>
-export SC_SIGNAL_WRITE_CHECK=DISABLE <br>
->source ~/.bashrc <br>
-然后执行以下步骤：<br>
+基于Linux操作系统，需要安装Verilator和CMake。<br>
+Verilator的具体安装方法，参考其官方网站或者本项目开发者的公众号文章。<br>
+
+运行仿真，请执行以下步骤：<br>
 >cd /path/to/solution <br>
 >rm -rf build && mkdir build && cd build <br>
 >cmake .. <br>

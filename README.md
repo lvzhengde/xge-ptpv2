@@ -31,12 +31,23 @@ sim: 仿真运行所在目录<br>
 doc: 参考文档<br>
 </blockquote>
 <br>
-执行以下命令以运行基本的RTL功能测试<br>
+RTL仿真基于Linux操作系统，使用Icarus Verilog完成。<br>
+执行以下命令以运行基本的RTL功能测试：<br>
 <blockquote>
-cd /path/to/sim<br>
-./runcase.sh tc_rapid_ptp_test<br>
+>cd /path/to/sim<br>
+>./runcase.sh tc_rapid_ptp_test<br>
 </blockquote>
 <br>
+<br>
+如果对软件设计或软硬件协同设计感兴趣，可进入esl目录阅读。<br>
+运行软硬件协同仿真，执行以下命令：
+>cd /path/to/esl/solution <br>
+>mkdir build <br>
+>cd build <br>
+>cmake .. <br>
+>make <br>
+>./ptpv2_tlm <br>
+
 本开源项目着重于整体架构设计和开源设计流程的建立，目前情况下，保证基本功能测试通过即可。<br>
 如果读者有意在此基础上进一步开发，请自行进行修改，使其功能符合特定需求并得到充分的验证和测试。<br>
 
