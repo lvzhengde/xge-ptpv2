@@ -53,6 +53,66 @@ testbench::testbench
     //declare sc thread
     SC_THREAD(reset_gen); 
   }
+  else if(sw_type == 1)
+  {
+    pInstance = new ptp_instance("ptp_instance", m_sw_type, 1);
+    pChannel  = new Vchannel_model("delay_channel");
+
+    pInstance_lp = new ptp_instance("lp_ptp_instance", m_sw_type, 2);
+    pChannel_lp  = new Vchannel_model("lp_delay_channel");
+  
+    //bind delay channel ports for local device
+    pChannel->clk(clk);
+    pChannel->xge_rxc_i(xge_txc);
+    pChannel->xge_rxd_i(xge_txd);
+    pChannel->xge_txc_o(lp_xge_rxc);
+    pChannel->xge_txd_o(lp_xge_rxd);
+
+    //bind delay channel ports for link partner 
+    pChannel_lp->clk(lp_clk);
+    pChannel_lp->xge_rxc_i(lp_xge_txc);
+    pChannel_lp->xge_rxd_i(lp_xge_txd);
+    pChannel_lp->xge_txc_o(xge_rxc);
+    pChannel_lp->xge_txd_o(xge_rxd);
+
+    //bind ptp_instance ports for local device
+    pInstance->bus2ip_clk    (clk  );
+    pInstance->bus2ip_rst_n  (rst_n);
+    pInstance->tx_clk        (clk  );
+    pInstance->tx_rst_n      (rst_n);
+    pInstance->xge_txc_o     (xge_txc);
+    pInstance->xge_txd_o     (xge_txd);
+    pInstance->rx_clk        (lp_clk  );
+    pInstance->rx_rst_n      (lp_rst_n);
+    pInstance->xge_rxc_i     (xge_rxc);
+    pInstance->xge_rxd_i     (xge_rxd);
+    pInstance->rtc_clk       (clk  );
+    pInstance->rtc_rst_n     (rst_n);
+    pInstance->pps_i         (pps_in);
+    pInstance->pps_o         (pps_out);
+    pInstance->proc_rst_n    (rst_n);
+
+    //bind ptp_instance ports for link partner
+    pInstance_lp->bus2ip_clk    (lp_clk  );
+    pInstance_lp->bus2ip_rst_n  (lp_rst_n);
+    pInstance_lp->tx_clk        (lp_clk  );
+    pInstance_lp->tx_rst_n      (lp_rst_n);
+    pInstance_lp->xge_txc_o     (lp_xge_txc);
+    pInstance_lp->xge_txd_o     (lp_xge_txd);
+    pInstance_lp->rx_clk        (clk  );
+    pInstance_lp->rx_rst_n      (rst_n);
+    pInstance_lp->xge_rxc_i     (lp_xge_rxc);
+    pInstance_lp->xge_rxd_i     (lp_xge_rxd);
+    pInstance_lp->rtc_clk       (lp_clk  );
+    pInstance_lp->rtc_rst_n     (lp_rst_n);
+    pInstance_lp->pps_i         (lp_pps_in);
+    pInstance_lp->pps_o         (lp_pps_out);
+    pInstance_lp->proc_rst_n    (lp_rst_n);
+
+    //declare sc thread
+    SC_THREAD(reset_gen); 
+    SC_THREAD(lp_reset_gen); 
+  }
 }
 
 ///destructor

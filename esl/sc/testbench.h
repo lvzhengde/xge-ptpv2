@@ -18,7 +18,7 @@ public:
 
   ///connection signals
   sc_clock clk{"clk", 6.4, SC_NS, 0.5, 2, SC_NS, true};       
-  sc_clock clk_lp{"clk_lp", 6.4, SC_NS, 0.5, 2, SC_NS, true}; 
+  sc_clock lp_clk{"lp_clk", 6.4, SC_NS, 0.5, 2, SC_NS, true}; 
   sc_signal<bool> rst_n;
   sc_signal<bool> lp_rst_n;
 
@@ -28,6 +28,13 @@ public:
   sc_signal<uint32_t> xge_rxc;
   sc_signal<bool> pps_in;
   sc_signal<bool> pps_out;
+
+  sc_signal<uint64_t> lp_xge_txd;
+  sc_signal<uint32_t> lp_xge_txc;
+  sc_signal<uint64_t> lp_xge_rxd;
+  sc_signal<uint32_t> lp_xge_rxc;
+  sc_signal<bool> lp_pps_in;
+  sc_signal<bool> lp_pps_out;
 
   ///constructor
   testbench 
