@@ -41,8 +41,6 @@ int sc_main(int argc, char* argv[])
   else if(func_sel == '1')
   {
     sw_type = 1;
-    cout << "Not Supported Now, Exit!" << "\r\n";
-    exit(1);
   }
   else 
   {

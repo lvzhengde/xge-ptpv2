@@ -2,6 +2,7 @@
  * controller.cpp
  */
 
+#include "ptpd.h"
 #include "loop_back.h"
 #include "reporting.h"               	 // reporting macros
 
@@ -56,6 +57,8 @@ void controller::controller_thread(void)
   
   if(m_sw_type == 0) //loop back test
     pApp = new loop_back(this);
+  if(m_sw_type == 1) //loop back test
+    pApp = new ptpd(this);
   else
     sc_stop();
   
@@ -83,7 +86,10 @@ void controller::controller_thread(void)
   delete pApp;
 
   //stop simulation
-  sc_stop();
+  if(m_clock_id == 1)
+  {
+    sc_stop();
+  }
 
 } // end controller_thread
 
