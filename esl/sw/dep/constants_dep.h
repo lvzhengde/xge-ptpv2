@@ -71,9 +71,11 @@
 
 #endif  //#if 0
 
+#include <climits>
+
 #define IFACE_NAME_LENGTH         128
 #define MAXHOSTNAMELEN            128
-#define PATH_MAX                  512
+//#define PATH_MAX                  512 //already defined in <climits>
 
 #define CLOCK_IDENTITY_LENGTH 8
 #define ADJ_FREQ_MAX  512000
@@ -124,5 +126,9 @@
 
 
 #define MAXTIMESTR 32
+
+//#define LOG_DAEMON 0
+//#define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
+
 
 #endif /*CONSTANTS_DEP_H_*/

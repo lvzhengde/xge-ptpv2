@@ -2,10 +2,13 @@
 #define DATATYPES_H_
 
 #include <stdio.h> 
+#include <string>
 
 #include "constants.h"
-#include "dep/constants_dep.h"
-#include "dep/datatypes_dep.h"
+#include "constants_dep.h"
+#include "datatypes_dep.h"
+
+using namespace std;
 
 /*Struct defined in spec*/
 

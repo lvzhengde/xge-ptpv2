@@ -29,16 +29,19 @@ find_package(SystemCLanguage CONFIG REQUIRED)
 include_directories(
   ../sc 
   ../sw
+  ../sw/dep
   $ENV{SYSTEMC_INCLUDE}
   )
 aux_source_directory(../sc SYSC_TLM)
 aux_source_directory(../sw SW_TOP)
+aux_source_directory(../sw/dep PTP_DEP)
 
 # Create a new executable target that will contain all your sources
 add_executable (
   ${CMAKE_PROJECT_NAME} 
   ${SYSC_TLM}
   ${SW_TOP}
+  ${PTP_DEP}
   )
 target_link_libraries (${CMAKE_PROJECT_NAME} SystemC::systemc)
 

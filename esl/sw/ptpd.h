@@ -23,8 +23,9 @@ class ptpd: public MyApp
     virtual void exit();
 
   //member variables
-  protected:
-    PtpClock *G_ptpClock;
+    //RunTimeOpts rtOpts;			//configuration data     
+
+    //PtpClock *G_ptpClock;
 };
 
 #endif // _PTPD_H__
