@@ -70,15 +70,15 @@ typedef struct {
 /**
 * \brief Struct used to store network datas
  */
+
+#include <arpa/inet.h>
+
 typedef struct {
     //UDP/IPv4 related address
     Integer32 eventSock, generalSock, multicastAddr, peerMulticastAddr,unicastAddr;
 
-#if 0
     /* used by IGMP refresh */
     struct in_addr interfaceAddr;
-#endif
-    Integer32 interfaceAddr;   
 
 #ifdef PTP_EXPERIMENTAL
     /* used for Hybrid mode */

@@ -128,7 +128,7 @@
 #define MAXTIMESTR 32
 
 //#define LOG_DAEMON 0
-//#define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
+#define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
 
 
 #endif /*CONSTANTS_DEP_H_*/
