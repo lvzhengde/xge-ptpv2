@@ -54,16 +54,20 @@
 
 #include "common.h"
 
-double round (double __x);
+
+arith::arith(ptpd *pApp) 
+{ 
+    BASE_MEMBER_ASSIGN
+}
 
 void
-internalTime_to_integer64(TimeInternal internal, Integer64 *bigint)
+arith::internalTime_to_integer64(TimeInternal internal, Integer64 *bigint)
 {
 	/* TODO: implement me */
 }
 
 void 
-integer64_to_internalTime(Integer64 bigint, TimeInternal * internal)
+arith::integer64_to_internalTime(Integer64 bigint, TimeInternal * internal)
 {
 	int sign;
 	int64_t scaledNanoseconds;
@@ -92,7 +96,7 @@ integer64_to_internalTime(Integer64 bigint, TimeInternal * internal)
 
 
 void 
-fromInternalTime(TimeInternal * internal, Timestamp * external)
+arith::fromInternalTime(TimeInternal * internal, Timestamp * external)
 {
 
 	/*
@@ -118,7 +122,7 @@ fromInternalTime(TimeInternal * internal, Timestamp * external)
 }
 
 void 
-toInternalTime(TimeInternal * internal, Timestamp * external)
+arith::toInternalTime(TimeInternal * internal, Timestamp * external)
 {
 
 	/* Program will not run after 2038... */
@@ -133,7 +137,7 @@ toInternalTime(TimeInternal * internal, Timestamp * external)
 }
 
 void 
-ts_to_InternalTime(struct timespec *a,  TimeInternal * b)
+arith::ts_to_InternalTime(struct timespec *a,  TimeInternal * b)
 {
 
 	b->seconds = a->tv_sec;
@@ -141,7 +145,7 @@ ts_to_InternalTime(struct timespec *a,  TimeInternal * b)
 }
 
 void 
-tv_to_InternalTime(struct timeval *a,  TimeInternal * b)
+arith::tv_to_InternalTime(struct timeval *a,  TimeInternal * b)
 {
 
 	b->seconds = a->tv_sec;
@@ -150,7 +154,7 @@ tv_to_InternalTime(struct timeval *a,  TimeInternal * b)
 
 
 void 
-normalizeTime(TimeInternal * r)
+arith::normalizeTime(TimeInternal * r)
 {
 	r->seconds += r->nanoseconds / 1000000000;
 	r->nanoseconds -= r->nanoseconds / 1000000000 * 1000000000;
@@ -165,7 +169,7 @@ normalizeTime(TimeInternal * r)
 }
 
 void 
-addTime(TimeInternal * r, const TimeInternal * x, const TimeInternal * y)
+arith::addTime(TimeInternal * r, const TimeInternal * x, const TimeInternal * y)
 {
 	r->seconds = x->seconds + y->seconds;
 	r->nanoseconds = x->nanoseconds + y->nanoseconds;
@@ -174,7 +178,7 @@ addTime(TimeInternal * r, const TimeInternal * x, const TimeInternal * y)
 }
 
 void 
-subTime(TimeInternal * r, const TimeInternal * x, const TimeInternal * y)
+arith::subTime(TimeInternal * r, const TimeInternal * x, const TimeInternal * y)
 {
 	r->seconds = x->seconds - y->seconds;
 	r->nanoseconds = x->nanoseconds - y->nanoseconds;
@@ -208,7 +212,7 @@ divTime(TimeInternal *r, int divisor)
 } 
 #endif
 
-void div2Time(TimeInternal *r)
+void arith::div2Time(TimeInternal *r)
 {
     r->nanoseconds += r->seconds % 2 * 1000000000;
     r->seconds /= 2;
@@ -220,7 +224,7 @@ void div2Time(TimeInternal *r)
 
 
 /* clear an internal time value */
-void clearTime(TimeInternal *time)
+void arith::clearTime(TimeInternal *time)
 {
 	time->seconds     = 0;
 	time->nanoseconds = 0;
@@ -228,7 +232,7 @@ void clearTime(TimeInternal *time)
 
 
 /* sets a time value to a certain nanoseconds */
-void nano_to_Time(TimeInternal *time, int nano)
+void arith::nano_to_Time(TimeInternal *time, int nano)
 {
 	time->seconds     = 0;
 	time->nanoseconds = nano;
@@ -236,7 +240,7 @@ void nano_to_Time(TimeInternal *time, int nano)
 }
 
 /* greater than operation */
-int gtTime(TimeInternal *x, TimeInternal *y)
+int arith::gtTime(TimeInternal *x, TimeInternal *y)
 {
 	TimeInternal r;
 
@@ -245,7 +249,7 @@ int gtTime(TimeInternal *x, TimeInternal *y)
 }
 
 /* remove sign from variable */
-void absTime(TimeInternal *time)
+void arith::absTime(TimeInternal *time)
 {
 	time->seconds       = abs(time->seconds);
 	time->nanoseconds   = abs(time->nanoseconds);
@@ -253,7 +257,7 @@ void absTime(TimeInternal *time)
 
 
 /* if 2 time values are close enough for X nanoseconds */
-int is_Time_close(TimeInternal *x, TimeInternal *y, int nanos)
+int arith::is_Time_close(TimeInternal *x, TimeInternal *y, int nanos)
 {
 	TimeInternal r1;
 	TimeInternal r2;
@@ -269,7 +273,7 @@ int is_Time_close(TimeInternal *x, TimeInternal *y, int nanos)
 
 
 
-int check_timestamp_is_fresh2(TimeInternal * timeA, TimeInternal * timeB)
+int arith::check_timestamp_is_fresh2(TimeInternal * timeA, TimeInternal * timeB)
 {
 	int ret;
 
@@ -279,27 +283,27 @@ int check_timestamp_is_fresh2(TimeInternal * timeA, TimeInternal * timeB)
 }
 
 
-int check_timestamp_is_fresh(TimeInternal * timeA)
+int arith::check_timestamp_is_fresh(TimeInternal * timeA)
 {
 	TimeInternal timeB;
-	getTime(&timeB);
+	m_pApp->m_ptr_sys->getTime(&timeB);
 
 	return check_timestamp_is_fresh2(timeA, &timeB);
 }
 
 
 int
-isTimeInternalNegative(const TimeInternal * p)
+arith::isTimeInternalNegative(const TimeInternal * p)
 {
 	return (p->seconds < 0) || (p->nanoseconds < 0);
 }
 
 float
-secondsToMidnight(void) 
+arith::secondsToMidnight(void) 
 {
 	TimeInternal now;
 
-	getTime(&now);
+	m_pApp->m_ptr_sys->getTime(&now);
 
 	Integer32 stmI = (now.seconds - (now.seconds % 86400) + 86400) - 
 		now.seconds;
@@ -308,7 +312,7 @@ secondsToMidnight(void)
 }
 
 float
-getPauseAfterMidnight(Integer8 announceInterval) 
+arith::getPauseAfterMidnight(Integer8 announceInterval) 
 {
 	return((LEAP_SECOND_PAUSE_PERIOD > 2 * pow((float)2, (float)announceInterval)) ?
 	       LEAP_SECOND_PAUSE_PERIOD + 0.0  : 2 * pow((float)2, (float)announceInterval) + 

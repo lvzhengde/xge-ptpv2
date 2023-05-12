@@ -56,7 +56,6 @@
 
 
 #define US_TIMER_INTERVAL (62500)
-volatile unsigned int elapsed;
 
 /*
  * original code calls sigalarm every fixed 1ms. This highly pollutes the debug_log, and causes more interrupted instructions
@@ -66,40 +65,22 @@ volatile unsigned int elapsed;
  * Timers must now be explicitelly canceled with timerStop (instead of timerStart(0.0))
  */
 
-int gtime_ID;
-unsigned int delaytime = (unsigned int)US_TIMER_INTERVAL*0.001;
-void catch_alarm(int sig);
 
-#ifdef WIN_PTP
-void  CALLBACK TimeEvent(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
+//constructor
+ptp_timer::ptp_timer(ptpd *pApp)
 {
-	//printf("time ID is %d, started,dwUser is %d\n",gtime_ID, dwUser);
-	catch_alarm(gtime_ID);
-
-	return;
+    BASE_MEMBER_ASSIGN 
 }
- 
-void StartEventTime(DWORD_PTR duser)
-{
-	gtime_ID = timeSetEvent(delaytime,10,(LPTIMECALLBACK)TimeEvent,duser,TIME_PERIODIC);
-	if(gtime_ID == NULL)
-	{
-		printf("time ID is not created\n");
-		return;
-	}
-	return;
-}
-#endif
 
 void 
-catch_alarm(int sig)
+ptp_timer::catch_alarm(int sig)
 {
 	elapsed++;
 	/* be sure to NOT call DBG in asynchronous handlers! */
 }
 
 void 
-initTimer(void)
+ptp_timer::initTimer(void)
 {
 	//struct itimerval itimer;
 
@@ -117,7 +98,7 @@ initTimer(void)
 }
 
 void 
-timerUpdate(IntervalTimer * itimer)
+ptp_timer::timerUpdate(IntervalTimer * itimer)
 {
 
 	int i, delta;
@@ -150,7 +131,7 @@ timerUpdate(IntervalTimer * itimer)
 }
 
 void 
-timerStop(UInteger16 index, IntervalTimer * itimer)
+ptp_timer::timerStop(UInteger16 index, IntervalTimer * itimer)
 {
 	if (index >= TIMER_ARRAY_SIZE)
 		return;
@@ -160,7 +141,7 @@ timerStop(UInteger16 index, IntervalTimer * itimer)
 }
 
 void 
-timerStart(UInteger16 index, float interval, IntervalTimer * itimer)
+ptp_timer::timerStart(UInteger16 index, float interval, IntervalTimer * itimer)
 {
 	if (index >= TIMER_ARRAY_SIZE)
 		return;
@@ -218,11 +199,11 @@ timerStart(UInteger16 index, float interval, IntervalTimer * itimer)
  *    R is the number of Syncs to be received, before sending a new request
  * 
  */ 
-void timerStart_random(UInteger16 index, float interval, IntervalTimer * itimer)
+void ptp_timer::timerStart_random(UInteger16 index, float interval, IntervalTimer * itimer)
 {
 	float new_value;
 
-	new_value = getRand() * interval * 2.0;
+	new_value = m_pApp->m_ptr_sys->getRand() * interval * 2.0;
 	DBG2(" timerStart_random: requested %.2f, got %.2f\n", interval, new_value);
 	
 	timerStart(index, new_value, itimer);
@@ -231,7 +212,7 @@ void timerStart_random(UInteger16 index, float interval, IntervalTimer * itimer)
 
 
 Boolean 
-timerExpired(UInteger16 index, IntervalTimer * itimer)
+ptp_timer::timerExpired(UInteger16 index, IntervalTimer * itimer)
 {
 	timerUpdate(itimer);
 

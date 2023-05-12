@@ -75,17 +75,17 @@
   ps -ef | grep ptpd2
 */
 
+//constructor
+startup::startup(ptpd *pApp)
+{
+    BASE_MEMBER_ASSIGN 
 
-
-/*
- * Synchronous signal processing:
- * original idea: http://www.openbsd.org/cgi-bin/cvsweb/src/usr.sbin/ntpd/ntpd.c?rev=1.68;content-type=text%2Fplain
- */
-volatile sig_atomic_t	 sigint_received  = 0;
-volatile sig_atomic_t	 sigterm_received = 0;
-volatile sig_atomic_t	 sighup_received  = 0;
-volatile sig_atomic_t	 sigusr1_received = 0;
-volatile sig_atomic_t	 sigusr2_received = 0;
+    sigint_received  = 0;
+    sigterm_received = 0;
+    sighup_received  = 0;
+    sigusr1_received = 0;
+    sigusr2_received = 0;
+}
 
 /*
  * Function to catch signals asynchronously.
@@ -93,7 +93,7 @@ volatile sig_atomic_t	 sigusr2_received = 0;
  *
  * Please do NOT call any functions inside this handler - especially DBG() and its friends, or any glibc.
  */
-void catch_signals(int sig)
+void startup::catch_signals(int sig)
 {
 	switch (sig) {
 	case SIGINT:
@@ -127,7 +127,7 @@ void catch_signals(int sig)
  * exit the program cleanly
  */
 void
-do_signal_close(PtpClock * ptpClock)
+startup::do_signal_close(PtpClock * ptpClock)
 {
 	ptpdShutdown(ptpClock);
 
@@ -141,7 +141,7 @@ do_signal_close(PtpClock * ptpClock)
  * @param sig 
  */
 void 
-do_signal_sighup(RunTimeOpts * rtOpts)
+startup::do_signal_sighup(RunTimeOpts * rtOpts)
 {
 	if(rtOpts->do_record_quality_file)
 	if(!recordToFile(rtOpts))
@@ -160,7 +160,7 @@ do_signal_sighup(RunTimeOpts * rtOpts)
  * This function should be called regularly from the main loop
  */
 void
-check_signals(RunTimeOpts * rtOpts, PtpClock * ptpClock)
+startup::check_signals(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 	/*
 	 * note:
@@ -178,7 +178,7 @@ check_signals(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 	if(sigusr1_received){
 		WARNING("SigUSR1 received, manually stepping clock to current known OFM\n");
-		servo_perform_clock_step(rtOpts, ptpClock);
+		m_pApp->m_ptr_servo->servo_perform_clock_step(rtOpts, ptpClock);
 	sigusr1_received = 0;
 	}
 
@@ -231,14 +231,14 @@ check_signals(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 #ifdef RUNTIME_DEBUG
 /* These functions are useful to temporarily enable Debug around parts of code, similar to bash's "set -x" */
-void enable_runtime_debug(void )
+void startup::enable_runtime_debug(void )
 {
 	extern RunTimeOpts rtOpts;
 	
 	rtOpts.debug_level = max(LOG_DEBUGV, rtOpts.debug_level);
 }
 
-void disable_runtime_debug(void )
+void startup::disable_runtime_debug(void )
 {
 	extern RunTimeOpts rtOpts;
 	
@@ -249,25 +249,13 @@ void disable_runtime_debug(void )
 /*
  * Lock via filesystem implementation, as described in "Advanced Programming in the UNIX Environment, 2nd ed"
  */
-//#include <unistd.h>
-#include <stdlib.h>
-#include <fcntl.h>
-//#include <syslog.h>
-#include <string.h>
-#include <errno.h>
-#include <stdio.h>
-//#include <sys/stat.h>
-//#include <libgen.h>
 
 #define LOCKFILE "/var/run/kernel_clock"
 #define LOCKMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
 
-int global_lock_fd;
-
-
 /* try to apply a write lock on the file */
 int
-lockfile(int fd)
+startup::lockfile(int fd)
 {
 	//struct flock fl;
 
@@ -285,7 +273,7 @@ lockfile(int fd)
  * a discussion where the lock file should reside: http://rute.2038bug.com/node38.html.gz#SECTION003859000000000000000
  */
 int
-daemon_already_running(void)
+startup::daemon_already_running(void)
 {
 	//char    buf[16];
 
@@ -312,17 +300,13 @@ daemon_already_running(void)
 }
 
 
-int query_shell(char *command, char *answer, int answer_size);
-
-
-
 /* return number of pgrep exact matches to the given string
  * -1: error
  * 0: no matches
  * >0: number of matches
  */
 int
-pgrep_matches(char *name)
+startup::pgrep_matches(char *name)
 {
 	//char command[BUF_SIZE];
 	//char answer[BUF_SIZE];
@@ -352,7 +336,7 @@ pgrep_matches(char *name)
  * ret: -1 error ; 0 ok
  *
  */
-int query_shell(char *command, char *answer, int answer_size)
+int startup::query_shell(char *command, char *answer, int answer_size)
 {
 	//int status;
 	//FILE *fp;
@@ -393,7 +377,7 @@ int query_shell(char *command, char *answer, int answer_size)
  *   0: error, will exit program
  */
 int
-check_parallel_daemons(string name, int expected, int strict, RunTimeOpts * rtOpts)
+startup::check_parallel_daemons(string name, int expected, int strict, RunTimeOpts * rtOpts)
 {
 	//int matches = pgrep_matches(name);
 
@@ -432,11 +416,6 @@ check_parallel_daemons(string name, int expected, int strict, RunTimeOpts * rtOp
 }
 
 
-
-
-
-
-
 /** 
  * Log output to a file
  * 
@@ -444,7 +423,7 @@ check_parallel_daemons(string name, int expected, int strict, RunTimeOpts * rtOp
  * @return True if success, False if failure
  */
 int 
-logToFile(RunTimeOpts * rtOpts)
+startup::logToFile(RunTimeOpts * rtOpts)
 {
 	//if(rtOpts->logFd != -1)
 	//	close(rtOpts->logFd);
@@ -467,7 +446,7 @@ logToFile(RunTimeOpts * rtOpts)
  * @return True if success, False if failure
  */
 int
-recordToFile(RunTimeOpts * rtOpts)
+startup::recordToFile(RunTimeOpts * rtOpts)
 {
 	//if (rtOpts->recordFP != NULL)
 	//	fclose(rtOpts->recordFP);
@@ -483,21 +462,22 @@ recordToFile(RunTimeOpts * rtOpts)
 
 
 void 
-ptpdShutdown(PtpClock * ptpClock)
+startup::ptpdShutdown(PtpClock * ptpClock)
 {
-	netShutdown(&ptpClock->netPath);
+	m_pApp->m_ptr_net->netShutdown(&ptpClock->netPath);
 	free(ptpClock->foreign);
 
 	/* free management messages, they can have dynamic memory allocated */
 	if(ptpClock->msgTmpHeader.messageType == MANAGEMENT)
-		freeManagementTLV(&ptpClock->msgTmp.manage);
-	freeManagementTLV(&ptpClock->outgoingManageTmp);
+		m_pApp->m_ptr_msg->freeManagementTLV(&ptpClock->msgTmp.manage);
+	m_pApp->m_ptr_msg->freeManagementTLV(&ptpClock->outgoingManageTmp);
 
 	free(ptpClock);
 	ptpClock = NULL;
 
-	extern PtpClock* G_ptpClock;
-	G_ptpClock = NULL;
+	//extern PtpClock* G_ptpClock;
+	//G_ptpClock = NULL;
+	m_pApp->m_ptr_ptpClock = NULL;
 
 	/* properly clean lockfile (eventough new deaemons can adquire the lock after we die) */
 	//close(global_lock_fd);
@@ -505,7 +485,7 @@ ptpdShutdown(PtpClock * ptpClock)
 }
 
 
-void dump_command_line_parameters(int argc, char **argv)
+void startup::dump_command_line_parameters(int argc, char **argv)
 {
 	//
 	int i = 0;
@@ -526,7 +506,7 @@ void dump_command_line_parameters(int argc, char **argv)
 
 
 void
-display_short_help(string error)
+startup::display_short_help(string error)
 {
 	printf(
 			//"\n"
@@ -546,7 +526,7 @@ display_short_help(string error)
 }
 
 PtpClock *
-ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpts)
+startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpts)
 {
 	PtpClock * ptpClock;
 	int c, noclose = 0;
@@ -1130,8 +1110,8 @@ ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpts)
 	}
 	
 	/* use new synchronous signal handlers */
-	signal(SIGINT,  catch_signals);
-	signal(SIGTERM, catch_signals);
+	//signal(SIGINT,  catch_signals);
+	//signal(SIGTERM, catch_signals);
 	//signal(SIGHUP,  catch_signals);
 
 	//signal(SIGUSR1, catch_signals);

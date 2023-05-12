@@ -54,9 +54,15 @@
 
 #include "common.h"
 
+//constructor
+display::display(ptpd *pApp)
+{
+    BASE_MEMBER_ASSIGN
+}
+
 /**\brief Display an Integer64 type*/
 void
-integer64_display(Integer64 * bigint)
+display::integer64_display(Integer64 * bigint)
 {
 	DBGV("Integer 64 : \n");
 	DBGV("LSB : %u\n", bigint->lsb);
@@ -65,7 +71,7 @@ integer64_display(Integer64 * bigint)
 
 /**\brief Display an UInteger48 type*/
 void
-uInteger48_display(UInteger48 * bigint)
+display::uInteger48_display(UInteger48 * bigint)
 {
 	DBGV("Integer 48 : \n");
 	DBGV("LSB : %u\n", bigint->lsb);
@@ -74,7 +80,7 @@ uInteger48_display(UInteger48 * bigint)
 
 /** \brief Display a TimeInternal Structure*/
 void
-timeInternal_display(TimeInternal * timeInternal)
+display::timeInternal_display(TimeInternal * timeInternal)
 {
 	DBGV("seconds : %d \n", timeInternal->seconds);
 	DBGV("nanoseconds %d \n", timeInternal->nanoseconds);
@@ -82,7 +88,7 @@ timeInternal_display(TimeInternal * timeInternal)
 
 /** \brief Display a Timestamp Structure*/
 void
-timestamp_display(Timestamp * timestamp)
+display::timestamp_display(Timestamp * timestamp)
 {
 	uInteger48_display(&timestamp->secondsField);
 	DBGV("nanoseconds %u \n", timestamp->nanosecondsField);
@@ -90,7 +96,7 @@ timestamp_display(Timestamp * timestamp)
 
 /**\brief Display a Clockidentity Structure*/
 void
-clockIdentity_display(ClockIdentity clockIdentity)
+display::clockIdentity_display(ClockIdentity clockIdentity)
 {
 	DBGV(
 	    "ClockIdentity : %02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx\n",
@@ -102,7 +108,7 @@ clockIdentity_display(ClockIdentity clockIdentity)
 
 /**\brief Display MAC address*/
 void
-clockUUID_display(Octet * sourceUuid)
+display::clockUUID_display(Octet * sourceUuid)
 {
 	DBGV(
 	    "sourceUuid %02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx\n",
@@ -113,7 +119,7 @@ clockUUID_display(Octet * sourceUuid)
 
 /**\brief Display Network info*/
 void
-netPath_display(NetPath * net)
+display::netPath_display(NetPath * net)
 {
 	struct in_addr addr;
 
@@ -129,7 +135,7 @@ netPath_display(NetPath * net)
 
 /**\brief Display a IntervalTimer Structure*/
 void
-intervalTimer_display(IntervalTimer * ptimer)
+display::intervalTimer_display(IntervalTimer * ptimer)
 {
 	DBGV("interval : %d \n", ptimer->interval);
 	DBGV("left : %d \n", ptimer->left);
@@ -138,14 +144,14 @@ intervalTimer_display(IntervalTimer * ptimer)
 
 /**\brief Display a TimeInterval Structure*/
 void
-timeInterval_display(TimeInterval * timeInterval)
+display::timeInterval_display(TimeInterval * timeInterval)
 {
 	integer64_display(&timeInterval->scaledNanoseconds);
 }
 
 /**\brief Display a Portidentity Structure*/
 void
-portIdentity_display(PortIdentity * portIdentity)
+display::portIdentity_display(PortIdentity * portIdentity)
 {
 	clockIdentity_display(portIdentity->clockIdentity);
 	DBGV("port number : %d \n", portIdentity->portNumber);
@@ -153,7 +159,7 @@ portIdentity_display(PortIdentity * portIdentity)
 
 /**\brief Display a Clockquality Structure*/
 void
-clockQuality_display(ClockQuality * clockQuality)
+display::clockQuality_display(ClockQuality * clockQuality)
 {
 	DBGV("clockClass : %d \n", clockQuality->clockClass);
 	DBGV("clockAccuracy : %d \n", clockQuality->clockAccuracy);
@@ -162,7 +168,7 @@ clockQuality_display(ClockQuality * clockQuality)
 
 /**\brief Display PTPText Structure*/
 void
-PTPText_display(PTPText *p, PtpClock *ptpClock)
+display::PTPText_display(PTPText *p, PtpClock *ptpClock)
 {
 	/* Allocate new memory to append null-terminator to the text field.
 	 * This allows printing the textField as a string
@@ -178,7 +184,7 @@ PTPText_display(PTPText *p, PtpClock *ptpClock)
 
 /**\brief Display the Network Interface Name*/
 void
-iFaceName_display(Octet * iFaceName)
+display::iFaceName_display(Octet * iFaceName)
 {
 
 	int i;
@@ -194,7 +200,7 @@ iFaceName_display(Octet * iFaceName)
 
 /**\brief Display an Unicast Adress*/
 void
-unicast_display(Octet * unicast)
+display::unicast_display(Octet * unicast)
 {
 
 	int i;
@@ -211,7 +217,7 @@ unicast_display(Octet * unicast)
 
 /**\brief Display Sync message*/
 void
-msgSync_display(MsgSync * sync)
+display::msgSync_display(MsgSync * sync)
 {
 	DBGV("Message Sync : \n");
 	timestamp_display(&sync->originTimestamp);
@@ -220,7 +226,7 @@ msgSync_display(MsgSync * sync)
 
 /**\brief Display Header message*/
 void
-msgHeader_display(MsgHeader * header)
+display::msgHeader_display(MsgHeader * header)
 {
 	DBGV("Message header : \n");
 	DBGV("\n");
@@ -242,7 +248,7 @@ msgHeader_display(MsgHeader * header)
 
 /**\brief Display Announce message*/
 void
-msgAnnounce_display(MsgAnnounce * announce)
+display::msgAnnounce_display(MsgAnnounce * announce)
 {
 	DBGV("Announce Message : \n");
 	DBGV("\n");
@@ -263,21 +269,21 @@ msgAnnounce_display(MsgAnnounce * announce)
 
 /**\brief Display Follow_UP message*/
 void
-msgFollowUp_display(MsgFollowUp * follow)
+display::msgFollowUp_display(MsgFollowUp * follow)
 {
 	timestamp_display(&follow->preciseOriginTimestamp);
 }
 
 /**\brief Display DelayReq message*/
 void
-msgDelayReq_display(MsgDelayReq * req)
+display::msgDelayReq_display(MsgDelayReq * req)
 {
 	timestamp_display(&req->originTimestamp);
 }
 
 /**\brief Display DelayResp message*/
 void
-msgDelayResp_display(MsgDelayResp * resp)
+display::msgDelayResp_display(MsgDelayResp * resp)
 {
 	timestamp_display(&resp->receiveTimestamp);
 	portIdentity_display(&resp->requestingPortIdentity);
@@ -285,14 +291,14 @@ msgDelayResp_display(MsgDelayResp * resp)
 
 /**\brief Display Pdelay_Req message*/
 void
-msgPDelayReq_display(MsgPDelayReq * preq)
+display::msgPDelayReq_display(MsgPDelayReq * preq)
 {
 	timestamp_display(&preq->originTimestamp);
 }
 
 /**\brief Display Pdelay_Resp message*/
 void
-msgPDelayResp_display(MsgPDelayResp * presp)
+display::msgPDelayResp_display(MsgPDelayResp * presp)
 {
 
 	timestamp_display(&presp->requestReceiptTimestamp);
@@ -301,7 +307,7 @@ msgPDelayResp_display(MsgPDelayResp * presp)
 
 /**\brief Display Pdelay_Resp Follow Up message*/
 void
-msgPDelayRespFollowUp_display(MsgPDelayRespFollowUp * prespfollow)
+display::msgPDelayRespFollowUp_display(MsgPDelayRespFollowUp * prespfollow)
 {
 
 	timestamp_display(&prespfollow->responseOriginTimestamp);
@@ -310,7 +316,7 @@ msgPDelayRespFollowUp_display(MsgPDelayRespFollowUp * prespfollow)
 
 /**\brief Display Management message*/
 void
-msgManagement_display(MsgManagement * manage)
+display::msgManagement_display(MsgManagement * manage)
 {
         DBGV("Management Message : \n");
         DBGV("\n");
@@ -323,7 +329,7 @@ msgManagement_display(MsgManagement * manage)
 
 /**\brief Display ManagementTLV Slave Only message*/
 void
-mMSlaveOnly_display(MMSlaveOnly *slaveOnly, PtpClock *ptpClock)
+display::mMSlaveOnly_display(MMSlaveOnly *slaveOnly, PtpClock *ptpClock)
 {
 	DBGV("Slave Only ManagementTLV message \n");
 	DBGV("SO : %d \n", slaveOnly->so);
@@ -331,7 +337,7 @@ mMSlaveOnly_display(MMSlaveOnly *slaveOnly, PtpClock *ptpClock)
 
 /**\brief Display ManagementTLV Clock Description message*/
 void
-mMClockDescription_display(MMClockDescription *clockDescription, PtpClock *ptpClock)
+display::mMClockDescription_display(MMClockDescription *clockDescription, PtpClock *ptpClock)
 {
 	DBGV("Clock Description ManagementTLV message \n");
 	DBGV("clockType0 : %d \n", clockDescription->clockType0);
@@ -370,134 +376,134 @@ mMClockDescription_display(MMClockDescription *clockDescription, PtpClock *ptpCl
 }
 
 void
-mMUserDescription_display(MMUserDescription* userDescription, PtpClock *ptpClock)
+display::mMUserDescription_display(MMUserDescription* userDescription, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMInitialize_display(MMInitialize* initialize, PtpClock *ptpClock)
+display::mMInitialize_display(MMInitialize* initialize, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMDefaultDataSet_display(MMDefaultDataSet* defaultDataSet, PtpClock *ptpClock)
+display::mMDefaultDataSet_display(MMDefaultDataSet* defaultDataSet, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMCurrentDataSet_display(MMCurrentDataSet* currentDataSet, PtpClock *ptpClock)
+display::mMCurrentDataSet_display(MMCurrentDataSet* currentDataSet, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMParentDataSet_display(MMParentDataSet* parentDataSet, PtpClock *ptpClock)
+display::mMParentDataSet_display(MMParentDataSet* parentDataSet, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMTimePropertiesDataSet_display(MMTimePropertiesDataSet* timePropertiesDataSet, PtpClock *ptpClock)
+display::mMTimePropertiesDataSet_display(MMTimePropertiesDataSet* timePropertiesDataSet, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMPortDataSet_display(MMPortDataSet* portDataSet, PtpClock *ptpClock)
+display::mMPortDataSet_display(MMPortDataSet* portDataSet, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMPriority1_display(MMPriority1* priority1, PtpClock *ptpClock)
+display::mMPriority1_display(MMPriority1* priority1, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMPriority2_display(MMPriority2* priority2, PtpClock *ptpClock)
+display::mMPriority2_display(MMPriority2* priority2, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMDomain_display(MMDomain* domain, PtpClock *ptpClock)
+display::mMDomain_display(MMDomain* domain, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMLogAnnounceInterval_display(MMLogAnnounceInterval* logAnnounceInterval, PtpClock *ptpClock)
+display::mMLogAnnounceInterval_display(MMLogAnnounceInterval* logAnnounceInterval, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMAnnounceReceiptTimeout_display(MMAnnounceReceiptTimeout* announceReceiptTimeout, PtpClock *ptpClock)
+display::mMAnnounceReceiptTimeout_display(MMAnnounceReceiptTimeout* announceReceiptTimeout, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMLogSyncInterval_display(MMLogSyncInterval* logSyncInterval, PtpClock *ptpClock)
+display::mMLogSyncInterval_display(MMLogSyncInterval* logSyncInterval, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMVersionNumber_display(MMVersionNumber* versionNumber, PtpClock *ptpClock)
+display::mMVersionNumber_display(MMVersionNumber* versionNumber, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMTime_display(MMTime* time, PtpClock *ptpClock)
+display::mMTime_display(MMTime* time, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMClockAccuracy_display(MMClockAccuracy* clockAccuracy, PtpClock *ptpClock)
+display::mMClockAccuracy_display(MMClockAccuracy* clockAccuracy, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMUtcProperties_display(MMUtcProperties* utcProperties, PtpClock *ptpClock)
+display::mMUtcProperties_display(MMUtcProperties* utcProperties, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMTraceabilityProperties_display(MMTraceabilityProperties* traceabilityProperties, PtpClock *ptpClock)
+display::mMTraceabilityProperties_display(MMTraceabilityProperties* traceabilityProperties, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMDelayMechanism_display(MMDelayMechanism* delayMechanism, PtpClock *ptpClock)
+display::mMDelayMechanism_display(MMDelayMechanism* delayMechanism, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMLogMinPdelayReqInterval_display(MMLogMinPdelayReqInterval* logMinPdelayReqInterval, PtpClock *ptpClock)
+display::mMLogMinPdelayReqInterval_display(MMLogMinPdelayReqInterval* logMinPdelayReqInterval, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 void
-mMErrorStatus_display(MMErrorStatus* errorStatus, PtpClock *ptpClock)
+display::mMErrorStatus_display(MMErrorStatus* errorStatus, PtpClock *ptpClock)
 {
 	/* TODO: implement me */
 }
 
 /**\brief Display runTimeOptions structure*/
 void
-displayRunTimeOpts(RunTimeOpts * rtOpts)
+display::displayRunTimeOpts(RunTimeOpts * rtOpts)
 {
 
 	DBGV("---Run time Options Display-- \n");
@@ -529,7 +535,7 @@ displayRunTimeOpts(RunTimeOpts * rtOpts)
 
 /**\brief Display Default data set of a PtpClock*/
 void
-displayDefault(PtpClock * ptpClock)
+display::displayDefault(PtpClock * ptpClock)
 {
 	DBGV("---Ptp Clock Default Data Set-- \n");
 	DBGV("\n");
@@ -547,7 +553,7 @@ displayDefault(PtpClock * ptpClock)
 
 /**\brief Display Current data set of a PtpClock*/
 void
-displayCurrent(PtpClock * ptpClock)
+display::displayCurrent(PtpClock * ptpClock)
 {
 	DBGV("---Ptp Clock Current Data Set-- \n");
 	DBGV("\n");
@@ -564,7 +570,7 @@ displayCurrent(PtpClock * ptpClock)
 
 /**\brief Display Parent data set of a PtpClock*/
 void
-displayParent(PtpClock * ptpClock)
+display::displayParent(PtpClock * ptpClock)
 {
 	DBGV("---Ptp Clock Parent Data Set-- \n");
 	DBGV("\n");
@@ -582,7 +588,7 @@ displayParent(PtpClock * ptpClock)
 
 /**\brief Display Global data set of a PtpClock*/
 void
-displayGlobal(PtpClock * ptpClock)
+display::displayGlobal(PtpClock * ptpClock)
 {
 	DBGV("---Ptp Clock Global Time Data Set-- \n");
 	DBGV("\n");
@@ -600,7 +606,7 @@ displayGlobal(PtpClock * ptpClock)
 
 /**\brief Display Port data set of a PtpClock*/
 void
-displayPort(PtpClock * ptpClock)
+display::displayPort(PtpClock * ptpClock)
 {
 	DBGV("---Ptp Clock Port Data Set-- \n");
 	DBGV("\n");
@@ -621,7 +627,7 @@ displayPort(PtpClock * ptpClock)
 
 /**\brief Display ForeignMaster data set of a PtpClock*/
 void
-displayForeignMaster(PtpClock * ptpClock)
+display::displayForeignMaster(PtpClock * ptpClock)
 {
 
 	ForeignMasterRecord *foreign;
@@ -656,7 +662,7 @@ displayForeignMaster(PtpClock * ptpClock)
 /**\brief Display other data set of a PtpClock*/
 
 void
-displayOthers(PtpClock * ptpClock)
+display::displayOthers(PtpClock * ptpClock)
 {
 
 	int i;
@@ -729,7 +735,7 @@ displayOthers(PtpClock * ptpClock)
 
 /**\brief Display Buffer in & out of a PtpClock*/
 void
-displayBuffer(PtpClock * ptpClock)
+display::displayBuffer(PtpClock * ptpClock)
 {
 
 	int i;
@@ -781,7 +787,7 @@ displayBuffer(PtpClock * ptpClock)
 
 /**\brief Display All data set of a PtpClock*/
 void
-displayPtpClock(PtpClock * ptpClock)
+display::displayPtpClock(PtpClock * ptpClock)
 {
 
 	displayDefault(ptpClock);

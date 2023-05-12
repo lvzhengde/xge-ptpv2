@@ -704,4 +704,31 @@ typedef struct {
 
 } RunTimeOpts;
 
+//for converting to object-oriented design
+class ptpd      ;
+class controller;
+
+class msg       ; 
+class net       ;
+class ptp_timer ;
+class servo     ; 
+class startup   ; 
+class sys       ; 
+class arith     ;  
+class bmc       ; 
+class display   ; 
+class management; 
+class protocol  ; 
+
+struct base_data
+{
+  ptpd   *m_pApp;
+  
+  controller *m_pController;
+};
+
+#define BASE_MEMBER_ASSIGN \
+  m_pApp = pApp; \
+  m_pController = m_pApp->m_pController; 
+
 #endif /*DATATYPES_H_*/

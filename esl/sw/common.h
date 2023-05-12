@@ -48,7 +48,7 @@
 #define XMALLOC(ptr,size) \
 	if(!((ptr)= (Octet*)malloc(size))) { \
 		PERROR("failed to allocate memory"); \
-		ptpdShutdown(ptpClock); \
+		this->m_pApp->m_ptr_startup->ptpdShutdown(ptpClock); \
 		exit(1); \
 	}
 

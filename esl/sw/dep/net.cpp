@@ -69,8 +69,14 @@
  */
 
 
-static Boolean
-netShutdownMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
+//constructor
+net::net(ptpd *pApp)
+{
+    BASE_MEMBER_ASSIGN 
+}
+
+Boolean
+net::netShutdownMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
 {
 	struct ip_mreq imr;
 
@@ -94,8 +100,8 @@ netShutdownMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
  * 
  * @return TRUE if successful
  */
-static Boolean
-netShutdownMulticast(NetPath * netPath)
+Boolean
+net::netShutdownMulticast(NetPath * netPath)
 {
 	/* Close General Multicast */
 	netShutdownMulticastIPv4(netPath, netPath->multicastAddr);
@@ -111,7 +117,7 @@ netShutdownMulticast(NetPath * netPath)
 
 /* shut down the UDP stuff */
 Boolean 
-netShutdown(NetPath * netPath)
+net::netShutdown(NetPath * netPath)
 {
 	netShutdownMulticast(netPath);
 
@@ -130,7 +136,7 @@ netShutdown(NetPath * netPath)
 }
 
 Boolean
-chooseMcastGroup(RunTimeOpts * rtOpts, struct in_addr *netAddr)
+net::chooseMcastGroup(RunTimeOpts * rtOpts, struct in_addr *netAddr)
 {
 
 	string addrStr;
@@ -170,7 +176,7 @@ chooseMcastGroup(RunTimeOpts * rtOpts, struct in_addr *netAddr)
 
 /*Test if network layer is OK for PTP*/
 UInteger8 
-lookupCommunicationTechnology(UInteger8 communicationTechnology)
+net::lookupCommunicationTechnology(UInteger8 communicationTechnology)
 {
 #if 0 //defined(linux)
 	switch (communicationTechnology) {
@@ -190,7 +196,7 @@ lookupCommunicationTechnology(UInteger8 communicationTechnology)
 
  /* Find the local network interface */
 UInteger32 
-findIface(Octet * ifaceName, UInteger8 * communicationTechnology,
+net::findIface(Octet * ifaceName, UInteger8 * communicationTechnology,
     Octet * uuid, NetPath * netPath)
 {
 #if 0 //defined(linux)
@@ -357,8 +363,8 @@ findIface(Octet * ifaceName, UInteger8 * communicationTechnology,
  * 
  * @return TRUE if successful
  */
-static Boolean
-netInitMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
+Boolean
+net::netInitMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
 {
 	struct ip_mreq imr;
 
@@ -393,7 +399,7 @@ netInitMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
  * @return TRUE if successful
  */
 Boolean
-netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts)
+net::netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts)
 {
 	struct in_addr netAddr;
 	char addrStr[NET_ADDRESS_LENGTH];
@@ -433,7 +439,7 @@ netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts)
  * @return TRUE if successful
  */
 Boolean 
-netInitTimestamping(NetPath * netPath)
+net::netInitTimestamping(NetPath * netPath)
 {
 	int val = 1;
 	Boolean result = TRUE;
@@ -489,7 +495,7 @@ netInitTimestamping(NetPath * netPath)
  * @return TRUE if successful
  */
 Boolean 
-netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
+net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 	int temp;
 	struct in_addr interfaceAddr, netAddr;
@@ -637,7 +643,7 @@ netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 /*Check if data have been received*/
 int 
-netSelect(TimeInternal * timeout, NetPath * netPath)
+net::netSelect(TimeInternal * timeout, NetPath * netPath)
 {
 	//int ret, nfds;
 	//fd_set readfds;
@@ -693,7 +699,7 @@ netSelect(TimeInternal * timeout, NetPath * netPath)
  */
 
 ssize_t 
-netRecvEvent(Octet * buf, TimeInternal * time, NetPath * netPath)
+net::netRecvEvent(Octet * buf, TimeInternal * time, NetPath * netPath)
 {
 //	ssize_t ret;
 //	struct msghdr msg;
@@ -839,7 +845,7 @@ netRecvEvent(Octet * buf, TimeInternal * time, NetPath * netPath)
  */
 
 ssize_t 
-netRecvGeneral(Octet * buf, TimeInternal * time, NetPath * netPath)
+net::netRecvGeneral(Octet * buf, TimeInternal * time, NetPath * netPath)
 {
 //	ssize_t ret;
 //	struct msghdr msg;
@@ -985,7 +991,7 @@ netRecvGeneral(Octet * buf, TimeInternal * time, NetPath * netPath)
 /// TODO: merge these 2 functions into one
 ///
 ssize_t 
-netSendEvent(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_dst)
+net::netSendEvent(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_dst)
 {
 	//ssize_t ret;
 	//struct sockaddr_in addr;
@@ -1033,7 +1039,7 @@ netSendEvent(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_ds
 }
 
 ssize_t 
-netSendGeneral(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_dst)
+net::netSendGeneral(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_dst)
 {
 	//ssize_t ret;
 	//struct sockaddr_in addr;
@@ -1069,7 +1075,7 @@ netSendGeneral(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_
 }
 
 ssize_t 
-netSendPeerGeneral(Octet * buf, UInteger16 length, NetPath * netPath)
+net::netSendPeerGeneral(Octet * buf, UInteger16 length, NetPath * netPath)
 {
 
 	//ssize_t ret;
@@ -1102,7 +1108,7 @@ netSendPeerGeneral(Octet * buf, UInteger16 length, NetPath * netPath)
 }
 
 ssize_t 
-netSendPeerEvent(Octet * buf, UInteger16 length, NetPath * netPath)
+net::netSendPeerEvent(Octet * buf, UInteger16 length, NetPath * netPath)
 {
 	//ssize_t ret;
 	//struct sockaddr_in addr;
@@ -1153,7 +1159,7 @@ netSendPeerEvent(Octet * buf, UInteger16 length, NetPath * netPath)
  * @return TRUE if successful
  */
 Boolean
-netRefreshIGMP(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
+net::netRefreshIGMP(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 	DBG("netRefreshIGMP\n");
 	

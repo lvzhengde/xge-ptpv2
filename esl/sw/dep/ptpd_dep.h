@@ -29,6 +29,7 @@
  /** \name System messages*/
  /**\{*/
 
+#define MESSAGE this->m_pApp->m_ptr_sys->message
 
 // Syslog ordering. We define extra debug levels above LOG_DEBUG for internal use - but message() doesn't pass these to SysLog
 
@@ -48,15 +49,15 @@
 #define LOG_DEBUGV   9
 
 
-#define EMERGENCY(x, ...) message(LOG_EMERG, x, ##__VA_ARGS__)
-#define ALERT(x, ...)     message(LOG_ALERT, x, ##__VA_ARGS__)
-#define CRITICAL(x, ...)  message(LOG_CRIT, x, ##__VA_ARGS__)
-#define ERROR_(x, ...)  message(LOG_ERR, x, ##__VA_ARGS__)
-#define PERROR(x, ...)    message(LOG_ERR, x "      (strerror: %m)\n", ##__VA_ARGS__)
-#define WARNING(x, ...)   message(LOG_WARNING, x, ##__VA_ARGS__)
-#define NOTIFY(x, ...) message(LOG_NOTICE, x, ##__VA_ARGS__)
-#define NOTICE(x, ...)    message(LOG_NOTICE, x, ##__VA_ARGS__)
-#define INFO(x, ...)   message(LOG_INFO, x, ##__VA_ARGS__)
+#define EMERGENCY(x, ...) MESSAGE(LOG_EMERG, x, ##__VA_ARGS__)
+#define ALERT(x, ...)     MESSAGE(LOG_ALERT, x, ##__VA_ARGS__)
+#define CRITICAL(x, ...)  MESSAGE(LOG_CRIT, x, ##__VA_ARGS__)
+#define ERROR_(x, ...)  MESSAGE(LOG_ERR, x, ##__VA_ARGS__)
+#define PERROR(x, ...)    MESSAGE(LOG_ERR, x "      (strerror: %m)\n", ##__VA_ARGS__)
+#define WARNING(x, ...)   MESSAGE(LOG_WARNING, x, ##__VA_ARGS__)
+#define NOTIFY(x, ...) MESSAGE(LOG_NOTICE, x, ##__VA_ARGS__)
+#define NOTICE(x, ...)    MESSAGE(LOG_NOTICE, x, ##__VA_ARGS__)
+#define INFO(x, ...)   MESSAGE(LOG_INFO, x, ##__VA_ARGS__)
 
 
 /*
@@ -95,7 +96,7 @@
 #define PTPD_DBG
 #define PTPD_DBG2
 
-#define DBGV(x, ...) message(LOG_DEBUGV, x, ##__VA_ARGS__)
+#define DBGV(x, ...) MESSAGE(LOG_DEBUGV, x, ##__VA_ARGS__)
 #else
 #define DBGV(x, ...)
 #endif
@@ -109,13 +110,13 @@
 #ifdef PTPD_DBG2
 #undef PTPD_DBG
 #define PTPD_DBG
-#define DBG2(x, ...) message(LOG_DEBUG2, x, ##__VA_ARGS__)
+#define DBG2(x, ...) MESSAGE(LOG_DEBUG2, x, ##__VA_ARGS__)
 #else
 #define DBG2(x, ...)
 #endif
 
 #ifdef PTPD_DBG
-#define DBG(x, ...) message(LOG_DEBUG, x, ##__VA_ARGS__)
+#define DBG(x, ...) MESSAGE(LOG_DEBUG, x, ##__VA_ARGS__)
 #else
 #define DBG(x, ...)
 #endif

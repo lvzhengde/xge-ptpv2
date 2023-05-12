@@ -1,15 +1,15 @@
 #include "common.h"
 
 //global variables
-RunTimeOpts rtOpts;			//configuration data     
+//RunTimeOpts rtOpts;			//configuration data     
 
-PtpClock *G_ptpClock;
+//PtpClock *G_ptpClock;
 
 //constructor
 ptpd::ptpd(controller *pController)
   : MyApp(pController)
 {
-  //m_pController = pController;
+  m_pApp = this;
 }
 
 //destructor
@@ -21,9 +21,21 @@ ptpd::~ptpd()
 //initialize related variables
 void ptpd::init()
 {
-  m_cpu_str = "Clock ID: " + to_string(m_pController->m_clock_id) + " Controller: " + to_string(m_pController->m_ID);
+  m_ptr_msg        = new msg       (this); 
+  m_ptr_net        = new net       (this);
+  m_ptr_ptp_timer  = new ptp_timer (this);
+  m_ptr_servo      = new servo     (this); 
+  m_ptr_startup    = new startup   (this); 
+  m_ptr_sys        = new sys       (this); 
+  m_ptr_arith      = new arith     (this);  
+  m_ptr_bmc        = new bmc       (this); 
+  m_ptr_display    = new display   (this); 
+  m_ptr_management = new management(this); 
+  m_ptr_protocol   = new protocol  (this); 
+
+  m_cpu_str = "Clock ID: " + to_string(m_pController->m_clock_id);
   
-  cout << "\r\n            "<< m_cpu_str  << "\r\n"
+  cout << "\r\n                "<< m_cpu_str  << "\r\n"
        << "=========================================================" << "\r\n" 
        << "            ####  PTPv2 Protocol Test Start!  #### " << "\r\n" << "\r\n";
 
@@ -39,77 +51,78 @@ void ptpd::exec()
 	Integer16 ret;
 
 	/* initialize run-time options to default values */
-	rtOpts.announceInterval = DEFAULT_ANNOUNCE_INTERVAL;
-	rtOpts.syncInterval = DEFAULT_SYNC_INTERVAL;
-	rtOpts.clockQuality.clockAccuracy = DEFAULT_CLOCK_ACCURACY;
-	rtOpts.clockQuality.clockClass = DEFAULT_CLOCK_CLASS;
-	rtOpts.clockQuality.offsetScaledLogVariance = DEFAULT_CLOCK_VARIANCE;
-	rtOpts.priority1 = DEFAULT_PRIORITY1;
-	rtOpts.priority2 = DEFAULT_PRIORITY2;
-	rtOpts.domainNumber = DEFAULT_DOMAIN_NUMBER;
+	m_rtOpts.announceInterval = DEFAULT_ANNOUNCE_INTERVAL;
+	m_rtOpts.syncInterval = DEFAULT_SYNC_INTERVAL;
+	m_rtOpts.clockQuality.clockAccuracy = DEFAULT_CLOCK_ACCURACY;
+	m_rtOpts.clockQuality.clockClass = DEFAULT_CLOCK_CLASS;
+	m_rtOpts.clockQuality.offsetScaledLogVariance = DEFAULT_CLOCK_VARIANCE;
+	m_rtOpts.priority1 = DEFAULT_PRIORITY1;
+	m_rtOpts.priority2 = DEFAULT_PRIORITY2;
+	m_rtOpts.domainNumber = DEFAULT_DOMAIN_NUMBER;
 #ifdef PTP_EXPERIMENTAL
-	rtOpts.mcast_group_Number = 0;
-	rtOpts.do_hybrid_mode = 0;
+	m_rtOpts.mcast_group_Number = 0;
+	m_rtOpts.do_hybrid_mode = 0;
 #endif
 	
 	// rtOpts.slaveOnly = FALSE;
-	rtOpts.currentUtcOffset = DEFAULT_UTC_OFFSET;
-	rtOpts.ifaceName[0] = '\0';
-	rtOpts.do_unicast_mode = 0;
+	m_rtOpts.currentUtcOffset = DEFAULT_UTC_OFFSET;
+	m_rtOpts.ifaceName[0] = '\0';
+	m_rtOpts.do_unicast_mode = 0;
 
-	rtOpts.noAdjust = NO_ADJUST;  // false
+	m_rtOpts.noAdjust = NO_ADJUST;  // false
 	// rtOpts.displayStats = FALSE;
 	/* Deep display of all packets seen by the daemon */
-	rtOpts.displayPackets = FALSE;
+	m_rtOpts.displayPackets = FALSE;
 	// rtOpts.unicastAddress
-	rtOpts.ap = DEFAULT_AP;
-	rtOpts.ai = DEFAULT_AI;
-	rtOpts.s = DEFAULT_DELAY_S;
-	rtOpts.inboundLatency.nanoseconds = DEFAULT_INBOUND_LATENCY;
-	rtOpts.outboundLatency.nanoseconds = DEFAULT_OUTBOUND_LATENCY;
-	rtOpts.max_foreign_records = DEFAULT_MAX_FOREIGN_RECORDS;
+	m_rtOpts.ap = DEFAULT_AP;
+	m_rtOpts.ai = DEFAULT_AI;
+	m_rtOpts.s = DEFAULT_DELAY_S;
+	m_rtOpts.inboundLatency.nanoseconds = DEFAULT_INBOUND_LATENCY;
+	m_rtOpts.outboundLatency.nanoseconds = DEFAULT_OUTBOUND_LATENCY;
+	m_rtOpts.max_foreign_records = DEFAULT_MAX_FOREIGN_RECORDS;
 	// rtOpts.ethernet_mode = FALSE;
 	// rtOpts.offset_first_updated = FALSE;
 	// rtOpts.file[0] = 0;
-	rtOpts.maxDelayAutoTune = FALSE;
-	rtOpts.discardedPacketThreshold = 60;
-	rtOpts.logFd = -1;
-	rtOpts.recordFP = NULL;
-	rtOpts.do_log_to_file = FALSE;
-	rtOpts.do_record_quality_file = FALSE;
-	rtOpts.nonDaemon = FALSE;
+	m_rtOpts.maxDelayAutoTune = FALSE;
+	m_rtOpts.discardedPacketThreshold = 60;
+	m_rtOpts.logFd = -1;
+	m_rtOpts.recordFP = NULL;
+	m_rtOpts.do_log_to_file = FALSE;
+	m_rtOpts.do_record_quality_file = FALSE;
+	m_rtOpts.nonDaemon = FALSE;
 
 	/*
 	 * defaults for new options
 	 */
-	rtOpts.slaveOnly = TRUE;
-	rtOpts.ignore_delayreq_interval_master = FALSE;
-	rtOpts.do_IGMP_refresh = TRUE;
-	rtOpts.useSysLog       = TRUE;
-	rtOpts.syslog_startup_messages_also_to_stdout = TRUE;		/* used to print inital messages both to syslog and screen */
-	rtOpts.announceReceiptTimeout  = DEFAULT_ANNOUNCE_RECEIPT_TIMEOUT;
+	m_rtOpts.slaveOnly = TRUE;
+	m_rtOpts.ignore_delayreq_interval_master = FALSE;
+	m_rtOpts.do_IGMP_refresh = TRUE;
+	m_rtOpts.useSysLog       = TRUE;
+	m_rtOpts.syslog_startup_messages_also_to_stdout = TRUE;		/* used to print inital messages both to syslog and screen */
+	m_rtOpts.announceReceiptTimeout  = DEFAULT_ANNOUNCE_RECEIPT_TIMEOUT;
 #ifdef RUNTIME_DEBUG
-	rtOpts.debug_level = LOG_INFO;			/* by default debug messages as disabled, but INFO messages and below are printed */
+	m_rtOpts.debug_level = LOG_INFO;			/* by default debug messages as disabled, but INFO messages and below are printed */
 #endif
 
-	rtOpts.ttl = 1;
-	rtOpts.delayMechanism   = DEFAULT_DELAY_MECHANISM;
-	rtOpts.noResetClock     = DEFAULT_NO_RESET_CLOCK;
-	rtOpts.log_seconds_between_message = 0;
+	m_rtOpts.ttl = 1;
+	m_rtOpts.delayMechanism   = DEFAULT_DELAY_MECHANISM;
+	m_rtOpts.noResetClock     = DEFAULT_NO_RESET_CLOCK;
+	m_rtOpts.log_seconds_between_message = 0;
 
-	rtOpts.initial_delayreq = DEFAULT_DELAYREQ_INTERVAL;
-	rtOpts.subsequent_delayreq = DEFAULT_DELAYREQ_INTERVAL;      // this will be updated if -g is given
+	m_rtOpts.initial_delayreq = DEFAULT_DELAYREQ_INTERVAL;
+	m_rtOpts.subsequent_delayreq = DEFAULT_DELAYREQ_INTERVAL;      // this will be updated if -g is given
 
 #if 0
 	/* Initialize run time options with command line arguments */
-	if (!(ptpClock = ptpdStartup(argc, argv, &ret, &rtOpts)))
+	if (!(ptpClock = ptpdStartup(argc, argv, &ret, &m_rtOpts)))
 		return ret;
 
 	/* global variable for message(), please see comment on top of this file */
-	G_ptpClock = ptpClock;
+	//G_ptpClock = ptpClock;
+	m_ptr_ptpClock = ptpClock;
 
 	/* do the protocol engine */
-	protocol(&rtOpts, ptpClock);
+	protocolExec(&m_rtOpts, ptpClock);
 	/* forever loop.. */
 
 	ptpdShutdown(ptpClock);
@@ -123,11 +136,22 @@ void ptpd::exec()
 //exit test and clean up
 void ptpd::exit()
 {
+  if(m_ptr_msg        != NULL) delete m_ptr_msg       ; 
+  if(m_ptr_net        != NULL) delete m_ptr_net       ;
+  if(m_ptr_ptp_timer  != NULL) delete m_ptr_ptp_timer ;
+  if(m_ptr_servo      != NULL) delete m_ptr_servo     ; 
+  if(m_ptr_startup    != NULL) delete m_ptr_startup   ; 
+  if(m_ptr_sys        != NULL) delete m_ptr_sys       ; 
+  if(m_ptr_arith      != NULL) delete m_ptr_arith     ;  
+  if(m_ptr_bmc        != NULL) delete m_ptr_bmc       ; 
+  if(m_ptr_display    != NULL) delete m_ptr_display   ; 
+  if(m_ptr_management != NULL) delete m_ptr_management; 
+  if(m_ptr_protocol   != NULL) delete m_ptr_protocol  ; 
+
   wait(200, SC_NS);
 
-  cout << "\r\n            "<< m_cpu_str  << "\r\n"
+  cout << "\r\n                  "<< m_cpu_str  << "\r\n"
        << "=========================================================" << "\r\n" 
        << "            ####  PTPv2 Protocol Test Complete!  #### " << "\r\n";
 }
-
 

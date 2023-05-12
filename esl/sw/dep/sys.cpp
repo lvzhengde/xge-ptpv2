@@ -68,12 +68,30 @@
 /* only C99 has the round function built-in */
 double round (double __x);
 
+#if defined(PTPD_LSBF)
+Integer16 flip16(Integer16 x)
+{
+   return (((x) >> 8) & 0x00ff) | (((x) << 8) & 0xff00);
+}
+
+Integer32 flip32(Integer32 x)
+{
+  return (((x) >> 24) & 0x000000ff) | (((x) >> 8 ) & 0x0000ff00) |
+         (((x) << 8 ) & 0x00ff0000) | (((x) << 24) & 0xff000000);
+}
+#endif
+
+//constructor
+sys::sys(ptpd *pApp)
+{
+    BASE_MEMBER_ASSIGN 
+}
 
 /*
  returns a static char * for the representation of time, for debug purposes
  DO NOT call this twice in the same printf!
 */
-char *dump_TimeInternal(const TimeInternal * p)
+char *sys::dump_TimeInternal(const TimeInternal * p)
 {
 	static char buf[100];
 
@@ -86,7 +104,7 @@ char *dump_TimeInternal(const TimeInternal * p)
  displays 2 timestamps and their strings in sequence, and the difference between then
  DO NOT call this twice in the same printf!
 */
-char *dump_TimeInternal2(const char *st1, const TimeInternal * p1, const char *st2, const TimeInternal * p2)
+char *sys::dump_TimeInternal2(const char *st1, const TimeInternal * p1, const char *st2, const TimeInternal * p2)
 {
 	static char buf[BUF_SIZE];
 	int n = 0;
@@ -106,7 +124,7 @@ char *dump_TimeInternal2(const char *st1, const TimeInternal * p1, const char *s
 
 	/* display difference */
 	TimeInternal r;
-	subTime(&r, p1, p2);
+	m_pApp->m_ptr_arith->subTime(&r, p1, p2);
 	n += snprintf(buf + n, BUF_SIZE - n, "   (diff: ");
 	n += snprint_TimeInternal(buf + n, BUF_SIZE - n, &r);
 	n += snprintf(buf + n, BUF_SIZE - n, ") ");
@@ -117,13 +135,13 @@ char *dump_TimeInternal2(const char *st1, const TimeInternal * p1, const char *s
 
 
 int 
-snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
+sys::snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
 {
 	int len = 0;
 
 	/* always print either a space, or the leading "-". This makes the stat files columns-aligned */
 	len += snprintf(&s[len], max_len - len, "%c",
-		isTimeInternalNegative(p)? '-':' ');
+		m_pApp->m_ptr_arith->isTimeInternalNegative(p)? '-':' ');
 
 	len += snprintf(&s[len], max_len - len, "%d.%09d",
 	    abs(p->seconds), abs(p->nanoseconds));
@@ -133,7 +151,7 @@ snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
 
 
 /* debug aid: convert a time variable into a static char */
-char *time2st(const TimeInternal * p)
+char *sys::time2st(const TimeInternal * p)
 {
 	static char buf[1000];
 
@@ -143,28 +161,15 @@ char *time2st(const TimeInternal * p)
 
 
 
-void DBG_time(const char *name, const TimeInternal  p)
+void sys::DBG_time(const char *name, const TimeInternal  p)
 {
 	DBG("             %s:   %s\n", name, time2st(&p));
 
 }
 
 
-#if defined(PTPD_LSBF)
-Integer16 flip16(Integer16 x)
-{
-   return (((x) >> 8) & 0x00ff) | (((x) << 8) & 0xff00);
-}
-
-Integer32 flip32(Integer32 x)
-{
-  return (((x) >> 24) & 0x000000ff) | (((x) >> 8 ) & 0x0000ff00) |
-         (((x) << 8 ) & 0x00ff0000) | (((x) << 24) & 0xff000000);
-}
-#endif
-
 string
-translatePortState(PtpClock *ptpClock)
+sys::translatePortState(PtpClock *ptpClock)
 {
 	string s;
 	switch(ptpClock->portState) {
@@ -191,7 +196,7 @@ translatePortState(PtpClock *ptpClock)
 
 
 int 
-snprint_ClockIdentity(char *s, int max_len, const ClockIdentity id)
+sys::snprint_ClockIdentity(char *s, int max_len, const ClockIdentity id)
 {
 	int len = 0;
 	int i;
@@ -209,7 +214,7 @@ snprint_ClockIdentity(char *s, int max_len, const ClockIdentity id)
 
 /* show the mac address in an easy way */
 int
-snprint_ClockIdentity_mac(char *s, int max_len, const ClockIdentity id)
+sys::snprint_ClockIdentity_mac(char *s, int max_len, const ClockIdentity id)
 {
 	int len = 0;
 	int i;
@@ -240,7 +245,7 @@ snprint_ClockIdentity_mac(char *s, int max_len, const ClockIdentity id)
  * so it only have different output on a failover or at restart
  *
  */
-int ether_ntohost_cache(char *hostname, struct ether_addr *addr)
+int sys::ether_ntohost_cache(char *hostname, struct ether_addr *addr)
 {
 //	static int valid = 0;
 //	static struct ether_addr prev_addr;
@@ -279,7 +284,7 @@ int ether_ntohost_cache(char *hostname, struct ether_addr *addr)
 
 /* Show the hostname configured in /etc/ethers */
 int
-snprint_ClockIdentity_ntohost(char *s, int max_len, const ClockIdentity id)
+sys::snprint_ClockIdentity_ntohost(char *s, int max_len, const ClockIdentity id)
 {
 	int len = 0;
 //	int i,j;
@@ -308,7 +313,7 @@ snprint_ClockIdentity_ntohost(char *s, int max_len, const ClockIdentity id)
 
 
 int 
-snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
+sys::snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
 {
 	int len = 0;
 
@@ -331,19 +336,19 @@ snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
  * (which has possibly been redirected to a file, using logtofile()/dup2().
  */
 void
-message(int priority, const char * format, ...)
+sys::message(int priority, const char * format, ...)
 {
-	extern RunTimeOpts rtOpts;
+	//extern RunTimeOpts rtOpts;
 	va_list ap;
 	va_start(ap, format);
 
 #ifdef RUNTIME_DEBUG
-	if ((priority >= LOG_DEBUG) && (priority > rtOpts.debug_level)) {
+	if ((priority >= LOG_DEBUG) && (priority > m_pApp->m_rtOpts.debug_level)) {
 		return;
 	}
 #endif
 
-	if (rtOpts.useSysLog) {
+	if (m_pApp->m_rtOpts.useSysLog) {
 		static Boolean logOpened;
 #ifdef RUNTIME_DEBUG
 		/*
@@ -362,7 +367,7 @@ message(int priority, const char * format, ...)
 		vsyslog(priority, format, ap);
 
 		/* Also warn operator during startup only */
-		if (rtOpts.syslog_startup_messages_also_to_stdout &&
+		if (m_pApp->m_rtOpts.syslog_startup_messages_also_to_stdout &&
 			(priority <= LOG_WARNING)
 			){
 			va_start(ap, format);
@@ -372,10 +377,10 @@ message(int priority, const char * format, ...)
 		char time_str[MAXTIMESTR];
 		struct timeval now;
 
-		extern string translatePortState(PtpClock *ptpClock);
-		extern PtpClock *G_ptpClock;
+		//extern string translatePortState(PtpClock *ptpClock);
+		//extern PtpClock *G_ptpClock;
 
-		fprintf(stderr, "   (ptpd %-9s ",
+		fprintf(stderr, "    %s   (ptpd %-9s ", m_pApp->m_cpu_str.c_str(),
 			priority == LOG_EMERG   ? "emergency)" :
 			priority == LOG_ALERT   ? "alert)" :
 			priority == LOG_CRIT    ? "critical)" :
@@ -396,8 +401,8 @@ message(int priority, const char * format, ...)
 		gettimeofday(&now, 0);
 		strftime(time_str, MAXTIMESTR, "%X", localtime(&now.tv_sec));
 		fprintf(stderr, "%s.%06d ", time_str, (int)now.tv_usec  );
-		fprintf(stderr, " (%s)  ", G_ptpClock ?
-		       translatePortState(G_ptpClock) : "___");
+		fprintf(stderr, " (%s)  ", m_pApp->m_ptr_ptpClock ?
+		       translatePortState(m_pApp->m_ptr_ptpClock) : "___");
 
 		vfprintf(stderr, format, ap);
 	}
@@ -405,28 +410,28 @@ message(int priority, const char * format, ...)
 }
 
 void
-increaseMaxDelayThreshold()
+sys::increaseMaxDelayThreshold()
 {
-	extern RunTimeOpts rtOpts;
-	NOTIFY("Increasing maxDelay threshold from %i to %i\n", rtOpts.maxDelay, 
-	       rtOpts.maxDelay << 1);
+	//extern RunTimeOpts rtOpts;
+	NOTIFY("Increasing maxDelay threshold from %i to %i\n", m_pApp->m_rtOpts.maxDelay, 
+	       m_pApp->m_rtOpts.maxDelay << 1);
 
-	rtOpts.maxDelay <<= 1;
+	m_pApp->m_rtOpts.maxDelay <<= 1;
 }
 
 void
-decreaseMaxDelayThreshold()
+sys::decreaseMaxDelayThreshold()
 {
-	extern RunTimeOpts rtOpts;
-	if ((rtOpts.maxDelay >> 1) < rtOpts.origMaxDelay)
+	//extern RunTimeOpts rtOpts;
+	if ((m_pApp->m_rtOpts.maxDelay >> 1) < m_pApp->m_rtOpts.origMaxDelay)
 		return;
 	NOTIFY("Decreasing maxDelay threshold from %i to %i\n", 
-	       rtOpts.maxDelay, rtOpts.maxDelay >> 1);
-	rtOpts.maxDelay >>= 1;
+	       m_pApp->m_rtOpts.maxDelay, m_pApp->m_rtOpts.maxDelay >> 1);
+	m_pApp->m_rtOpts.maxDelay >>= 1;
 }
 
 void 
-displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
+sys::displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 	static int start = 1;
 	static char sbuf[SCREEN_BUFSZ];
@@ -555,7 +560,7 @@ displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 
 void
-recordSync(RunTimeOpts * rtOpts, UInteger16 sequenceId, TimeInternal * time)
+sys::recordSync(RunTimeOpts * rtOpts, UInteger16 sequenceId, TimeInternal * time)
 {
 	if (rtOpts->recordFP) 
 		fprintf(rtOpts->recordFP, "%d %llu\n", sequenceId, 
@@ -564,7 +569,7 @@ recordSync(RunTimeOpts * rtOpts, UInteger16 sequenceId, TimeInternal * time)
 }
 
 Boolean 
-nanoSleep(TimeInternal * t)
+sys::nanoSleep(TimeInternal * t)
 {
 	//struct timespec ts, tr;
 
@@ -582,7 +587,7 @@ nanoSleep(TimeInternal * t)
 }
 
 void 
-getTime(TimeInternal * time)
+sys::getTime(TimeInternal * time)
 {
 //#if defined(linux) || defined(__APPLE__)
 //
@@ -602,7 +607,7 @@ getTime(TimeInternal * time)
 }
 
 void 
-setTime(TimeInternal * time)
+sys::setTime(TimeInternal * time)
 {
 	//struct timeval tv;
  //
@@ -618,7 +623,7 @@ setTime(TimeInternal * time)
 
 /* returns a double beween 0.0 and 1.0 */
 double 
-getRand(void)
+sys::getRand(void)
 {
 	return ((rand() * 1.0) / RAND_MAX);
 }
@@ -635,7 +640,7 @@ getRand(void)
  */
 #if !defined(__APPLE__)
 Boolean
-adjFreq(Integer32 adj)
+sys::adjFreq(Integer32 adj)
 {
 	//struct timex t;
 
@@ -666,7 +671,7 @@ adjFreq(Integer32 adj)
 }
 
 void
-setTimexFlags(int flags, Boolean quiet)
+sys::setTimexFlags(int flags, Boolean quiet)
 {
 //	struct timex tmx;
 //	int ret;
@@ -708,7 +713,7 @@ setTimexFlags(int flags, Boolean quiet)
 }
 
 void
-unsetTimexFlags(int flags, Boolean quiet) 
+sys::unsetTimexFlags(int flags, Boolean quiet) 
 {
 //	struct timex tmx;
 //	int ret;
@@ -749,7 +754,7 @@ unsetTimexFlags(int flags, Boolean quiet)
 //	}
 }
 
-int getTimexFlags(void)
+int sys::getTimexFlags(void)
 {
 	//struct timex tmx;
 	//int ret;
@@ -770,7 +775,7 @@ int getTimexFlags(void)
 }
 
 Boolean
-checkTimexFlags(int flags) {
+sys::checkTimexFlags(int flags) {
 
     int tflags = getTimexFlags();
     if (tflags == -1) 
@@ -786,7 +791,7 @@ checkTimexFlags(int flags) {
 
 #if defined(MOD_TAI) &&  NTP_API == 4
 void
-setKernelUtcOffset(int utc_offset) {
+sys::setKernelUtcOffset(int utc_offset) {
 
 	struct timex tmx;
 	int ret;
@@ -811,7 +816,7 @@ setKernelUtcOffset(int utc_offset) {
 #else
 
 void
-adjTime(Integer32 nanoseconds)
+sys::adjTime(Integer32 nanoseconds)
 {
 
 	struct timeval t;
@@ -831,7 +836,7 @@ adjTime(Integer32 nanoseconds)
 #if 0 && defined (linux)  /* NOTE: This is actually not used */
 
 long
-get_current_tickrate(void)
+sys::get_current_tickrate(void)
 {
 	struct timex t;
 

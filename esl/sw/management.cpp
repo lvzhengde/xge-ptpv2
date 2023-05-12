@@ -54,9 +54,14 @@
 
 #include "common.h"
 
+//constructor
+management::management(ptpd *pApp)
+{
+    BASE_MEMBER_ASSIGN
+}
 
 /**\brief Initialize outgoing management message fields*/
-void initOutgoingMsgManagement(MsgManagement* incoming, MsgManagement* outgoing, PtpClock *ptpClock)
+void management::initOutgoingMsgManagement(MsgManagement* incoming, MsgManagement* outgoing, PtpClock *ptpClock)
 {
 	/* set header fields */
 	outgoing->header.transportSpecific = 0x0;
@@ -68,13 +73,13 @@ void initOutgoingMsgManagement(MsgManagement* incoming, MsgManagement* outgoing,
         outgoing->header.flagField1 = 0x00;
         outgoing->header.correctionField.msb = 0;
         outgoing->header.correctionField.lsb = 0;
-	copyPortIdentity(&outgoing->header.sourcePortIdentity, &ptpClock->portIdentity);
+	m_pApp->m_ptr_msg->copyPortIdentity(&outgoing->header.sourcePortIdentity, &ptpClock->portIdentity);
 	outgoing->header.sequenceId = incoming->header.sequenceId;
 	outgoing->header.controlField = 0x0; /* deprecrated for ptp version 2 */
 	outgoing->header.logMessageInterval = 0x7F;
 
 	/* set management message fields */
-	copyPortIdentity( &outgoing->targetPortIdentity, &incoming->header.sourcePortIdentity );
+	m_pApp->m_ptr_msg->copyPortIdentity( &outgoing->targetPortIdentity, &incoming->header.sourcePortIdentity );
 	outgoing->startingBoundaryHops = incoming->startingBoundaryHops - incoming->boundaryHops;
 	outgoing->boundaryHops = outgoing->startingBoundaryHops;
         outgoing->actionField = 0; /* set default action, avoid uninitialized value */
@@ -87,7 +92,7 @@ void initOutgoingMsgManagement(MsgManagement* incoming, MsgManagement* outgoing,
 }
 
 /**\brief Handle incoming NULL_MANAGEMENT message*/
-void handleMMNullManagement(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMNullManagement(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received NULL_MANAGEMENT message\n");
 
@@ -116,7 +121,7 @@ void handleMMNullManagement(MsgManagement* incoming, MsgManagement* outgoing, Pt
 }
 
 /**\brief Handle incoming CLOCK_DESCRIPTION management message*/
-void handleMMClockDescription(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMClockDescription(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received CLOCK_DESCRIPTION management message \n");
 
@@ -209,7 +214,7 @@ void handleMMClockDescription(MsgManagement* incoming, MsgManagement* outgoing, 
 }
 
 /**\brief Handle incoming SLAVE_ONLY management message type*/
-void handleMMSlaveOnly(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMSlaveOnly(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received SLAVE_ONLY management message \n");
 
@@ -246,7 +251,7 @@ void handleMMSlaveOnly(MsgManagement* incoming, MsgManagement* outgoing, PtpCloc
 }
 
 /**\brief Handle incoming USER_DESCRIPTION management message type*/
-void handleMMUserDescription(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMUserDescription(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received USER_DESCRIPTION message\n");
 
@@ -299,7 +304,7 @@ void handleMMUserDescription(MsgManagement* incoming, MsgManagement* outgoing, P
 }
 
 /**\brief Handle incoming SAVE_IN_NON_VOLATILE_STORAGE management message type*/
-void handleMMSaveInNonVolatileStorage(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMSaveInNonVolatileStorage(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received SAVE_IN_NON_VOLATILE_STORAGE message\n");
 
@@ -325,7 +330,7 @@ void handleMMSaveInNonVolatileStorage(MsgManagement* incoming, MsgManagement* ou
 }
 
 /**\brief Handle incoming RESET_NON_VOLATILE_STORAGE management message type*/
-void handleMMResetNonVolatileStorage(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMResetNonVolatileStorage(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received RESET_NON_VOLATILE_STORAGE message\n");
 
@@ -351,7 +356,7 @@ void handleMMResetNonVolatileStorage(MsgManagement* incoming, MsgManagement* out
 }
 
 /**\brief Handle incoming INITIALIZE management message type*/
-void handleMMInitialize(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMInitialize(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received INITIALIZE message\n");
 
@@ -398,7 +403,7 @@ void handleMMInitialize(MsgManagement* incoming, MsgManagement* outgoing, PtpClo
 }
 
 /**\brief Handle incoming DEFAULT_DATA_SET management message type*/
-void handleMMDefaultDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMDefaultDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received DEFAULT_DATA_SET message\n");
 
@@ -431,7 +436,7 @@ void handleMMDefaultDataSet(MsgManagement* incoming, MsgManagement* outgoing, Pt
 				ptpClock->clockQuality.offsetScaledLogVariance;
 		data->priority2 = ptpClock->priority2;
 		/* copy clockIdentity */
-		copyClockIdentity(data->clockIdentity, ptpClock->clockIdentity);
+		m_pApp->m_ptr_msg->copyClockIdentity(data->clockIdentity, ptpClock->clockIdentity);
 		data->domainNumber = ptpClock->domainNumber;
 		data->reserved1 = 0x0;
 		break;
@@ -451,7 +456,7 @@ void handleMMDefaultDataSet(MsgManagement* incoming, MsgManagement* outgoing, Pt
 }
 
 /**\brief Handle incoming CURRENT_DATA_SET management message type*/
-void handleMMCurrentDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMCurrentDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received CURRENT_DATA_SET message\n");
 
@@ -502,7 +507,7 @@ void handleMMCurrentDataSet(MsgManagement* incoming, MsgManagement* outgoing, Pt
 }
 
 /**\brief Handle incoming PARENT_DATA_SET management message type*/
-void handleMMParentDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMParentDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received PARENT_DATA_SET message\n");
 
@@ -520,7 +525,7 @@ void handleMMParentDataSet(MsgManagement* incoming, MsgManagement* outgoing, Ptp
 		XMALLOC(outgoing->tlv->dataField, sizeof(MMParentDataSet));
 		data = (MMParentDataSet*)outgoing->tlv->dataField;
 		/* GET actions */
-		copyPortIdentity(&data->parentPortIdentity, &ptpClock->parentPortIdentity);
+		m_pApp->m_ptr_msg->copyPortIdentity(&data->parentPortIdentity, &ptpClock->parentPortIdentity);
 		data->PS = ptpClock->parentStats;
 		data->reserved = 0;
 		data->observedParentOffsetScaledLogVariance =
@@ -535,7 +540,7 @@ void handleMMParentDataSet(MsgManagement* incoming, MsgManagement* outgoing, Ptp
 		data->grandmasterClockQuality.offsetScaledLogVariance =
 				ptpClock->grandmasterClockQuality.offsetScaledLogVariance;
 		data->grandmasterPriority2 = ptpClock->grandmasterPriority2;
-		copyClockIdentity(data->grandmasterIdentity, ptpClock->grandmasterIdentity);
+		m_pApp->m_ptr_msg->copyClockIdentity(data->grandmasterIdentity, ptpClock->grandmasterIdentity);
 		break;
 	case RESPONSE:
 		DBGV(" RESPONSE action\n");
@@ -552,7 +557,7 @@ void handleMMParentDataSet(MsgManagement* incoming, MsgManagement* outgoing, Ptp
 }
 
 /**\brief Handle incoming PROPERTIES_DATA_SET management message type*/
-void handleMMTimePropertiesDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMTimePropertiesDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received TIME_PROPERTIES message\n");
 
@@ -597,7 +602,7 @@ void handleMMTimePropertiesDataSet(MsgManagement* incoming, MsgManagement* outgo
 }
 
 /**\brief Handle incoming PORT_DATA_SET management message type*/
-void handleMMPortDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMPortDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received PORT_DATA_SET message\n");
 
@@ -614,7 +619,7 @@ void handleMMPortDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpCl
 		outgoing->actionField = RESPONSE;
 		XMALLOC(outgoing->tlv->dataField, sizeof(MMPortDataSet));
 		data = (MMPortDataSet*)outgoing->tlv->dataField;
-		copyPortIdentity(&data->portIdentity, &ptpClock->portIdentity);
+		m_pApp->m_ptr_msg->copyPortIdentity(&data->portIdentity, &ptpClock->portIdentity);
 		data->portState = ptpClock->portState;
 		data->logMinDelayReqInterval = ptpClock->logMinDelayReqInterval;
 		TimeInterval pMPD;
@@ -648,7 +653,7 @@ void handleMMPortDataSet(MsgManagement* incoming, MsgManagement* outgoing, PtpCl
 }
 
 /**\brief Handle incoming PRIORITY1 management message type*/
-void handleMMPriority1(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMPriority1(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received PRIORITY1 message\n");
 
@@ -690,7 +695,7 @@ void handleMMPriority1(MsgManagement* incoming, MsgManagement* outgoing, PtpCloc
 }
 
 /**\brief Handle incoming PRIORITY2 management message type*/
-void handleMMPriority2(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMPriority2(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received PRIORITY2 message\n");
 
@@ -732,7 +737,7 @@ void handleMMPriority2(MsgManagement* incoming, MsgManagement* outgoing, PtpCloc
 }
 
 /**\brief Handle incoming DOMAIN management message type*/
-void handleMMDomain(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMDomain(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received DOMAIN message\n");
 
@@ -774,7 +779,7 @@ void handleMMDomain(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* 
 }
 
 /**\brief Handle incoming LOG_ANNOUNCE_INTERVAL management message type*/
-void handleMMLogAnnounceInterval(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMLogAnnounceInterval(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received LOG_ANNOUNCE_INTERVAL message\n");
 
@@ -816,7 +821,7 @@ void handleMMLogAnnounceInterval(MsgManagement* incoming, MsgManagement* outgoin
 }
 
 /**\brief Handle incoming ANNOUNCE_RECEIPT_TIMEOUT management message type*/
-void handleMMAnnounceReceiptTimeout(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMAnnounceReceiptTimeout(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received ANNOUNCE_RECEIPT_TIMEOUT message\n");
 
@@ -858,7 +863,7 @@ void handleMMAnnounceReceiptTimeout(MsgManagement* incoming, MsgManagement* outg
 }
 
 /**\brief Handle incoming LOG_SYNC_INTERVAL management message type*/
-void handleMMLogSyncInterval(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMLogSyncInterval(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received LOG_SYNC_INTERVAL message\n");
 
@@ -900,7 +905,7 @@ void handleMMLogSyncInterval(MsgManagement* incoming, MsgManagement* outgoing, P
 }
 
 /**\brief Handle incoming VERSION_NUMBER management message type*/
-void handleMMVersionNumber(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMVersionNumber(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received VERSION_NUMBER message\n");
 
@@ -943,7 +948,7 @@ void handleMMVersionNumber(MsgManagement* incoming, MsgManagement* outgoing, Ptp
 }
 
 /**\brief Handle incoming ENABLE_PORT management message type*/
-void handleMMEnablePort(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMEnablePort(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received ENABLE_PORT message\n");
 
@@ -976,7 +981,7 @@ void handleMMEnablePort(MsgManagement* incoming, MsgManagement* outgoing, PtpClo
 }
 
 /**\brief Handle incoming DISABLE_PORT management message type*/
-void handleMMDisablePort(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMDisablePort(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received DISABLE_PORT message\n");
 
@@ -1007,7 +1012,7 @@ void handleMMDisablePort(MsgManagement* incoming, MsgManagement* outgoing, PtpCl
 }
 
 /**\brief Handle incoming TIME management message type*/
-void handleMMTime(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMTime(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received TIME message\n");
 
@@ -1044,7 +1049,7 @@ void handleMMTime(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* pt
 }
 
 /**\brief Handle incoming CLOCK_ACCURACY management message type*/
-void handleMMClockAccuracy(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMClockAccuracy(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received CLOCK_ACCURACY message\n");
 
@@ -1086,7 +1091,7 @@ void handleMMClockAccuracy(MsgManagement* incoming, MsgManagement* outgoing, Ptp
 }
 
 /**\brief Handle incoming UTC_PROPERTIES management message type*/
-void handleMMUtcProperties(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMUtcProperties(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received UTC_PROPERTIES message\n");
 
@@ -1138,7 +1143,7 @@ void handleMMUtcProperties(MsgManagement* incoming, MsgManagement* outgoing, Ptp
 }
 
 /**\brief Handle incoming TRACEABILITY_PROPERTIES management message type*/
-void handleMMTraceabilityProperties(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMTraceabilityProperties(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received TRACEABILITY_PROPERTIES message\n");
 
@@ -1185,7 +1190,7 @@ void handleMMTraceabilityProperties(MsgManagement* incoming, MsgManagement* outg
 }
 
 /**\brief Handle incoming DELAY_MECHANISM management message type*/
-void handleMMDelayMechanism(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMDelayMechanism(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received DELAY_MECHANISM message\n");
 
@@ -1227,7 +1232,7 @@ void handleMMDelayMechanism(MsgManagement* incoming, MsgManagement* outgoing, Pt
 }
 
 /**\brief Handle incoming LOG_MIN_PDELAY_REQ_INTERVAL management message type*/
-void handleMMLogMinPdelayReqInterval(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
+void management::handleMMLogMinPdelayReqInterval(MsgManagement* incoming, MsgManagement* outgoing, PtpClock* ptpClock)
 {
 	DBGV("received LOG_MIN_PDELAY_REQ_INTERVAL message\n");
 
@@ -1269,14 +1274,15 @@ void handleMMLogMinPdelayReqInterval(MsgManagement* incoming, MsgManagement* out
 }
 
 /**\brief Handle incoming ERROR_STATUS management message type*/
-void handleMMErrorStatus(MsgManagement *incoming)
+void management::handleMMErrorStatus(MsgManagement *incoming)
 {
 	DBGV("received MANAGEMENT_ERROR_STATUS message \n");
 	/* implementation specific */
 }
 
 /**\brief Handle issuing ERROR_STATUS management message type*/
-void handleErrorManagementMessage(MsgManagement *incoming, MsgManagement *outgoing, PtpClock *ptpClock, Enumeration16 mgmtId, Enumeration16 errorId)
+void management::handleErrorManagementMessage(MsgManagement *incoming, MsgManagement *outgoing,
+    PtpClock *ptpClock, Enumeration16 mgmtId, Enumeration16 errorId)
 {
         /* init management header fields */
         initOutgoingMsgManagement(incoming, outgoing, ptpClock);

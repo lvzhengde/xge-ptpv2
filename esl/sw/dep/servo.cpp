@@ -55,12 +55,13 @@
 #include "common.h"
 
 
+//constructor
+servo::servo(ptpd *pApp)
+{
+    BASE_MEMBER_ASSIGN 
+}
 
-
-
-
-
-void reset_operator_messages(RunTimeOpts * rtOpts, PtpClock * ptpClock)
+void servo::reset_operator_messages(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 	ptpClock->warned_operator_slow_slewing = 0;
 	ptpClock->warned_operator_fast_slewing = 0;
@@ -68,36 +69,27 @@ void reset_operator_messages(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	//ptpClock->seen_servo_stable_first_time = FALSE;
 }
 
-
-
-
 void 
-initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
+servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 
 	DBG("initClock\n");
 	/* clear vars */
 	ptpClock->owd_filt.s_exp = 0;	/* clears one-way delay filter */
 
-
-
-
 #if !defined(__APPLE__)
 
 	if (!rtOpts->noAdjust)
-		adjFreq(0);
+		m_pApp->m_ptr_sys->adjFreq(0);
 	ptpClock->observed_drift = 0;
 #endif /* apple */
 
-
-
 	
 	/* clean more original filter variables */
-	clearTime(&ptpClock->offsetFromMaster);
-	clearTime(&ptpClock->meanPathDelay);
-	clearTime(&ptpClock->delaySM);
-	clearTime(&ptpClock->delayMS);
-
+	m_pApp->m_ptr_arith->clearTime(&ptpClock->offsetFromMaster);
+	m_pApp->m_ptr_arith->clearTime(&ptpClock->meanPathDelay);
+	m_pApp->m_ptr_arith->clearTime(&ptpClock->delaySM);
+	m_pApp->m_ptr_arith->clearTime(&ptpClock->delayMS);
 
 	ptpClock->ofm_filt.y           = 0;
 	ptpClock->ofm_filt.nsec_prev   = -1; /* AKB: -1 used for non-valid nsec time */
@@ -116,10 +108,8 @@ initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 }
 
-
-
 void 
-updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * ptpClock, TimeInternal * correctionField)
+servo::updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * ptpClock, TimeInternal * correctionField)
 {
 
 	/* updates paused, leap second pending - do nothing */
@@ -137,7 +127,7 @@ updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * pt
 
 	
 	/* calc 'slave_to_master_delay' */
-	subTime(&slave_to_master_delay, &ptpClock->delay_req_receive_time, 
+	m_pApp->m_ptr_arith->subTime(&slave_to_master_delay, &ptpClock->delay_req_receive_time, 
 		&ptpClock->delay_req_send_time);
 
 	if (rtOpts->maxDelay && /* If maxDelay is 0 then it's OFF */
@@ -162,7 +152,7 @@ updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * pt
 			INFO("updateDelay aborted, delay greater than 1"
 			     " second.\n");
 			if (rtOpts->displayPackets)
-				msgDump(ptpClock);
+				m_pApp->m_ptr_msg->msgDump(ptpClock);
 			ptpClock->discardedPacketCount++;
 			goto autotune;
 		}
@@ -173,7 +163,7 @@ updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * pt
 			     slave_to_master_delay.nanoseconds, 
 			     rtOpts->maxDelay);
 			if (rtOpts->displayPackets)
-				msgDump(ptpClock);
+				m_pApp->m_ptr_msg->msgDump(ptpClock);
 			ptpClock->discardedPacketCount++;
 			goto autotune;
 			}
@@ -199,19 +189,19 @@ updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * pt
 			dump_TimeInternal2("Req_RECV:", &ptpClock->delay_req_receive_time, "Req_SENT:", &ptpClock->delay_req_send_time));
 
 		
-		subTime(&ptpClock->delaySM, &ptpClock->delay_req_receive_time, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->delaySM, &ptpClock->delay_req_receive_time, 
 			&ptpClock->delay_req_send_time);
 
 		/* update 'one_way_delay' */
-		addTime(&ptpClock->meanPathDelay, &ptpClock->delaySM, 
+		m_pApp->m_ptr_arith->addTime(&ptpClock->meanPathDelay, &ptpClock->delaySM, 
 			&ptpClock->delayMS);
 
 		/* Substract correctionField */
-		subTime(&ptpClock->meanPathDelay, &ptpClock->meanPathDelay, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->meanPathDelay, &ptpClock->meanPathDelay, 
 			correctionField);
 
 		/* Compute one-way delay */
-		div2Time(&ptpClock->meanPathDelay);
+		m_pApp->m_ptr_arith->div2Time(&ptpClock->meanPathDelay);
 
 
 		
@@ -268,24 +258,23 @@ autotune:
 		if (ptpClock->discardedPacketCount >= 
 		    rtOpts->discardedPacketThreshold) {
 			ptpClock->discardedPacketCount = 0;
-			increaseMaxDelayThreshold();
+			m_pApp->m_ptr_sys->increaseMaxDelayThreshold();
 			goto display;
 		} 
 		if (ptpClock->discardedPacketCount <
 		    (rtOpts->discardedPacketThreshold * -1)) {
 			ptpClock->discardedPacketCount = 0;
-			decreaseMaxDelayThreshold();
+			m_pApp->m_ptr_sys->decreaseMaxDelayThreshold();
 		}
 	}
 
 display:
-	displayStats(rtOpts, ptpClock);
+	m_pApp->m_ptr_sys->displayStats(rtOpts, ptpClock);
 
 }
 
-
 void 
-updatePeerDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * ptpClock, TimeInternal * correctionField, Boolean twoStep)
+servo::updatePeerDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * ptpClock, TimeInternal * correctionField, Boolean twoStep)
 {
 	Integer16 s;
 
@@ -293,37 +282,37 @@ updatePeerDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock 
 
 	if (twoStep) {
 		/* calc 'slave_to_master_delay' */
-		subTime(&ptpClock->pdelayMS, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->pdelayMS, 
 			&ptpClock->pdelay_resp_receive_time, 
 			&ptpClock->pdelay_resp_send_time);
-		subTime(&ptpClock->pdelaySM, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->pdelaySM, 
 			&ptpClock->pdelay_req_receive_time, 
 			&ptpClock->pdelay_req_send_time);
 
 		/* update 'one_way_delay' */
-		addTime(&ptpClock->peerMeanPathDelay, 
+		m_pApp->m_ptr_arith->addTime(&ptpClock->peerMeanPathDelay, 
 			&ptpClock->pdelayMS, 
 			&ptpClock->pdelaySM);
 
 		/* Substract correctionField */
-		subTime(&ptpClock->peerMeanPathDelay, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->peerMeanPathDelay, 
 			&ptpClock->peerMeanPathDelay, correctionField);
 
 		/* Compute one-way delay */
-		div2Time(&ptpClock->peerMeanPathDelay);
+		m_pApp->m_ptr_arith->div2Time(&ptpClock->peerMeanPathDelay);
 	} else {
 		/* One step clock */
 
-		subTime(&ptpClock->peerMeanPathDelay, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->peerMeanPathDelay, 
 			&ptpClock->pdelay_resp_receive_time, 
 			&ptpClock->pdelay_req_send_time);
 
 		/* Substract correctionField */
-		subTime(&ptpClock->peerMeanPathDelay, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->peerMeanPathDelay, 
 			&ptpClock->peerMeanPathDelay, correctionField);
 
 		/* Compute one-way delay */
-		div2Time(&ptpClock->peerMeanPathDelay);
+		m_pApp->m_ptr_arith->div2Time(&ptpClock->peerMeanPathDelay);
 	}
 
 	if (ptpClock->peerMeanPathDelay.seconds) {
@@ -357,7 +346,7 @@ updatePeerDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock 
 }
 
 void 
-updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
+servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
     offset_from_master_filter * ofm_filt, RunTimeOpts * rtOpts, PtpClock * ptpClock, TimeInternal * correctionField)
 {
 
@@ -374,7 +363,7 @@ updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
 	TimeInternal master_to_slave_delay;
 
 	/* calc 'master_to_slave_delay' */
-	subTime(&master_to_slave_delay, recv_time, send_time);
+	m_pApp->m_ptr_arith->subTime(&master_to_slave_delay, recv_time, send_time);
 
 	if (rtOpts->maxDelay) { /* If maxDelay is 0 then it's OFF */
 		if (master_to_slave_delay.seconds && rtOpts->maxDelay) {
@@ -403,22 +392,22 @@ updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
 	 *   - update the global delayMS variable
 	 *   - calculate a new filtered OFM
 	 */
-	subTime(&ptpClock->delayMS, recv_time, send_time);
+	m_pApp->m_ptr_arith->subTime(&ptpClock->delayMS, recv_time, send_time);
 	/* Used just for End to End mode. */
 
 	/* Take care about correctionField */
-	subTime(&ptpClock->delayMS,
+	m_pApp->m_ptr_arith->subTime(&ptpClock->delayMS,
 		&ptpClock->delayMS, correctionField);
 
 
 	/* update 'offsetFromMaster' */
 	if (ptpClock->delayMechanism == P2P) {
-		subTime(&ptpClock->offsetFromMaster, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->offsetFromMaster, 
 			&ptpClock->delayMS, 
 			&ptpClock->peerMeanPathDelay);
 	} else if (ptpClock->delayMechanism == E2E) {
 		/* (End to End mode) */
-		subTime(&ptpClock->offsetFromMaster, 
+		m_pApp->m_ptr_arith->subTime(&ptpClock->offsetFromMaster, 
 			&ptpClock->delayMS, 
 			&ptpClock->meanPathDelay);
 	}
@@ -443,11 +432,9 @@ updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
 	 * computing end to end delay
 	 */
 		rtOpts->offset_first_updated = TRUE;
-	}
+}
 
-
-
-void servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
+void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 	if(rtOpts->noAdjust){
 		WARNING("     Clock step blocked because of option -t\n");
@@ -456,20 +443,20 @@ void servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 	TimeInternal timeTmp;
 	
-	getTime(&timeTmp);
-	subTime(&timeTmp, &timeTmp, &ptpClock->offsetFromMaster);
+	m_pApp->m_ptr_sys->getTime(&timeTmp);
+	m_pApp->m_ptr_arith->subTime(&timeTmp, &timeTmp, &ptpClock->offsetFromMaster);
 
 	WARNING("     Performing hard frequency reset, by setting frequency to zero\n");
-	adjFreq(0);
+	m_pApp->m_ptr_sys->adjFreq(0);
 	ptpClock->observed_drift = 0;
 
-	setTime(&timeTmp);
+	m_pApp->m_ptr_sys->setTime(&timeTmp);
 	initClock(rtOpts, ptpClock);
-	toState(PTP_FAULTY, rtOpts, ptpClock);		/* make a full protocol reset */
+	m_pApp->m_ptr_protocol->toState(PTP_FAULTY, rtOpts, ptpClock);		/* make a full protocol reset */
 }
 
 
-void warn_operator_fast_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
+void servo::warn_operator_fast_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
 {
 	if(ptpClock->warned_operator_fast_slewing == 0){
 		if ((adj >= ADJ_FREQ_MAX) || ((adj <= -ADJ_FREQ_MAX))){
@@ -481,7 +468,7 @@ void warn_operator_fast_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integ
 
 }
 
-void warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock )
+void servo::warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock )
 {
 	if(ptpClock->warned_operator_slow_slewing == 0){
 		ptpClock->warned_operator_slow_slewing = 1;
@@ -503,7 +490,7 @@ void warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock )
 /*
  * this is a wrapper around adjFreq to abstract extra operations
  */
-void adjFreq_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
+void servo::adjFreq_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
 {
 
 
@@ -516,18 +503,15 @@ void adjFreq_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
 
 	// call original adjtime
 	DBG2("     adjFreq2: call adjfreq to %d us \n", adj / DBG_UNIT);
-	adjFreq(adj);
+	m_pApp->m_ptr_sys->adjFreq(adj);
 
 	warn_operator_fast_slewing(rtOpts, ptpClock, adj);
 
 
 }
 
-
-
-
 void 
-updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
+servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
 	Integer32 adj;
 	//TimeInternal timeTmp;
@@ -545,7 +529,7 @@ updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 			INFO("updateClock aborted, offset greater than 1"
 			     " second.");
 			if (rtOpts->displayPackets)
-				msgDump(ptpClock);
+				m_pApp->m_ptr_msg->msgDump(ptpClock);
 			goto display;
 		}
 
@@ -555,7 +539,7 @@ updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 			     ptpClock->offsetFromMaster.nanoseconds, 
 			     rtOpts->maxReset);
 			if (rtOpts->displayPackets)
-				msgDump(ptpClock);
+				m_pApp->m_ptr_msg->msgDump(ptpClock);
 			goto display;
 		}
 	}
@@ -605,10 +589,6 @@ updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 		Integer32 ap = rtOpts->ap;
 		Integer32 ai = rtOpts->ai;
 
-
-		
-
-		
 		/* the PI controller */
 		/* Offset from master is less than one second.  Use the the PI controller
 		 * to adjust the time
@@ -620,9 +600,6 @@ updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 		if (ai < 1)
 			ai = 1;
 
-
-
-		
 		/* the accumulator for the I component */
 		// original PI servo
 		ptpClock->observed_drift += 
@@ -659,11 +636,8 @@ updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 #endif /* __APPLE__ */
 	}
 
-
-
 display:
-		displayStats(rtOpts, ptpClock);
-
+		m_pApp->m_ptr_sys->displayStats(rtOpts, ptpClock);
 
 	DBGV("\n--Offset Correction-- \n");
 	DBGV("Raw offset from master:  %10ds %11dns\n",

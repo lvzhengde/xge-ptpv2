@@ -13,25 +13,25 @@ using namespace std;
 
 class MyApp
 {
+public:
   //member methods
-  public:
-    MyApp(controller *pController)
-      : m_pController(pController)
-    {};
+  MyApp(controller *pController)
+    : m_pController(pController)
+  {};
   
-    virtual ~MyApp(){};
+  virtual ~MyApp(){};
   
-    virtual void init() = 0;
+  virtual void init() = 0;
   
-    virtual void exec() = 0;
+  virtual void exec() = 0;
   
-    virtual void exit() = 0;
+  virtual void exit() = 0;
 
+public:
   //member variables
-  protected:
-    controller *m_pController;
+  controller *m_pController;
 
-    string m_cpu_str;
+  string m_cpu_str;
 };
 
 #endif // _MY_APP_H__

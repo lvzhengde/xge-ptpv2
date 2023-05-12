@@ -55,9 +55,15 @@
 
 #include "common.h"
 
+//constructor
+bmc::bmc(ptpd *pApp)
+{
+    BASE_MEMBER_ASSIGN
+}
+
 
 /* Init ptpClock with run time values (initialization constants are in constants.h)*/
-void initData(RunTimeOpts *rtOpts, PtpClock *ptpClock)
+void bmc::initData(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 {
 	int i,j;
 	j=0;
@@ -102,14 +108,14 @@ void initData(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 	 * PortIdentity Init (portNumber = 1 for an ardinary clock spec
 	 * 7.5.2.3)
 	 */
-	copyClockIdentity(ptpClock->portIdentity.clockIdentity,
+	m_pApp->m_ptr_msg->copyClockIdentity(ptpClock->portIdentity.clockIdentity,
 			ptpClock->clockIdentity);
 	ptpClock->portIdentity.portNumber = NUMBER_PORTS;
 
 	/* select the initial rate of delayreqs until we receive the first announce message */
 	ptpClock->logMinDelayReqInterval = rtOpts->initial_delayreq;
 
-	clearTime(&ptpClock->peerMeanPathDelay);
+	m_pApp->m_ptr_arith->clearTime(&ptpClock->peerMeanPathDelay);
 
 	ptpClock->logAnnounceInterval = rtOpts->announceInterval;
 	ptpClock->announceReceiptTimeout = rtOpts->announceReceiptTimeout;
@@ -131,22 +137,22 @@ void initData(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 
 
 /*Local clock is becoming Master. Table 13 (9.3.5) of the spec.*/
-void m1(RunTimeOpts *rtOpts, PtpClock *ptpClock)
+void bmc::m1(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 {
 	/*Current data set update*/
 	ptpClock->stepsRemoved = 0;
 	
-	clearTime(&ptpClock->offsetFromMaster);
-	clearTime(&ptpClock->meanPathDelay);
+	m_pApp->m_ptr_arith->clearTime(&ptpClock->offsetFromMaster);
+	m_pApp->m_ptr_arith->clearTime(&ptpClock->meanPathDelay);
 
 	/*Parent data set*/
-	copyClockIdentity(ptpClock->parentPortIdentity.clockIdentity,
+	m_pApp->m_ptr_msg->copyClockIdentity(ptpClock->parentPortIdentity.clockIdentity,
 	       ptpClock->clockIdentity);
 	ptpClock->parentPortIdentity.portNumber = 0;
 	ptpClock->parentStats = DEFAULT_PARENTS_STATS;
 	ptpClock->observedParentClockPhaseChangeRate = 0;
 	ptpClock->observedParentOffsetScaledLogVariance = 0;
-	copyClockIdentity(ptpClock->grandmasterIdentity,
+	m_pApp->m_ptr_msg->copyClockIdentity(ptpClock->grandmasterIdentity,
 			ptpClock->clockIdentity);
 	ptpClock->grandmasterClockQuality.clockAccuracy = 
 		ptpClock->clockQuality.clockAccuracy;
@@ -168,7 +174,7 @@ void m1(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 
 
 /* first cut on a passive mode specific BMC actions */
-void p1(PtpClock *ptpClock, RunTimeOpts *rtOpts)
+void bmc::p1(PtpClock *ptpClock, RunTimeOpts *rtOpts)
 {
 	/* make sure we revert to ARB timescale in Passive mode*/
 	if(ptpClock->portState == PTP_PASSIVE){
@@ -180,7 +186,7 @@ void p1(PtpClock *ptpClock, RunTimeOpts *rtOpts)
 
 
 /*Local clock is synchronized to Ebest Table 16 (9.3.5) of the spec*/
-void s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTimeOpts *rtOpts)
+void bmc::s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTimeOpts *rtOpts)
 {
 
 	Boolean previousLeap59 = FALSE, previousLeap61 = FALSE;
@@ -196,11 +202,11 @@ void s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTimeOpts 
 	ptpClock->stepsRemoved = announce->stepsRemoved + 1;
 
 	/* Parent DS */
-	copyClockIdentity(ptpClock->parentPortIdentity.clockIdentity,
+	m_pApp->m_ptr_msg->copyClockIdentity(ptpClock->parentPortIdentity.clockIdentity,
 	       header->sourcePortIdentity.clockIdentity);
 	ptpClock->parentPortIdentity.portNumber = 
 		header->sourcePortIdentity.portNumber;
-	copyClockIdentity(ptpClock->grandmasterIdentity,
+	m_pApp->m_ptr_msg->copyClockIdentity(ptpClock->grandmasterIdentity,
 			announce->grandmasterIdentity);
 	ptpClock->grandmasterClockQuality.clockAccuracy = 
 		announce->grandmasterClockQuality.clockAccuracy;
@@ -247,7 +253,7 @@ void s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTimeOpts 
         if (ptpClock->portState == PTP_SLAVE) {
 		if(ptpClock->leap59 && ptpClock->leap61) {
 			ERROR_("Both Leap59 and Leap61 flags set!\n");
-			toState(PTP_FAULTY, rtOpts, ptpClock);
+			m_pApp->m_ptr_protocol->toState(PTP_FAULTY, rtOpts, ptpClock);
 			return;
 		}
 
@@ -259,7 +265,7 @@ void s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTimeOpts 
 			WARNING("=== Leap second event aborted by GM!");
 			ptpClock->leapSecondPending = FALSE;
 			ptpClock->leapSecondInProgress = FALSE;
-			timerStop(LEAP_SECOND_PAUSE_TIMER, ptpClock->itimer);
+			m_pApp->m_ptr_ptp_timer->timerStop(LEAP_SECOND_PAUSE_TIMER, ptpClock->itimer);
 #if !defined(__APPLE__)
 			//unsetTimexFlags(STA_INS | STA_DEL,TRUE);
 #endif /* apple */
@@ -308,10 +314,10 @@ void s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTimeOpts 
 
 
 /*Copy local data set into header and announce message. 9.3.4 table 12*/
-void copyD0(MsgHeader *header, MsgAnnounce *announce, PtpClock *ptpClock)
+void bmc::copyD0(MsgHeader *header, MsgAnnounce *announce, PtpClock *ptpClock)
 {
 	announce->grandmasterPriority1 = ptpClock->priority1;
-	copyClockIdentity(announce->grandmasterIdentity,
+	m_pApp->m_ptr_msg->copyClockIdentity(announce->grandmasterIdentity,
 			ptpClock->clockIdentity);
 	announce->grandmasterClockQuality.clockClass = 
 		ptpClock->clockQuality.clockClass;
@@ -321,7 +327,7 @@ void copyD0(MsgHeader *header, MsgAnnounce *announce, PtpClock *ptpClock)
 		ptpClock->clockQuality.offsetScaledLogVariance;
 	announce->grandmasterPriority2 = ptpClock->priority2;
 	announce->stepsRemoved = 0;
-	copyClockIdentity(header->sourcePortIdentity.clockIdentity,
+	m_pApp->m_ptr_msg->copyClockIdentity(header->sourcePortIdentity.clockIdentity,
 	       ptpClock->clockIdentity);
 }
 
@@ -330,7 +336,7 @@ void copyD0(MsgHeader *header, MsgAnnounce *announce, PtpClock *ptpClock)
  * return similar to memcmp() */
 
 Integer8 
-bmcDataSetComparison(MsgHeader *headerA, MsgAnnounce *announceA,
+bmc::bmcDataSetComparison(MsgHeader *headerA, MsgAnnounce *announceA,
 		     MsgHeader *headerB,MsgAnnounce *announceB,
 		     PtpClock *ptpClock)
 {
@@ -443,7 +449,7 @@ bmcDataSetComparison(MsgHeader *headerA, MsgAnnounce *announceA,
 
 /*State decision algorithm 9.3.3 Fig 26*/
 UInteger8 
-bmcStateDecision(MsgHeader *header, MsgAnnounce *announce,
+bmc::bmcStateDecision(MsgHeader *header, MsgAnnounce *announce,
 		 RunTimeOpts *rtOpts, PtpClock *ptpClock)
 {
 	Integer8 comp;
@@ -492,7 +498,7 @@ bmcStateDecision(MsgHeader *header, MsgAnnounce *announce,
 
 
 UInteger8 
-bmc(ForeignMasterRecord *foreignMaster,
+bmc::bmcExec(ForeignMasterRecord *foreignMaster,
     RunTimeOpts *rtOpts, PtpClock *ptpClock)
 {
 	Integer16 i,best;
