@@ -10,6 +10,7 @@ ptpd::ptpd(controller *pController)
   : MyApp(pController)
 {
   m_pApp = this;
+  m_ptr_ptpClock = NULL;
 }
 
 //destructor
@@ -89,7 +90,7 @@ void ptpd::exec()
 	m_rtOpts.recordFP = NULL;
 	m_rtOpts.do_log_to_file = FALSE;
 	m_rtOpts.do_record_quality_file = FALSE;
-	m_rtOpts.nonDaemon = FALSE;
+	m_rtOpts.nonDaemon = TRUE;
 
 	/*
 	 * defaults for new options
@@ -112,25 +113,28 @@ void ptpd::exec()
 	m_rtOpts.initial_delayreq = DEFAULT_DELAYREQ_INTERVAL;
 	m_rtOpts.subsequent_delayreq = DEFAULT_DELAYREQ_INTERVAL;      // this will be updated if -g is given
 
-#if 0
 	/* Initialize run time options with command line arguments */
-	if (!(ptpClock = ptpdStartup(argc, argv, &ret, &m_rtOpts)))
-		return ret;
+	int argc = 3;
+	char *argv[] = {(char *)"ptpv2d", (char *)"-e", (char *)"-z"};
+	if (!(ptpClock = m_ptr_startup->ptpdStartup(argc, argv, &ret, &m_rtOpts)))
+	{
+	    NOTIFY("ptpdv2 startup error, return value: %d\n", ret);
+	    return ;
+	}
 
-	/* global variable for message(), please see comment on top of this file */
-	//G_ptpClock = ptpClock;
+	/* member variable for message()*/
 	m_ptr_ptpClock = ptpClock;
 
 	/* do the protocol engine */
-	protocolExec(&m_rtOpts, ptpClock);
+	//m_ptr_protocol->protocolExec(&m_rtOpts, ptpClock);
 	/* forever loop.. */
 
-	ptpdShutdown(ptpClock);
-#endif
+	//m_ptr_startup->ptpdShutdown(ptpClock);
 
 	NOTIFY("self shutdown, probably due to an error\n");
 
-  exit();
+    //exit app and clean up
+    exit();
 }
 
 //exit test and clean up

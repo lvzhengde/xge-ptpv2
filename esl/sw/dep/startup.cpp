@@ -102,15 +102,15 @@ void startup::catch_signals(int sig)
 	case SIGTERM:
 		sigterm_received = 1;
 		break;
-	//case SIGHUP:
-	//	sighup_received = 1;
-	//	break;
-	//case SIGUSR1:
-	//	sigusr1_received = 1;
-	//	break;
-	//case SIGUSR2:
-	//	sigusr2_received = 1;
-	//	break;
+	case SIGHUP:
+		sighup_received = 1;
+		break;
+	case SIGUSR1:
+		sigusr1_received = 1;
+		break;
+	case SIGUSR2:
+		sigusr2_received = 1;
+		break;
 	default:
 		/*
 		 * TODO: should all other signals be catched, and handled as SIGINT?
@@ -250,22 +250,17 @@ void startup::disable_runtime_debug(void )
  * Lock via filesystem implementation, as described in "Advanced Programming in the UNIX Environment, 2nd ed"
  */
 
-#define LOCKFILE "/var/run/kernel_clock"
-#define LOCKMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
-
 /* try to apply a write lock on the file */
 int
 startup::lockfile(int fd)
 {
-	//struct flock fl;
+	struct flock fl;
 
-	//fl.l_type = F_WRLCK;
-	//fl.l_start = 0;
-	//fl.l_whence = SEEK_SET;
-	//fl.l_len = 0;
-	//return(fcntl(fd, F_SETLK, &fl));
-
-	return 1;
+	fl.l_type = F_WRLCK;
+	fl.l_start = 0;
+	fl.l_whence = SEEK_SET;
+	fl.l_len = 0;
+	return(fcntl(fd, F_SETLK, &fl));
 }
 
 
@@ -275,28 +270,7 @@ startup::lockfile(int fd)
 int
 startup::daemon_already_running(void)
 {
-	//char    buf[16];
-
-	//INFO("  Info:    Going to check lock %s\n", LOCKFILE);
-	//global_lock_fd = open(LOCKFILE, O_RDWR|O_CREAT, LOCKMODE);
-	//if (global_lock_fd < 0) {
-	//	syslog(LOG_ERR, "can't open %s: %s", LOCKFILE, strerror(errno));
-	//	PERROR("can't open %s: %s", LOCKFILE, strerror(errno));
-	//	exit(1);
-	//}
-	//if (lockfile(global_lock_fd) < 0) {
-	//	if (errno == EACCES || errno == EAGAIN) {
-	//		close(global_lock_fd);
-	//		return(1);
-	//	}
-	//	syslog(LOG_ERR, "can't lock %s: %s", LOCKFILE, strerror(errno));
-	//	PERROR("can't lock %s: %s", LOCKFILE, strerror(errno));
-	//	return(1);
-	//}
-	//ftruncate(global_lock_fd, 0);
-	//sprintf(buf, "%ld\n", (long)getpid());
-	//write(global_lock_fd, buf, strlen(buf)+1);
-	return(0);
+	return 0;
 }
 
 
@@ -308,25 +282,21 @@ startup::daemon_already_running(void)
 int
 startup::pgrep_matches(char *name)
 {
-	//char command[BUF_SIZE];
-	//char answer[BUF_SIZE];
-	//int matches;
+	char command[BUF_SIZE];
+	char answer[BUF_SIZE];
+	int matches;
 
-	///* use pgrep to count processes with the given name
-	// * but exclude our own pid from the search results */
-	//snprintf(command, BUF_SIZE - 1, "pgrep -x %s | grep -v ^%ld$ | wc -l", name, (long)getpid());
+	/* use pgrep to count processes with the given name
+	 * but exclude our own pid from the search results */
+	snprintf(command, BUF_SIZE - 1, "pgrep -x %s | grep -v ^%ld$ | wc -l", name, (long)getpid());
 
-	//if( query_shell(command, answer, BUF_SIZE) < 0){
-	//	return -1;
-	//};
-	//
-	//sscanf(answer, "%d", &matches);
-	//return (matches);
-
-	return 0;
+	if( query_shell(command, answer, BUF_SIZE) < 0){
+		return -1;
+	};
+	
+	sscanf(answer, "%d", &matches);
+	return (matches);
 }
-
-
 
 /*
  * This function executes a given shell command (including pipes), and returns the first line of the output
@@ -338,32 +308,32 @@ startup::pgrep_matches(char *name)
  */
 int startup::query_shell(char *command, char *answer, int answer_size)
 {
-	//int status;
-	//FILE *fp;
+	int status;
+	FILE *fp;
 
-	//// clear previous answer
-	//answer[0] = '\0';
+	// clear previous answer
+	answer[0] = '\0';
 
-	//fp = popen(command, "r");
-	//if (fp == NULL){
-	//	PERROR("can't call  %s", command);
-	//	return -1;
-	//};
+	fp = popen(command, "r");
+	if (fp == NULL){
+		PERROR("can't call  %s", command);
+		return -1;
+	};
 
-	//// get first line of popen
-	//fgets(answer, answer_size - 1, fp);
+	// get first line of popen
+	fgets(answer, answer_size - 1, fp);
 
-	//DBG2("Query_shell: _%s_ -> _%s_\n", command, answer);
+	DBG2("Query_shell: _%s_ -> _%s_\n", command, answer);
 
-	//status = pclose(fp);
-	//if (status == -1) {
-	//	PERROR("can't call pclose() ");
-	//	return -1;
-	//} 
+	status = pclose(fp);
+	if (status == -1) {
+		PERROR("can't call pclose() ");
+		return -1;
+	} 
 
-	///* from Man page:
-	//     Use macros described under wait() to inspect `status' in order
-	//     to determine success/failure of command executed by popen() */
+	/* from Man page:
+	     Use macros described under wait() to inspect `status' in order
+	     to determine success/failure of command executed by popen() */
 
 	return 0;
 }
@@ -379,39 +349,6 @@ int startup::query_shell(char *command, char *answer, int answer_size)
 int
 startup::check_parallel_daemons(string name, int expected, int strict, RunTimeOpts * rtOpts)
 {
-	//int matches = pgrep_matches(name);
-
-	//if(matches == expected){
-	//	if(!expected){
-	//		INFO(       "  Info:    No %s daemons detected in parallel (as expected)\n",
-	//			name );
-	//	} else {
-	//		INFO(       "  Info:    %d %s daemons detected in parallel (as expected)\n",
-	//			matches, name);
-	//	}
-	//	return 1;
-	//} else {
-	//	if(strict){
-	//		if(expected == 0){
-	//			ERROR_(  "  Error:   %d %s daemon(s) detected in parallel, but we were not expecting any. Exiting.\n",
-	//			   matches, name);
-	//		} else {
-	//			ERROR_(  "  Error:   %d %s daemon(s) detected in parallel, but we were expecting %d. Exiting.\n",
-	//			   matches, name, expected);
-	//		}
-	//		return 0;
-	//	} else {
-	//		if(!expected){
-	//			WARNING("  Warning: %d %s daemon(s) detected in parallel, but we were expected none. Continuing anyway.\n",
-	//			   matches, name);
-	//		} else {
-	//			WARNING("  Warning: %d %s daemon(s) detected in parallel, but we were expecting %d. Continuing anyway.\n",
-	//			   matches, name, expected);
-	//		}
-	//		return 1;
-	//	}
-	//}
-
 	return 1;
 }
 
@@ -425,18 +362,16 @@ startup::check_parallel_daemons(string name, int expected, int strict, RunTimeOp
 int 
 startup::logToFile(RunTimeOpts * rtOpts)
 {
-	//if(rtOpts->logFd != -1)
-	//	close(rtOpts->logFd);
-	//
+	if(rtOpts->logFd != -1)
+		close(rtOpts->logFd);
+	
 
-	///* We new append the file instead of replacing it. Also use mask 644 instead of 444 */
-	//if((rtOpts->logFd = open(rtOpts->file, O_CREAT | O_APPEND | O_RDWR, 0644 )) != -1) {
-	//	dup2(rtOpts->logFd, STDOUT_FILENO);
-	//	dup2(rtOpts->logFd, STDERR_FILENO);
-	//}
-	//return rtOpts->logFd != -1;
-
-	return 1;
+	/* We new append the file instead of replacing it. Also use mask 644 instead of 444 */
+	if((rtOpts->logFd = open(rtOpts->file, O_CREAT | O_APPEND | O_RDWR, 0644 )) != -1) {
+		dup2(rtOpts->logFd, STDOUT_FILENO);
+		dup2(rtOpts->logFd, STDERR_FILENO);
+	}
+	return rtOpts->logFd != -1;
 }
 
 /** 
@@ -448,16 +383,14 @@ startup::logToFile(RunTimeOpts * rtOpts)
 int
 startup::recordToFile(RunTimeOpts * rtOpts)
 {
-	//if (rtOpts->recordFP != NULL)
-	//	fclose(rtOpts->recordFP);
+	if (rtOpts->recordFP != NULL)
+		fclose(rtOpts->recordFP);
 
-	//if ((rtOpts->recordFP = fopen(rtOpts->recordFile, "w")) == NULL)
-	//	PERROR("could not open sync recording file");
-	//else
-	//	setlinebuf(rtOpts->recordFP);
-	//return (rtOpts->recordFP != NULL);
-
-	return 1;
+	if ((rtOpts->recordFP = fopen(rtOpts->recordFile, "w")) == NULL)
+		PERROR("could not open sync recording file");
+	else
+		setlinebuf(rtOpts->recordFP);
+	return (rtOpts->recordFP != NULL);
 }
 
 
@@ -475,13 +408,7 @@ startup::ptpdShutdown(PtpClock * ptpClock)
 	free(ptpClock);
 	ptpClock = NULL;
 
-	//extern PtpClock* G_ptpClock;
-	//G_ptpClock = NULL;
 	m_pApp->m_ptr_ptpClock = NULL;
-
-	/* properly clean lockfile (eventough new deaemons can adquire the lock after we die) */
-	//close(global_lock_fd);
-	//unlink(LOCKFILE);
 }
 
 
@@ -554,7 +481,7 @@ startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpt
 		case 'H':
 			printf(
 				"\nUsage:  ptpv2d [OPTION]\n\n"
-				"Ptpv2d runs on UDP/IP , E2E mode by default\n"
+				"Ptpv2d runs on Ethernet , P2P mode by default\n"
 				"\n"
 #define GETOPT_START_OF_OPTIONS
 				"-H                show detailed help page\n"
@@ -934,17 +861,8 @@ startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpt
 		}
 	}
 
-	/*
-	 * we try to catch as many error conditions as possible, but before we call daemon().
-	 * the exception is the lock file, as we get a new pid when we call daemon(),
-	 * so this is checked twice: once to read, second to read/write
-	 */
-	//if(geteuid() != 0)
-	//{
-	//	display_short_help("Please run this daemon as root");
-	//		*ret = 1;
-	//		return 0;
-	//	}
+    //clock mode determined by clock_id
+	mode_selected = m_pController->m_clock_id;
 
 	if(!mode_selected){
 		display_short_help("Please select program mode");
@@ -959,11 +877,6 @@ startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpt
 		return 0;
 	}
 #endif
-
-
-
-
-
 
 
 	ptpClock = (PtpClock *) calloc(1, sizeof(PtpClock));
@@ -995,71 +908,12 @@ startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpt
 	memset(ptpClock->msgObuf, 0, PACKET_SIZE);
 
 
- 
-	/*
-	 * This section discusses some of the complexities of doing proper Locking and Background Daemon programs.
-	 *
-	 *
-	 * Locking mechanism:
-	 *     - Slave PTPs require locking to avoid having multiple discipliners adjusting the Kernel's Clock, via adjtimex().
-	 *   The most common use case is to avoid running multiple ptpd2 processes, but we also want to avoid running when other
-	 *   known time discipliners (ntpd/ptpd) are there.
-	 *
-	 *      The correct way is to lock the shared resource that needs write protection: the kernel clock itself.
-	 *   (http://mywiki.wooledge.org/ProcessManagement#How_do_I_make_sure_only_one_copy_of_my_script_can_run_at_a_time.3F)
-	 *   Thus, ptpd2 will lock the file /var/run/kernel_clock in daemon_already_running().
-	 *      Unfortunately this is not followed by the other discipliners, so on top of locking we also try to find
-	 *   them by name (we spawn pgrep in check_parallel_daemons()).
-	 *      Another alternative would be to clone NTP's way of doing this: to bind to port 123, the NTP port. Although this
-	 *   works, it is inelegant and confusing.
-	 *
-	 *     - For PTP Masters with NTP (-G), no locking is needed as we only read the clock. For standalone masters (-W)
-	 *   it is a similar situation as Slaves, because we can need write permission at any time.
-	 *
-	 *
-	 * Demonizing Mechanism:
-	 *    If we survive locking and init checks, then the next step is to call the daemon() command to force us to
-	 * detach from the shell, and attach to process 1 (init).
-	 *    As it is suggested in http://mywiki.wooledge.org/ProcessManagement#How_can_I_check_to_see_if_my_game_server_is_still_running.3F__I.27ll_put_a_script_in_crontab.2C_and_if_it.27s_not_running.2C_I.27ll_restart_it...
-	 * self-backgrounding has a lot of issues and pitfalls, so newer software packages that provide services as increasingly
-	 * moving to run in foreground, or provide a flag to do so. Then, the foreground process is managed by inittab, daemontools, etc
-	 *
-	 *   Its still unclear how such daemons are managed by /etc/init.d/ style of scripts
-	 *
-	 */
-
-
 	/* Init user_description */
 	memset(ptpClock->user_description, 0, sizeof(ptpClock->user_description));
 	memcpy(ptpClock->user_description, &USER_DESCRIPTION, sizeof(USER_DESCRIPTION));
 	
 	/* Init outgoing management message */
 	ptpClock->outgoingManageTmp.tlv = NULL;
-
-	
-	/* First lock check, just to be user-friendly to the operator */
-	if(rtOpts->ignore_daemon_lock == 0){
-		/* check and create Lock */
-		if(daemon_already_running()){
-			ERROR_("  Error:   Multiple " PTPD_PROGNAME " instances detected (-L to ignore lock file %s)\n", LOCKFILE);
-			*ret = 3;
-			return 0;
-		}
-	} else {
-		/* if we ignore the daemon lock, we also are not strict for parallel daemons (but we always syslog what is happening) */
-		ptp_daemons_strict=0;
-		ntp_daemons_strict=0;
-	}
-
-
-	if(check_parallel_daemons(PTPD_PROGNAME, ptp_daemons_expected, ptp_daemons_strict, rtOpts) &&
-	   check_parallel_daemons("ntpd", ntp_daemons_expected, ntp_daemons_strict, rtOpts))
-	{
-		;  /* ok */
-	} else {
-		*ret = 3;
-		return 0;
-	}
 
 	/* Manage open files: stats and quality file */
 	if(rtOpts->do_record_quality_file){
@@ -1078,42 +932,14 @@ startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpt
 		rtOpts->displayStats = TRUE;
 	}
 
-	/*  DAEMON */
-#ifdef PTPD_NO_DAEMON
-	if(rtOpts->nonDaemon == 0){
-		rtOpts->nonDaemon= 1;
-	}
-#endif
-
-	if(rtOpts->nonDaemon == 0){
-		///* fork to daemon */
-		//if (daemon(0, noclose) == -1) {
-		//	PERROR("failed to start as daemon");
-		//	*ret = 3;
-		//	return 0;
-		//}
-		INFO("  Info:    Now running as a daemon\n");
-	}
-
 	/* if syslog is on, send all messages to syslog only  */
 	rtOpts->syslog_startup_messages_also_to_stdout = FALSE;   
 
-
-	/* Second lock check, to replace the contents with our own new PID. It seems that F_WRLCK is not inherited to the child, so we lock again */
-	if(rtOpts->ignore_daemon_lock == 0){
-		/* check and create Lock */
-		if(daemon_already_running()){
-			ERROR_("Multiple instances of this daemon detected (Use option -L to ignore lock file %s)\n", LOCKFILE);
-			*ret = 3;
-			return 0;
-		}
-	}
 	
 	/* use new synchronous signal handlers */
 	//signal(SIGINT,  catch_signals);
 	//signal(SIGTERM, catch_signals);
 	//signal(SIGHUP,  catch_signals);
-
 	//signal(SIGUSR1, catch_signals);
 	//signal(SIGUSR2, catch_signals);
 
