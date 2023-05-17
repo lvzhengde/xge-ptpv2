@@ -33,6 +33,7 @@ void ptpd::init()
   m_ptr_display    = new display   (this); 
   m_ptr_management = new management(this); 
   m_ptr_protocol   = new protocol  (this); 
+  m_ptr_transport  = new transport (this);
 
   m_cpu_str = "Clock ID: " + to_string(m_pController->m_clock_id);
   
@@ -126,10 +127,10 @@ void ptpd::exec()
 	m_ptr_ptpClock = ptpClock;
 
 	/* do the protocol engine */
-	//m_ptr_protocol->protocolExec(&m_rtOpts, ptpClock);
+	m_ptr_protocol->protocolExec(&m_rtOpts, ptpClock);
 	/* forever loop.. */
 
-	//m_ptr_startup->ptpdShutdown(ptpClock);
+	m_ptr_startup->ptpdShutdown(ptpClock);
 
 	NOTIFY("self shutdown, probably due to an error\n");
 
@@ -151,6 +152,7 @@ void ptpd::exit()
   if(m_ptr_display    != NULL) delete m_ptr_display   ; 
   if(m_ptr_management != NULL) delete m_ptr_management; 
   if(m_ptr_protocol   != NULL) delete m_ptr_protocol  ; 
+  if(m_ptr_transport  != NULL) delete m_ptr_transport ; 
 
   wait(200, SC_NS);
 

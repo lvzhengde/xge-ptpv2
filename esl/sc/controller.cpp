@@ -151,7 +151,7 @@ void controller::isr_thread (void)
       REPORT_INFO(filename, __FUNCTION__, msg.str());
     }
 
-    if((data & (mask << 3)) && ptp_rcved == false)  //notify normal frame excep ptp message received interrupt
+    if((data & (mask << 3)) && ptp_rcved == false)  //notify normal frame except ptp message received interrupt
     {
       m_ev_rx_all.notify();
 

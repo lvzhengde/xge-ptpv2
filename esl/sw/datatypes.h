@@ -719,6 +719,7 @@ class bmc       ;
 class display   ; 
 class management; 
 class protocol  ; 
+class transport ;
 
 struct base_data
 {

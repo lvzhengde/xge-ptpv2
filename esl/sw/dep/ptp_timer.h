@@ -6,10 +6,13 @@
 
 class ptp_timer : public base_data
 {
-public:
+private:
   //member variables
   volatile unsigned int elapsed;
 
+  int operator_warned_interval_too_small; 
+
+public:
   //member methods
   ptp_timer(ptpd *pApp);
   

@@ -30,6 +30,7 @@ public:
   display     *m_ptr_display   ; 
   management  *m_ptr_management; 
   protocol    *m_ptr_protocol  ; 
+  transport   *m_ptr_transport ;
 
   //member methods
   ptpd(controller *pController);

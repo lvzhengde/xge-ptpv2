@@ -105,7 +105,7 @@ void bmc::initData(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 /* Port configuration data set */
 
 	/*
-	 * PortIdentity Init (portNumber = 1 for an ardinary clock spec
+	 * PortIdentity Init (portNumber = 1 for an ordinary clock spec
 	 * 7.5.2.3)
 	 */
 	m_pApp->m_ptr_msg->copyClockIdentity(ptpClock->portIdentity.clockIdentity,

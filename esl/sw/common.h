@@ -35,6 +35,7 @@
 #include "servo.h"
 #include "startup.h"
 #include "sys.h"
+#include "transport.h"
 #include "ptp_timer.h"
 #include "arith.h"
 #include "bmc.h"

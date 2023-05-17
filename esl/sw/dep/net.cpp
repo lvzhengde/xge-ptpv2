@@ -84,10 +84,10 @@ net::netShutdownMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
 	imr.imr_multiaddr.s_addr = multicastAddr;
 	imr.imr_interface.s_addr = netPath->interfaceAddr.s_addr;
 
-	//setsockopt(netPath->eventSock, IPPROTO_IP, IP_DROP_MEMBERSHIP, 
-	//	   &imr, sizeof(struct ip_mreq));
-	//setsockopt(netPath->generalSock, IPPROTO_IP, IP_DROP_MEMBERSHIP, 
-	//	   &imr, sizeof(struct ip_mreq));
+	setsockopt(netPath->eventSock, IPPROTO_IP, IP_DROP_MEMBERSHIP, 
+		   &imr, sizeof(struct ip_mreq));
+	setsockopt(netPath->generalSock, IPPROTO_IP, IP_DROP_MEMBERSHIP, 
+		   &imr, sizeof(struct ip_mreq));
 	
 	return TRUE;
 }
@@ -124,12 +124,12 @@ net::netShutdown(NetPath * netPath)
 	netPath->unicastAddr = 0;
 
 	/* Close sockets */
-	//if (netPath->eventSock > 0)
-	//	close(netPath->eventSock);
+	if (netPath->eventSock > 0)
+		close(netPath->eventSock);
 	netPath->eventSock = -1;
 
-	//if (netPath->generalSock > 0)
-	//	close(netPath->generalSock);
+	if (netPath->generalSock > 0)
+		close(netPath->generalSock);
 	netPath->generalSock = -1;
 
 	return TRUE;
@@ -418,10 +418,10 @@ net::netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts)
 	/* Init Peer multicast IP address */
 	memcpy(addrStr, PEER_PTP_DOMAIN_ADDRESS, NET_ADDRESS_LENGTH);
 
-	//if (!inet_pton(AF_INET, addrStr, &netAddr)) {
-	//	ERROR_("failed to encode multi-cast address: %s\n", addrStr);
-	//	return FALSE;
-	//}
+	if (!inet_pton(AF_INET, addrStr, &netAddr)) {
+		ERROR_("failed to encode multi-cast address: %s\n", addrStr);
+		return FALSE;
+	}
 	netPath->peerMulticastAddr = netAddr.s_addr;
 	if(!netInitMulticastIPv4(netPath, netPath->peerMulticastAddr)) {
 		return FALSE;
@@ -504,12 +504,12 @@ net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	DBG("netInit\n");
 
 	/* open sockets */
-	//if ((netPath->eventSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0
-	//    || (netPath->generalSock = socket(PF_INET, SOCK_DGRAM, 
-	//				      IPPROTO_UDP)) < 0) {
-	//	PERROR("failed to initalize sockets");
-	//	return FALSE;
-	//}
+	if ((netPath->eventSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0
+	    || (netPath->generalSock = socket(PF_INET, SOCK_DGRAM, 
+					      IPPROTO_UDP)) < 0) {
+		PERROR("failed to initalize sockets");
+		return FALSE;
+	}
 	/* find a network interface */
 	if (!(interfaceAddr.s_addr = 
 	      findIface(rtOpts->ifaceName, 
@@ -523,31 +523,31 @@ net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	DBG("Local IP address used : %s \n", inet_ntoa(interfaceAddr));
 
 	temp = 1;			/* allow address reuse */
-	//if (setsockopt(netPath->eventSock, SOL_SOCKET, SO_REUSEADDR, 
-	//	       &temp, sizeof(int)) < 0
-	//    || setsockopt(netPath->generalSock, SOL_SOCKET, SO_REUSEADDR, 
-	//		  &temp, sizeof(int)) < 0) {
-	//	DBG("failed to set socket reuse\n");
-	//}
+	if (setsockopt(netPath->eventSock, SOL_SOCKET, SO_REUSEADDR, 
+		       &temp, sizeof(int)) < 0
+	    || setsockopt(netPath->generalSock, SOL_SOCKET, SO_REUSEADDR, 
+			  &temp, sizeof(int)) < 0) {
+		DBG("failed to set socket reuse\n");
+	}
 	/* bind sockets */
 	/*
 	 * need INADDR_ANY to allow receipt of multi-cast and uni-cast
 	 * messages
 	 */
 	addr.sin_family = AF_INET;
-	//addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	//addr.sin_port = htons(PTP_EVENT_PORT);
-	//if (bind(netPath->eventSock, (struct sockaddr *)&addr, 
-	//	 sizeof(struct sockaddr_in)) < 0) {
-	//	PERROR("failed to bind event socket");
-	//	return FALSE;
-	//}
-	//addr.sin_port = htons(PTP_GENERAL_PORT);
-	//if (bind(netPath->generalSock, (struct sockaddr *)&addr, 
-	//	 sizeof(struct sockaddr_in)) < 0) {
-	//	PERROR("failed to bind general socket");
-	//	return FALSE;
-	//}
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_port = htons(PTP_EVENT_PORT);
+	if (bind(netPath->eventSock, (struct sockaddr *)&addr, 
+		 sizeof(struct sockaddr_in)) < 0) {
+		PERROR("failed to bind event socket");
+		return FALSE;
+	}
+	addr.sin_port = htons(PTP_GENERAL_PORT);
+	if (bind(netPath->generalSock, (struct sockaddr *)&addr, 
+		 sizeof(struct sockaddr_in)) < 0) {
+		PERROR("failed to bind general socket");
+		return FALSE;
+	}
 
 
 
@@ -610,26 +610,26 @@ net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 	/* set socket time-to-live to 1 */
 
-	//if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_MULTICAST_TTL, 
-	//	       &rtOpts->ttl, sizeof(int)) < 0
-	//    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_MULTICAST_TTL, 
-	//		  &rtOpts->ttl, sizeof(int)) < 0) {
-	//	PERROR("failed to set the multi-cast time-to-live");
-	//	return FALSE;
-	//}
+	if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_MULTICAST_TTL, 
+		       &rtOpts->ttl, sizeof(int)) < 0
+	    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_MULTICAST_TTL, 
+			  &rtOpts->ttl, sizeof(int)) < 0) {
+		PERROR("failed to set the multi-cast time-to-live");
+		return FALSE;
+	}
 
 	/* enable loopback */
 	temp = 1;
 
-	//DBG("Going to set IP_MULTICAST_LOOP with %d \n", temp);
+	DBG("Going to set IP_MULTICAST_LOOP with %d \n", temp);
 
-	//if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_MULTICAST_LOOP, 
-	//	       &temp, sizeof(int)) < 0
-	//    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_MULTICAST_LOOP, 
-	//		  &temp, sizeof(int)) < 0) {
-	//	PERROR("failed to enable multi-cast loopback");
-	//	return FALSE;
-	//}
+	if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_MULTICAST_LOOP, 
+		       &temp, sizeof(int)) < 0
+	    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_MULTICAST_LOOP, 
+			  &temp, sizeof(int)) < 0) {
+		PERROR("failed to enable multi-cast loopback");
+		return FALSE;
+	}
 
 	/* make timestamps available through recvmsg() */
 	if (!netInitTimestamping(netPath)) {
@@ -1163,15 +1163,17 @@ net::netRefreshIGMP(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock
 {
 	DBG("netRefreshIGMP\n");
 	
+#if 0
 	netShutdownMulticast(netPath);
 	
 	/* suspend process 100 milliseconds, to make sure the kernel sends the IGMP_leave properly */
-	//usleep(100*1000);
+	usleep(100*1000);
 	//Sleep(10);
 
 	if (!netInitMulticast(netPath, rtOpts)) {
 		return FALSE;
 	}
+#endif
 	
 	INFO("refreshed IGMP multicast memberships\n");
 	return TRUE;

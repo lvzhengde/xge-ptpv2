@@ -70,6 +70,8 @@
 ptp_timer::ptp_timer(ptpd *pApp)
 {
     BASE_MEMBER_ASSIGN 
+
+    operator_warned_interval_too_small = 0; 
 }
 
 void 
@@ -162,7 +164,6 @@ ptp_timer::timerStart(UInteger16 index, float interval, IntervalTimer * itimer)
 		 */ 
 		itimer[index].left = 1;
 
-		static int operator_warned_interval_too_small = 0;
 		if(!operator_warned_interval_too_small){
 			operator_warned_interval_too_small = 1;
 			/*

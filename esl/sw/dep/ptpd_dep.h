@@ -145,17 +145,8 @@
 #define flip32(x) (x)
 #elif defined(PTPD_LSBF)
 Integer16 flip16(Integer16 x);
-//{
-//   return (((x) >> 8) & 0x00ff) | (((x) << 8) & 0xff00);
-//}
-
 Integer32 flip32(Integer32 x);
-//{
-//  return (((x) >> 24) & 0x000000ff) | (((x) >> 8 ) & 0x0000ff00) |
-//         (((x) << 8 ) & 0x00ff0000) | (((x) << 24) & 0xff000000);
-//}
 #endif
-
 
 /** \}*/
 
