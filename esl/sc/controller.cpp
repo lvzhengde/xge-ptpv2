@@ -57,7 +57,7 @@ void controller::controller_thread(void)
   
   if(m_sw_type == 0) //loop back test
     pApp = new loop_back(this);
-  if(m_sw_type == 1) //loop back test
+  else if(m_sw_type == 1) //protocol test
     pApp = new ptpd(this);
   else
     sc_stop();

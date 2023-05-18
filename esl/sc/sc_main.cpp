@@ -21,7 +21,7 @@ int sc_main(int argc, char* argv[])
 
   REPORT_ENABLE_ALL_REPORTING ();
   
-  //REPORT_DISABLE_INFO_REPORTING();
+  REPORT_DISABLE_INFO_REPORTING();
 
   unsigned int  sw_type;
 

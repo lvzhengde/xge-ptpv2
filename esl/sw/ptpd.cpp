@@ -127,7 +127,7 @@ void ptpd::exec()
 	m_ptr_ptpClock = ptpClock;
 
 	/* do the protocol engine */
-	m_ptr_protocol->protocolExec(&m_rtOpts, ptpClock);
+	//m_ptr_protocol->protocolExec(&m_rtOpts, ptpClock);
 	/* forever loop.. */
 
 	m_ptr_startup->ptpdShutdown(ptpClock);

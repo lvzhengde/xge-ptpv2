@@ -222,9 +222,11 @@ void loop_back::frame_test()
   addr = base + RX_FLEN_OFT;
   data = 0;
   REG_READ(addr, data);
-  unsigned int rx_frm_len = data;
+  printf("read from RX_FLEN_OFT register before reading buffer, value = 0x%x \r\n",  data);
+  bool data_rdy = (data >> 15) & 0x1;
+  unsigned int rx_frm_len = data & 0x1ff;
 
-  if(rx_frm_len > 0)
+  if(rx_frm_len > 0 && data_rdy)
   {
     //read RX PTPv2 message from RX buffer
     unsigned char *rx_frm_data = new unsigned char[rx_frm_len];
@@ -277,4 +279,11 @@ void loop_back::frame_test()
     cout << "\r\n \r\n"
          << "There Is No PTPv2 Message Received, Error Occurred!! \r\n";
   }
+
+  //verify read clearing operation
+  base = RX_BUF_BADDR;
+  addr = base + RX_FLEN_OFT;
+  data = 0;
+  REG_READ(addr, data);
+  printf("read from RX_FLEN_OFT register after reading buffer, value = 0x%x \r\n",  data);
 }

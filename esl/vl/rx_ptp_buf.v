@@ -78,13 +78,64 @@ module rx_ptp_buf (
     end //if
   end
 
+  //generate read clearing signal internally
+  reg  [31:0]      bus2ip_addr_z1, bus2ip_addr_z2 ; 
+  reg              bus2ip_rd_ce_z1 ;         //active high
+  reg              read_clear, read_clear_z1 ; 
+  wire             read_clear_pulse = read_clear & (~read_clear_z1);
+
+  always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
+    if(!bus2ip_rst_n) begin
+      bus2ip_addr_z1 <= 32'h0;
+      bus2ip_addr_z2 <= 32'h0;
+      bus2ip_rd_ce_z1 <= 1'b0;
+      read_clear_z1  <= 1'b0;
+    end
+    else begin
+      bus2ip_addr_z1 <= bus2ip_addr_i;
+      bus2ip_addr_z2 <= bus2ip_addr_z1;
+      bus2ip_rd_ce_z1 <= bus2ip_rd_ce_i;
+      read_clear_z1  <= read_clear  ;
+    end
+  end
+
+  always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
+    if(!bus2ip_rst_n)
+      read_clear <= 1'b0;
+    else if(bus2ip_rd_ce_i == 1'b0 && bus2ip_rd_ce_z1 == 1'b1) //single read
+      read_clear <= 1'b1;
+    else if(bus2ip_addr_i != bus2ip_addr_z1 && bus2ip_rd_ce_i == 1'b1 && bus2ip_rd_ce_z1 == 1'b1) //continuous read and not the first one
+      read_clear <= 1'b1;
+    else if(read_clear_z1 == 1'b1)
+      read_clear <= 1'b0;
+  end
+
+  //rx data ready signal, read clearing marks that data have been read out.
+  reg  data_rdy, data_rdy_z1, data_rdy_z2;
+  always @(posedge bus2ip_clk) {data_rdy_z1, data_rdy_z2} <= {data_rdy, data_rdy_z1};
+
+  //synchronize wr_fin to bus2ip_clk domain
+  wire wr_fin_bus = wr_fin | wr_fin_z1 | wr_fin_z2;
+  reg  wr_fin_bus_z1, wr_fin_bus_z2;
+  always @(posedge bus2ip_clk) {wr_fin_bus_z1, wr_fin_bus_z2} <= {wr_fin_bus, wr_fin_bus_z1};
+
+
+  always @(posedge bus2ip_clk or negedge bus2ip_rst_n) begin
+    if(!bus2ip_rst_n)
+      data_rdy <= 1'b0;
+    else if(wr_fin_bus_z1 & (~wr_fin_bus_z2))
+      data_rdy <= 1'b1;
+    else if(read_clear_pulse == 1'b1 && bus2ip_addr_z2 == (RX_BUF_BADDR + 32'h200) && data_rdy_z2 == 1'b1) 
+      data_rdy <= 1'b0;
+  end
+
   //bus read operation
   wire [31:0] masked_addr  = bus2ip_addr_i & 32'h1ff;
   wire [6:0]  shifted_addr = masked_addr[8:2];
 
   always @(*) begin
     if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i == RX_BUF_BADDR + 32'h200) //frame length
-      ip2bus_data_o[31:0] = {23'b0, frm_len};
+      ip2bus_data_o[31:0] = {16'b0, data_rdy, 6'b0, frm_len};
     else if(bus2ip_rd_ce_i == 1'b1 && bus2ip_addr_i >= RX_BUF_BADDR && bus2ip_addr_i < (RX_BUF_BADDR+32'h200)) 
       ip2bus_data_o[31:0] = rd_buf[shifted_addr];
     else

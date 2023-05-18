@@ -71,7 +71,7 @@
 
 //ptp rx buffer
 #define RX_BUF_BADDR    (0x1000)   //ptp rx buffer base address
-#define RX_FLEN_OFT     (0x200)    //rx frame length offset address {23'b0, frm_len}
+#define RX_FLEN_OFT     (0x200)    //rx frame length offset address {16'b0, data_rdy, 6'b0, frm_len[8:0]}
 
 //ptp tx buffer         
 #define TX_BUF_BADDR    (0x2000)   //ptp tx buffer base address
