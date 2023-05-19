@@ -85,6 +85,10 @@ Integer32 flip32(Integer32 x)
 sys::sys(ptpd *pApp)
 {
     BASE_MEMBER_ASSIGN 
+
+	logOpened = FALSE;
+
+	start = 1;
 }
 
 /*
@@ -93,10 +97,10 @@ sys::sys(ptpd *pApp)
 */
 char *sys::dump_TimeInternal(const TimeInternal * p)
 {
-	static char buf[100];
+	//static char buf[100];
 
-	snprint_TimeInternal(buf, 100, p);
-	return buf;
+	snprint_TimeInternal(buf0, 100, p);
+	return buf0;
 }
 
 
@@ -106,30 +110,30 @@ char *sys::dump_TimeInternal(const TimeInternal * p)
 */
 char *sys::dump_TimeInternal2(const char *st1, const TimeInternal * p1, const char *st2, const TimeInternal * p2)
 {
-	static char buf[BUF_SIZE];
+	//static char buf[BUF_SIZE];
 	int n = 0;
 
 	/* display Timestamps */
 	if (st1) {
-		n += snprintf(buf + n, BUF_SIZE - n, "%s ", st1);
+		n += snprintf(buf1 + n, BUF_SIZE - n, "%s ", st1);
 	}
-	n += snprint_TimeInternal(buf + n, BUF_SIZE - n, p1);
-	n += snprintf(buf + n, BUF_SIZE - n, "    ");
+	n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, p1);
+	n += snprintf(buf1 + n, BUF_SIZE - n, "    ");
 
 	if (st2) {
-		n += snprintf(buf + n, BUF_SIZE - n, "%s ", st2);
+		n += snprintf(buf1 + n, BUF_SIZE - n, "%s ", st2);
 	}
-	n += snprint_TimeInternal(buf + n, BUF_SIZE - n, p2);
-	n += snprintf(buf + n, BUF_SIZE - n, " ");
+	n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, p2);
+	n += snprintf(buf1 + n, BUF_SIZE - n, " ");
 
 	/* display difference */
 	TimeInternal r;
 	m_pApp->m_ptr_arith->subTime(&r, p1, p2);
-	n += snprintf(buf + n, BUF_SIZE - n, "   (diff: ");
-	n += snprint_TimeInternal(buf + n, BUF_SIZE - n, &r);
-	n += snprintf(buf + n, BUF_SIZE - n, ") ");
+	n += snprintf(buf1 + n, BUF_SIZE - n, "   (diff: ");
+	n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, &r);
+	n += snprintf(buf1 + n, BUF_SIZE - n, ") ");
 
-	return buf;
+	return buf1;
 }
 
 
@@ -153,10 +157,10 @@ sys::snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
 /* debug aid: convert a time variable into a static char */
 char *sys::time2st(const TimeInternal * p)
 {
-	static char buf[1000];
+	//static char buf[1000];
 
-	snprint_TimeInternal(buf, sizeof(buf), p);
-	return buf;
+	snprint_TimeInternal(buf2, sizeof(buf2), p);
+	return buf2;
 }
 
 
@@ -349,7 +353,7 @@ sys::message(int priority, const char * format, ...)
 #endif
 
 	if (m_pApp->m_rtOpts.useSysLog) {
-		static Boolean logOpened;
+		//static Boolean logOpened;
 #ifdef RUNTIME_DEBUG
 		/*
 		 *  Syslog only has 8 message levels (3 bits)
@@ -433,12 +437,12 @@ sys::decreaseMaxDelayThreshold()
 void 
 sys::displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-	static int start = 1;
-	static char sbuf[SCREEN_BUFSZ];
+	//static int start = 1;
+	//static char sbuf[SCREEN_BUFSZ];
 	int len = 0;
 	TimeInternal now;
 	time_t time_s;
-	static TimeInternal prev_now;
+	//static TimeInternal prev_now;
 	char time_str[MAXTIMESTR];
 
 	if (!rtOpts->displayStats) {

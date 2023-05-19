@@ -13,6 +13,19 @@ class sys : public base_data
 {
 public:
   //member variables
+	char buf0[100];
+
+	char buf1[BUF_SIZE];
+
+	char buf2[1000];
+
+	Boolean logOpened;
+
+	int start;
+
+	char sbuf[SCREEN_BUFSZ];
+
+	TimeInternal prev_now;
 
   //member methods
   sys(ptpd *pApp);
