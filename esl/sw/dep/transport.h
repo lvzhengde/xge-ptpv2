@@ -19,6 +19,14 @@ public:
 
   unsigned char m_ipv6_da[16];
 
+  int m_networkProtocol;      //Table 3 in the 2008 spec
+
+  int m_layer2Encap;          //0: ether2, 1: SNAP, 2: PPPoE
+
+  int m_vlanTag;              //0: no vlan, 1: single vlan, 2: double vlan
+
+  unsigned char m_frame_mem[256];
+
 public:
   //member methods
   transport(ptpd *pApp);
@@ -30,6 +38,9 @@ public:
   uint32_t nextCRC32_D8(unsigned char data, uint32_t currentCRC);
 
   uint32_t calculate_crc(int data_len, unsigned char *frame_mem);
+
+  int assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t length_type, uint16_t ether2_type, 
+                     int vlan_tag, uint16_t udp_dport);
 
 };
 

@@ -124,3 +124,140 @@ uint32_t transport::calculate_crc(int data_len, unsigned char *frame_mem)
 
     return  ~reverse_32b(current_crc);
 }
+
+
+int transport::assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t length_type, uint16_t ether2_type, 
+                     int vlan_tag, uint16_t udp_dport)
+{
+
+    int len;
+    int m;
+    int pad_len;
+    int len_sub_vlan;
+    uint32_t frame_crc;
+
+    len = 0;
+    //preamble
+    for(int i = 0; i < 7; i++) {
+      m_frame_mem[len++] = 0x55;
+    }
+    m_frame_mem[len++] = 0xd5;
+    
+    //destination mac address
+    for(int i = 0; i < 6; i++) {
+      m_frame_mem[len++] = m_mac_da[i];
+    }
+
+    //source mac address
+    for(int i = 0; i < 6; i++) {
+      m_frame_mem[len++] = m_mac_sa[i];
+    }
+
+    //external vlan tag
+    if(vlan_tag == 2) {
+      m_frame_mem[len++] = 0x88;  m_frame_mem[len++] = 0xa8;  
+      m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x02;
+    }
+    //inner vlan tag or single vlan
+    if(vlan_tag == 1 || vlan_tag == 2) {
+      m_frame_mem[len++] = 0x81;  m_frame_mem[len++] = 0x00;  
+      m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x02;
+    }
+
+    //ethernet length/type field
+    m_frame_mem[len++] = (length_type >> 8) & 0xff;  
+    m_frame_mem[len++] = length_type & 0xff;
+
+    //802.3/snap header
+    if(length_type <= 1500) {
+      //snap header
+      m_frame_mem[len++] = 0xaa;  m_frame_mem[len++] = 0xaa;  m_frame_mem[len++] = 0x00;  
+      m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  
+      m_frame_mem[len++] = (ether2_type >> 8) & 0xff;  
+      m_frame_mem[len++] = ether2_type & 0xff;
+    }
+    else if(length_type == 0x8864) {
+      //pppoe header
+      m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  
+      m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  
+      m_frame_mem[len++] = (ether2_type >> 8) & 0xff;  
+      m_frame_mem[len++] = ether2_type & 0xff;
+    }
+
+    //ipv4 header
+    if(length_type == 0x0800 || (length_type < 1500 && ether2_type == 0x0800) || (length_type == 0x8864 && ether2_type == 0x0021)) {
+      uint16_t total_len = 20 + 8 + msg_len;  //IP header length, UDP header length, message length
+      m_frame_mem[len++] = 0x45;  m_frame_mem[len++] = 0x00;  
+      m_frame_mem[len++] = (total_len >> 8) & 0xff;  m_frame_mem[len++] = total_len & 0xff;
+      m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;
+      m_frame_mem[len++] = 0xff;  m_frame_mem[len++] = 0x17;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;
+      
+      for(int i = 0; i < 4; i++) {
+        m_frame_mem[len++] = m_ipv4_sa[i];
+      }
+
+      for(int i = 0; i < 4; i++) {
+        m_frame_mem[len++] = m_ipv4_da[i];
+      }
+    }
+
+    //ipv6 header
+    if(length_type == 0x86dd || (length_type < 1500 && ether2_type == 0x86dd) ||(length_type == 0x8864 && ether2_type == 0x0057)) {
+      m_frame_mem[len++] = 0x60;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;
+      uint16_t payload_len = 8 + msg_len + 2; //UDP header length + PTP message length + padding
+      m_frame_mem[len++] = (payload_len >> 8) & 0xff;  m_frame_mem[len++] = payload_len & 0xff;  
+      m_frame_mem[len++] = 0x17;  m_frame_mem[len++] = 0xff;
+
+      for(int i = 0; i < 16; i++) {
+        m_frame_mem[len++] = m_ipv6_sa[i];
+      }
+
+      for(int i = 0; i < 16; i++) {
+        m_frame_mem[len++] = m_ipv6_da[i];
+      }
+    }
+
+    //udp header
+    if(length_type == 0x0800 || length_type == 0x86dd || (length_type < 1500 && (ether2_type == 0x0800 || ether2_type == 0x86dd))
+          || (length_type == 0x8864 && (ether2_type == 0x0021 || ether2_type == 0x0057))) {
+      m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  
+      m_frame_mem[len++] = (udp_dport >> 8) & 0xff;  m_frame_mem[len++] = udp_dport & 0xff;
+
+      uint16_t udp_len = 8 + msg_len;  //udp header length + ptp message length
+      if(length_type == 0x86dd || (length_type < 1500 &&  ether2_type == 0x86dd) 
+          || (length_type == 0x8864 && ether2_type == 0x0057)) {
+        udp_len = udp_len + 2;    //+ padding
+      }
+      m_frame_mem[len++] = (udp_len >> 8) & 0xff; m_frame_mem[len++] = udp_len & 0xff;  
+
+      m_frame_mem[len++] = 0xab; m_frame_mem[len++] = 0xcd;
+    }
+
+    //ptpv2 message payload
+    for(int i = 0; i < msg_len; i++) {
+      m_frame_mem[len++] = msg_buf[i];
+    }
+
+    //padding octets
+    len_sub_vlan = (vlan_tag == 2) ? len-8 : ((vlan_tag == 1) ? len-4 : len);
+    pad_len = 64 - (len_sub_vlan-8+4);
+    if(length_type == 0x86dd || (length_type < 1500 &&  ether2_type == 0x86dd) || (length_type == 0x8864 && ether2_type == 0x0057)) {
+      pad_len = 2;
+    }
+
+    if(pad_len > 0) {
+      for(m = 0; m < pad_len; m = m+1) {
+        m_frame_mem[len++] = 0x00;
+      }
+    }
+
+    //crc octets
+    frame_crc = calculate_crc(len-8, m_frame_mem+8);
+
+    m_frame_mem[len++] = frame_crc & 0xff;
+    m_frame_mem[len++] = (frame_crc >> 8) & 0xff;
+    m_frame_mem[len++] = (frame_crc >> 16) & 0xff;
+    m_frame_mem[len++] = (frame_crc >> 24) & 0xff;
+    
+    return len;
+}
