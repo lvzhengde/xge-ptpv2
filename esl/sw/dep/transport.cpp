@@ -11,6 +11,83 @@
 transport::transport(ptpd *pApp)
 {
     BASE_MEMBER_ASSIGN 
+
+    m_networkProtocol = IEEE_802_3;      //Table 3 in the 2008 spec
+
+    m_layer2Encap     = 0;               //0: ether2, 1: SNAP, 2: PPPoE
+
+    m_vlanTag         = 0;               //0: no vlan, 1: single vlan, 2: double vlan
+
+    m_delayMechanism  = P2P;             //1: E2E, 2: P2P
+}
+
+void transport::init(int networkProtocol, int layer2Encap, int vlanTag, int delayMechanism)
+{
+    m_networkProtocol = networkProtocol;      
+    m_layer2Encap     = layer2Encap    ;         
+    m_vlanTag         = vlanTag        ;            
+    m_delayMechanism  = delayMechanism ;       
+
+    //initialize source address
+    unsigned char mac_sa_tmp[6]   = {0xb0, 0x80, 0x63, 0xd2, 0x09, 0xba};
+    unsigned char ipv4_sa_tmp[4]  = {192, 168, 1, 11};
+    unsigned char ipv6_sa_tmp[16] = {0xfe, 0x80, 0xbe, 0x10, 0xdc, 0xd7, 0x1a, 0xc0, 
+                                     0xbd, 0x72, 0xde, 0x90, 0x08, 0x24, 0x00, 0x00};
+
+    for(int i = 0; i < 4; i++) {
+      m_mac_sa[i] = mac_sa_tmp[i];  
+    }
+    m_mac_sa[4] = m_pController->m_clock_id;
+    m_mac_sa[5] = m_pController->m_clock_id;
+
+    for(int i = 0; i < 2; i++) {
+      m_ipv4_sa[i] = ipv4_sa_tmp[i];  
+    }
+    m_ipv4_sa[2] = m_pController->m_clock_id;
+    m_ipv4_sa[3] = m_pController->m_clock_id;
+
+    for(int i = 0; i < 14; i++) {
+      m_ipv6_sa[i] = ipv6_sa_tmp[i];  
+    }
+    m_ipv6_sa[14] = m_pController->m_clock_id;
+    m_ipv6_sa[15] = m_pController->m_clock_id;
+
+    //initialize destination address
+    unsigned char mac_da_e2e[6]   = {0x01, 0x1b, 0x19, 0x00, 0x00, 0x00};
+    unsigned char mac_da_p2p[6]   = {0x01, 0x80, 0xc2, 0x00, 0x00, 0x0e};
+    unsigned char ipv4_da_e2e[4]  = {224, 0, 1, 129};
+    unsigned char ipv4_da_p2p[4]  = {224, 0, 0, 107};
+    unsigned char ipv6_da_e2e[16] = {0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x81};
+    unsigned char ipv6_da_p2p[16] = {0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6b};
+    
+    if(delayMechanism == P2P) {
+      for(int i = 0; i < 6; i++) {
+        m_mac_da[i] = mac_da_p2p[i];
+      }
+
+      for(int i = 0; i < 4; i++) {
+        m_ipv4_da[i] = ipv4_da_p2p[i];
+      }
+
+      for(int i = 0; i < 16; i++) {
+        m_ipv6_da[i] = ipv6_da_p2p[i];
+      }
+    }
+    else {
+      for(int i = 0; i < 6; i++) {
+        m_mac_da[i] = mac_da_e2e[i];
+      }
+
+      for(int i = 0; i < 4; i++) {
+        m_ipv4_da[i] = ipv4_da_e2e[i];
+      }
+
+      for(int i = 0; i < 16; i++) {
+        m_ipv6_da[i] = ipv6_da_e2e[i];
+      }
+    }
 }
 
 unsigned char transport::reverse_8b(unsigned char data)
@@ -260,4 +337,67 @@ int transport::assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t
     m_frame_mem[len++] = (frame_crc >> 24) & 0xff;
     
     return len;
+}
+
+int transport::transmit(unsigned char *msg_buf, uint16_t msg_len, unsigned char messageType)
+{
+    uint16_t length_type = 0;
+    uint16_t ether2_type = 0;
+    uint16_t udp_dport   = 0;
+
+    //determine lenth_type/ether2_type field
+    if(m_layer2Encap == 0) {                 //ehter2 frame
+      if(m_networkProtocol == UDP_IPV4)
+        length_type = 0x0800;
+      else if(m_networkProtocol == UDP_IPV6)
+        length_type = 0x86dd;
+      else if(m_networkProtocol == IEEE_802_3)
+        length_type = 0x88f7;
+    }
+    else if(m_layer2Encap == 1) {            //snap frame
+      length_type = 12 + 2 + 8 + 4;          //da+sa+length+snap header+crc
+
+      if(m_networkProtocol == UDP_IPV4){
+        length_type += 20 + 8 + msg_len;     //ipv4 header+udp header+ptp message
+        ether2_type = 0x0800;
+      }
+      else if(m_networkProtocol == UDP_IPV6) {
+        length_type += 40 + 8 + msg_len + 2;  //ipv4 header+udp header+ptp message+padding
+        ether2_type = 0x86dd;
+      }
+      else if(m_networkProtocol == IEEE_802_3) {
+        length_type += msg_len;               //+ptp message
+        ether2_type = 0x88f7;
+      }
+    }
+    else if(m_layer2Encap == 2) {            //PPPoE
+      length_type = 0x8864; 
+
+      if(m_networkProtocol == UDP_IPV4)
+        ether2_type = 0x0021;
+      else if(m_networkProtocol == UDP_IPV6) 
+        ether2_type = 0x0057;
+    }
+
+    //determine udp destination port
+    if(messageType < 8)  //event messasge
+      udp_dport = 319;
+    else
+      udp_dport = 320;
+
+    //assemble message
+    int frame_len = assemble_frame(msg_buf, msg_len, length_type, ether2_type, m_vlanTag, udp_dport);
+
+    uint32_t base, addr, data;
+
+    //write data to TX buffer
+    base = TX_BUF_BADDR;
+    BURST_WRITE(base, m_frame_mem, frame_len);
+
+    //transmit frame
+    addr = base + TX_FLEN_OFT;
+    data = frame_len + (1 << 15);
+    REG_WRITE(addr, data);
+
+    return frame_len;
 }

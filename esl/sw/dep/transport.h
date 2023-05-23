@@ -25,11 +25,15 @@ public:
 
   int m_vlanTag;              //0: no vlan, 1: single vlan, 2: double vlan
 
+  int m_delayMechanism;       //1: E2E, 2: P2P
+
   unsigned char m_frame_mem[256];
 
 public:
   //member methods
   transport(ptpd *pApp);
+
+  void init(int networkProtocol, int layer2Encap, int vlanTag, int delayMechanism);
 
   unsigned char reverse_8b(unsigned char data);
 
@@ -41,6 +45,8 @@ public:
 
   int assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t length_type, uint16_t ether2_type, 
                      int vlan_tag, uint16_t udp_dport);
+
+  int transmit(unsigned char *msg_buf, uint16_t msg_len, unsigned char messageType);
 
 };
 
