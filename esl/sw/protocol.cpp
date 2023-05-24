@@ -1718,8 +1718,7 @@ protocol::issueAnnounce(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 {
 	m_pApp->m_ptr_msg->msgPackAnnounce(ptpClock->msgObuf,ptpClock);
 
-	if (!m_pApp->m_ptr_net->netSendGeneral(ptpClock->msgObuf,ANNOUNCE_LENGTH,
-			    &ptpClock->netPath, 0)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, ANNOUNCE_LENGTH, ANNOUNCE)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("Announce message can't be sent -> FAULTY state \n");
 	} else {
@@ -1741,7 +1740,7 @@ protocol::issueSync(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 
 	m_pApp->m_ptr_msg->msgPackSync(ptpClock->msgObuf,&originTimestamp,ptpClock);
 
-	if (!m_pApp->m_ptr_net->netSendEvent(ptpClock->msgObuf,SYNC_LENGTH,&ptpClock->netPath, 0)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, SYNC_LENGTH, SYNC)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("Sync message can't be sent -> FAULTY state \n");
 	} else {
@@ -1760,8 +1759,7 @@ protocol::issueFollowup(TimeInternal *time,RunTimeOpts *rtOpts,PtpClock *ptpCloc
 	
 	m_pApp->m_ptr_msg->msgPackFollowUp(ptpClock->msgObuf,&preciseOriginTimestamp,ptpClock);
 	
-	if (!m_pApp->m_ptr_net->netSendGeneral(ptpClock->msgObuf,FOLLOW_UP_LENGTH,
-			    &ptpClock->netPath, 0)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, FOLLOW_UP_LENGTH, FOLLOW_UP)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("FollowUp message can't be sent -> FAULTY state \n");
 	} else {
@@ -1793,8 +1791,7 @@ protocol::issueDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 	}
 #endif
 
-	if (!m_pApp->m_ptr_net->netSendEvent(ptpClock->msgObuf,DELAY_REQ_LENGTH,
-			  &ptpClock->netPath, dst)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, DELAY_REQ_LENGTH, DELAY_REQ)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("delayReq message can't be sent -> FAULTY state \n");
 	} else {
@@ -1820,8 +1817,7 @@ protocol::issuePDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 	m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
 	
 	m_pApp->m_ptr_msg->msgPackPDelayReq(ptpClock->msgObuf,&originTimestamp,ptpClock);
-	if (!m_pApp->m_ptr_net->netSendPeerEvent(ptpClock->msgObuf,PDELAY_REQ_LENGTH,
-			      &ptpClock->netPath)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, PDELAY_REQ_LENGTH, PDELAY_REQ)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("PdelayReq message can't be sent -> FAULTY state \n");
 	} else {
@@ -1840,8 +1836,7 @@ protocol::issuePDelayResp(TimeInternal *time,MsgHeader *header,RunTimeOpts *rtOp
 	m_pApp->m_ptr_msg->msgPackPDelayResp(ptpClock->msgObuf,header,
 			  &requestReceiptTimestamp,ptpClock);
 
-	if (!m_pApp->m_ptr_net->netSendPeerEvent(ptpClock->msgObuf,PDELAY_RESP_LENGTH,
-			      &ptpClock->netPath)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, PDELAY_RESP_LENGTH, PDELAY_RESP)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("PdelayResp message can't be sent -> FAULTY state \n");
 	} else {
@@ -1866,8 +1861,7 @@ protocol::issueDelayResp(TimeInternal *time,MsgHeader *header,RunTimeOpts *rtOpt
 	}
 #endif
 
-	if (!m_pApp->m_ptr_net->netSendGeneral(ptpClock->msgObuf,PDELAY_RESP_LENGTH,
-			    &ptpClock->netPath, dst)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, DELAY_RESP_LENGTH, DELAY_RESP)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("delayResp message can't be sent -> FAULTY state \n");
 	} else {
@@ -1885,9 +1879,7 @@ protocol::issuePDelayRespFollowUp(TimeInternal *time, MsgHeader *header,
 
 	m_pApp->m_ptr_msg->msgPackPDelayRespFollowUp(ptpClock->msgObuf,header,
 				  &responseOriginTimestamp,ptpClock);
-	if (!m_pApp->m_ptr_net->netSendPeerGeneral(ptpClock->msgObuf,
-				PDELAY_RESP_FOLLOW_UP_LENGTH,
-				&ptpClock->netPath)) {
+	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, PDELAY_RESP_FOLLOW_UP_LENGTH, PDELAY_RESP_FOLLOW_UP)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("PdelayRespFollowUp message can't be sent -> FAULTY state \n");
 	} else {
@@ -1914,8 +1906,8 @@ protocol::issueManagementRespOrAck(MsgManagement *outgoing, RunTimeOpts *rtOpts,
 
 	m_pApp->m_ptr_msg->msgPackManagement( ptpClock->msgObuf, outgoing, ptpClock);
 
-	if(!m_pApp->m_ptr_net->netSendGeneral(ptpClock->msgObuf, outgoing->header.messageLength,
-				&ptpClock->netPath, 0)) {
+	if(!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, outgoing->header.messageLength,
+				MANAGEMENT)) {
 		DBGV("Management response/acknowledge can't be sent -> FAULTY state \n");
 		toState(PTP_FAULTY, rtOpts, ptpClock);
 	} else {
@@ -1936,8 +1928,8 @@ protocol::issueManagementErrorStatus(MsgManagement *outgoing, RunTimeOpts *rtOpt
 
 	m_pApp->m_ptr_msg->msgPackManagement( ptpClock->msgObuf, outgoing, ptpClock);
 
-	if(!m_pApp->m_ptr_net->netSendGeneral(ptpClock->msgObuf, outgoing->header.messageLength,
-				&ptpClock->netPath, 0)) {
+	if(!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, outgoing->header.messageLength,
+				MANAGEMENT)) {
 		DBGV("Management error status can't be sent -> FAULTY state \n");
 		toState(PTP_FAULTY, rtOpts, ptpClock);
 	} else {

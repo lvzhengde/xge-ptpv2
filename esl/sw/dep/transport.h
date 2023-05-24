@@ -29,6 +29,8 @@ public:
 
   unsigned char m_frame_mem[256];
 
+  unsigned char m_rcvd_frame[256];
+
 public:
   //member methods
   transport(ptpd *pApp);
@@ -47,6 +49,8 @@ public:
                      int vlan_tag, uint16_t udp_dport);
 
   int transmit(unsigned char *msg_buf, uint16_t msg_len, unsigned char messageType);
+
+  int parse_frame(unsigned char* &pHead, unsigned char &messageType);
 
 };
 

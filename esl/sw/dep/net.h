@@ -35,14 +35,8 @@ public:
   ssize_t netRecvEvent(Octet * buf, TimeInternal * time, NetPath * netPath);
   
   ssize_t netRecvGeneral(Octet * buf, TimeInternal * time, NetPath * netPath);
-  
-  ssize_t netSendEvent(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_dst);
-  
-  ssize_t netSendGeneral(Octet * buf, UInteger16 length, NetPath * netPath, Integer32 alt_dst);
-  
-  ssize_t netSendPeerGeneral(Octet * buf, UInteger16 length, NetPath * netPath);
-  
-  ssize_t netSendPeerEvent(Octet * buf, UInteger16 length, NetPath * netPath);
+
+  ssize_t netSend(Octet * buf, UInteger16 length, Enumeration4 messageType);
   
   Boolean netRefreshIGMP(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock);
 };

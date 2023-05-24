@@ -214,11 +214,7 @@ int transport::assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t
     uint32_t frame_crc;
 
     len = 0;
-    //preamble
-    for(int i = 0; i < 7; i++) {
-      m_frame_mem[len++] = 0x55;
-    }
-    m_frame_mem[len++] = 0xd5;
+    //preamble added by verilog, skip
     
     //destination mac address
     for(int i = 0; i < 6; i++) {
@@ -267,7 +263,7 @@ int transport::assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t
       m_frame_mem[len++] = 0x45;  m_frame_mem[len++] = 0x00;  
       m_frame_mem[len++] = (total_len >> 8) & 0xff;  m_frame_mem[len++] = total_len & 0xff;
       m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;
-      m_frame_mem[len++] = 0xff;  m_frame_mem[len++] = 0x17;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;
+      m_frame_mem[len++] = 0xff;  m_frame_mem[len++] = 17;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;
       
       for(int i = 0; i < 4; i++) {
         m_frame_mem[len++] = m_ipv4_sa[i];
@@ -283,7 +279,7 @@ int transport::assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t
       m_frame_mem[len++] = 0x60;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;  m_frame_mem[len++] = 0x00;
       uint16_t payload_len = 8 + msg_len + 2; //UDP header length + PTP message length + padding
       m_frame_mem[len++] = (payload_len >> 8) & 0xff;  m_frame_mem[len++] = payload_len & 0xff;  
-      m_frame_mem[len++] = 0x17;  m_frame_mem[len++] = 0xff;
+      m_frame_mem[len++] = 17;  m_frame_mem[len++] = 0xff;
 
       for(int i = 0; i < 16; i++) {
         m_frame_mem[len++] = m_ipv6_sa[i];
@@ -317,7 +313,7 @@ int transport::assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t
 
     //padding octets
     len_sub_vlan = (vlan_tag == 2) ? len-8 : ((vlan_tag == 1) ? len-4 : len);
-    pad_len = 64 - (len_sub_vlan-8+4);
+    pad_len = 64 - (len_sub_vlan+4); //64 - (payload length + crc length)
     if(length_type == 0x86dd || (length_type < 1500 &&  ether2_type == 0x86dd) || (length_type == 0x8864 && ether2_type == 0x0057)) {
       pad_len = 2;
     }
@@ -329,7 +325,7 @@ int transport::assemble_frame(unsigned char *msg_buf, uint16_t msg_len, uint16_t
     }
 
     //crc octets
-    frame_crc = calculate_crc(len-8, m_frame_mem+8);
+    frame_crc = calculate_crc(len, m_frame_mem);
 
     m_frame_mem[len++] = frame_crc & 0xff;
     m_frame_mem[len++] = (frame_crc >> 8) & 0xff;
@@ -400,4 +396,142 @@ int transport::transmit(unsigned char *msg_buf, uint16_t msg_len, unsigned char 
     REG_WRITE(addr, data);
 
     return frame_len;
+}
+
+/**
+ * parse received frame
+ * parameters
+ * pHead:       pointer to the start of PTP message
+ * messageType: the received PTP message type
+ * return value: int
+ *   >  0 : PTP message length
+ *   <= 0 : error or not PTP message
+ */
+int transport::parse_frame(unsigned char* &pHead, unsigned char &messageType)
+{
+    bool is_ptp_message = false;
+    unsigned char eth_data = 0;
+    uint16_t eth_type = 0;
+    uint16_t ppp_id = 0;
+    unsigned char snap_dsap = 0;
+    unsigned char snap_ssap = 0;
+    uint16_t snap_length_type = 0;
+    unsigned char  next_layer_protocol = 0;
+    uint16_t destination_udp_port = 0;
+    int k = 0, m = 0;
+    int eth_base_addr = 0;
+    int ptp_base_addr = 0;
+    int protocol_overhead = 0;
+
+    //get protocal_overhead;
+    m = eth_base_addr + 12;
+    protocol_overhead = 0;
+
+    eth_type = ((m_rcvd_frame[m] << 8) & 0xff00) + m_rcvd_frame[m+1];
+    if(eth_type == 0x8100) {              //single vlan 
+      eth_type = ((m_rcvd_frame[m+4] << 8) & 0xff00) + m_rcvd_frame[m+5];
+      protocol_overhead = 4;
+    } 
+
+    if(eth_type == 0x88a8 || eth_type == 0x9100 || eth_type == 0x9200 || eth_type == 0x9300 || 
+                   eth_type == 0x8100) {  //double vlan
+      eth_type = ((m_rcvd_frame[m+8] << 8) & 0xff00) + m_rcvd_frame[m+9];
+      protocol_overhead = 8;
+    }
+
+    if(eth_type == 0x88f7) {         //ptpv2 in ethernet2 
+      is_ptp_message = true;
+    }
+    else if(eth_type == 0x0800) {   //may be ptpv2 in ipv4
+      m = eth_base_addr + 14 + protocol_overhead;
+      next_layer_protocol = m_rcvd_frame[m+9];
+      destination_udp_port = ((m_rcvd_frame[m+22] << 8) & 0xff00) + m_rcvd_frame[m+23];
+
+      if(next_layer_protocol == 17 && (destination_udp_port == 319 || destination_udp_port == 320)) {
+        is_ptp_message = true;
+        protocol_overhead = protocol_overhead + 28;
+      }
+    }
+    else if(eth_type == 0x86dd) { //may be ptpv2 in ipv6
+      m = eth_base_addr + 14 + protocol_overhead;
+      next_layer_protocol = m_rcvd_frame[m+6];
+      destination_udp_port = ((m_rcvd_frame[m+42] << 8) & 0xff00) + m_rcvd_frame[m+43];
+
+      if(next_layer_protocol == 17 && (destination_udp_port == 319 || destination_udp_port == 320)) {
+        is_ptp_message = true;
+        protocol_overhead = protocol_overhead + 48;
+      }
+    }
+    else if(eth_type == 0x8864) {  //pppo_e
+      m = eth_base_addr + 14 + protocol_overhead;
+      ppp_id = ((m_rcvd_frame[m+6] << 8) & 0xff00) + m_rcvd_frame[m+7];
+
+      if(ppp_id == 0x0021) {         //pppoe, may be ptp over ipv4
+        next_layer_protocol = m_rcvd_frame[m+17];
+        destination_udp_port = ((m_rcvd_frame[m+30] << 8) & 0xff00) + m_rcvd_frame[m+31];
+
+        if(next_layer_protocol == 17 && (destination_udp_port == 319 || destination_udp_port == 320)) {
+          is_ptp_message = true;
+          protocol_overhead = protocol_overhead + 36;
+        }
+      }
+      else if(ppp_id == 0x0057) {    //pppoe, may be ptp over ipv6
+        next_layer_protocol = m_rcvd_frame[m+14];
+        destination_udp_port = ((m_rcvd_frame[m+50] << 8) & 0xff00) + m_rcvd_frame[m+51];
+
+        if(next_layer_protocol == 17 && (destination_udp_port == 319 || destination_udp_port == 320)) {
+          is_ptp_message = true;
+          protocol_overhead = protocol_overhead + 56;
+        }
+      }
+    }
+    else if(eth_type <= 1500)  {  //snap
+      m = eth_base_addr + 14 + protocol_overhead;
+      snap_dsap = m_rcvd_frame[m];
+      snap_ssap = m_rcvd_frame[m+1];
+      snap_length_type = ((m_rcvd_frame[m+6] << 8) & 0xff00) + m_rcvd_frame[m+7];
+
+      if(snap_dsap == 0xaa && snap_ssap == 0xaa && snap_length_type == 0x0800) {       //may be ptp over ipv4 
+        next_layer_protocol = m_rcvd_frame[m+17];
+        destination_udp_port = ((m_rcvd_frame[m+30] << 8) & 0xff00) + m_rcvd_frame[m+31];
+
+        if(next_layer_protocol == 17 && (destination_udp_port == 319 || destination_udp_port == 320)) {
+          is_ptp_message = true;
+          protocol_overhead = protocol_overhead + 36;
+        }
+      }
+      else if(snap_dsap == 0xaa && snap_ssap == 0xaa && snap_length_type == 0x86dd) {  //may be ptp over ipv6
+        next_layer_protocol = m_rcvd_frame[m+14];
+        destination_udp_port = ((m_rcvd_frame[m+50] << 8) & 0xff00) + m_rcvd_frame[m+51];
+
+        if(next_layer_protocol == 17 && (destination_udp_port == 319 || destination_udp_port == 320)) {
+          is_ptp_message = true;
+          protocol_overhead = protocol_overhead + 56;
+        }
+      }
+      else if(snap_dsap == 0xaa && snap_ssap == 0xaa && snap_length_type == 0x88f7)  { //snap 802.3
+        is_ptp_message = true;
+        protocol_overhead = protocol_overhead + 8;
+      }
+    }
+          
+    int messageLength = 0;
+    pHead = NULL;
+    messageType = 0xf;
+
+    if(is_ptp_message == true) {
+      ptp_base_addr = eth_base_addr + 14 + protocol_overhead;
+
+      eth_data = m_rcvd_frame[ptp_base_addr];
+      messageType = eth_data & 0xf;
+    
+      eth_data = m_rcvd_frame[ptp_base_addr+2];
+      messageLength = (eth_data << 8) & 0xff00;
+      eth_data = m_rcvd_frame[ptp_base_addr+3];
+      messageLength += eth_data;
+
+      pHead = m_rcvd_frame + ptp_base_addr;
+    }
+
+    return messageLength;
 }
