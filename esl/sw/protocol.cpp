@@ -519,11 +519,12 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 	ssize_t length;
 	Boolean isFromSelf;
 	TimeInternal time = { 0, 0 };
+    Enumeration4 messageType;
 
 	if (!ptpClock->message_activity) {
 		ret = m_pApp->m_ptr_net->netSelect(0, &ptpClock->netPath);
 		if (ret < 0) {
-			PERROR("failed to poll sockets");
+			PERROR("failed to poll receiving");
 			toState(PTP_FAULTY, rtOpts, ptpClock);
 			return;
 		} else if (!ret) {
@@ -535,39 +536,56 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 
 	DBGV("handle: something\n");
 
-	/* TODO: this should be based on the select actual FDs (if(FD_ISSET(...)) */
-	length = m_pApp->m_ptr_net->netRecvEvent(ptpClock->msgIbuf, &time, &ptpClock->netPath);
-
+	length = m_pApp->m_ptr_net->netRecv(ptpClock->msgIbuf, messageType);
 
 	if (length < 0) {
-		PERROR("failed to receive on the event socket");
+		PERROR("failed to receive PTP message");
 		toState(PTP_FAULTY, rtOpts, ptpClock);
 		return;
 	} else if (!length) {
-		length = m_pApp->m_ptr_net->netRecvGeneral(ptpClock->msgIbuf, &time,
-					&ptpClock->netPath);
-		if (length < 0) {
-			PERROR("failed to receive on the general socket");
-			toState(PTP_FAULTY, rtOpts, ptpClock);
-			return;
-		} else if (!length)
-			return;
+		return;
+	}
+
+    //get current RTC value for event message
+	//as a time reference for late timestamp processing
+	if(messageType < 8) {
+      uint32_t base, addr, data;
+      uint64_t second;
+      uint32_t nanosecond;
+
+      base = RTC_BLK_ADDR << 8;
+
+      addr = base + CUR_TM_ADDR0;
+      data = 0;
+      REG_READ(addr, data);
+      second = data;
+
+      addr = base + CUR_TM_ADDR1;
+      data = 0;
+      REG_READ(addr, data);
+      second = (second << 16) + ((data >> 16) & 0xffff);
+      nanosecond = data & 0xffff;
+
+      addr = base + CUR_TM_ADDR2;
+      data = 0;
+      REG_READ(addr, data);
+      nanosecond = (nanosecond << 16) + ((data >> 16) & 0xffff);
+
+      time.seconds = second;
+      time.nanoseconds = nanosecond;
 	}
 
 	/*
 	 * make sure we use the TAI to UTC offset specified, if the master is sending the UTC_VALID bit
-	 *
-	 *
-	 * On the slave, all timestamps that we handle here have been collected by our local clock (loopback+kernel-level timestamp)
-	 * This includes delayReq just send, and delayResp, when it arrives.
-	 *
 	 * these are then adjusted to the same timebase of the Master (+34 leap seconds, as of 2011)
 	 *
 	 */
+	#if 0
 	DBGV("__UTC_offset: %d %d \n", ptpClock->currentUtcOffsetValid, ptpClock->currentUtcOffset);
 	if (ptpClock->currentUtcOffsetValid) {
 		time.seconds += ptpClock->currentUtcOffset;
 	}
+	#endif
 
 	ptpClock->message_activity = TRUE;
 

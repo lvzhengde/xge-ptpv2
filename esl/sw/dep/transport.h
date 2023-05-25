@@ -52,6 +52,8 @@ public:
 
   int parse_frame(unsigned char* &pHead, unsigned char &messageType);
 
+  int receive(unsigned char *msb_buf, unsigned char &messageType);
+
 };
 
 #endif // _TRANSPORT_H__

@@ -535,3 +535,42 @@ int transport::parse_frame(unsigned char* &pHead, unsigned char &messageType)
 
     return messageLength;
 }
+
+/**
+ * receive frame
+ * parameters
+ * msb_buf:     pointer to input buffer for PTP message
+ * messageType: the received PTP message type
+ * return value: int
+ *   >  0 : PTP message length
+ *   <= 0 : error or not PTP message
+ */
+int transport::receive(unsigned char *msb_buf, unsigned char &messageType)
+{
+    uint32_t base, addr, data;
+
+    unsigned char* pHead = NULL;
+    int messageLength = 0;
+    messageType = 0xf;
+
+    base = RX_BUF_BADDR;
+    addr = base + RX_FLEN_OFT;
+    data = 0;
+    REG_READ(addr, data);
+    unsigned int rx_frm_len = data & 0x1ff;
+
+    if(rx_frm_len > 0)
+    {
+      //read RX PTPv2 message from RX buffer
+      addr = base;
+      BURST_READ(addr, m_rcvd_frame, rx_frm_len);
+
+      messageLength = parse_frame(pHead, messageType);
+      if(messageLength > 0) {
+        memcpy(msb_buf, pHead, messageLength);
+      }
+    }
+
+    return messageLength;
+}
+

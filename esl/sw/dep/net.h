@@ -32,9 +32,7 @@ public:
   
   int netSelect(TimeInternal * timeout, NetPath * netPath);
   
-  ssize_t netRecvEvent(Octet * buf, TimeInternal * time, NetPath * netPath);
-  
-  ssize_t netRecvGeneral(Octet * buf, TimeInternal * time, NetPath * netPath);
+  ssize_t netRecv(Octet * buf, Enumeration4 &messageType);
 
   ssize_t netSend(Octet * buf, UInteger16 length, Enumeration4 messageType);
   

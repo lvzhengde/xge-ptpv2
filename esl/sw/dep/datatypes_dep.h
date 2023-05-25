@@ -13,11 +13,11 @@
 typedef int Boolean;
 typedef char Octet;
 typedef signed char Integer8;
-typedef signed short Integer16;
-typedef signed int Integer32;
+typedef int16_t Integer16;
+typedef int32_t Integer32;
 typedef unsigned char UInteger8;
-typedef unsigned short UInteger16;
-typedef unsigned int UInteger32;
+typedef uint16_t UInteger16;
+typedef uint32_t UInteger32;
 typedef unsigned short Enumeration16;
 typedef unsigned char Enumeration8;
 typedef unsigned char Enumeration4;
@@ -34,16 +34,16 @@ typedef unsigned char NibbleLower;
 * \brief Implementation specific of UInteger48 type
  */
 typedef struct {
-	unsigned int lsb;     /* FIXME: shouldn't uint32_t and uint16_t be used here? */
-	unsigned short msb;
+	uint32_t lsb;     /* FIXME: shouldn't uint32_t and uint16_t be used here? */
+	uint16_t msb;
 } UInteger48;
 
 /**
 * \brief Implementation specific of Integer64 type
  */
 typedef struct {
-	unsigned int lsb;     /* FIXME: shouldn't uint32_t and int32_t be used here? */
-	int msb;
+	uint32_t lsb;     /* FIXME: shouldn't uint32_t and int32_t be used here? */
+	int32_t  msb;
 } Integer64;
 
 /**
