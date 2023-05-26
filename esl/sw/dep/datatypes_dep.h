@@ -87,4 +87,18 @@ typedef struct {
 
 } NetPath;
 
+//struct for timestamp and its identification
+typedef struct {
+    uint64_t seconds;
+    uint32_t nanoseconds;
+    uint16_t frac_nanoseconds;
+    unsigned char sourcePortIdentity[10];
+    unsigned char flagField[2];
+    unsigned char majorSdoId;
+    unsigned char messageType;
+    unsigned char minorVersionPTP;
+    unsigned char versionPTP;
+    uint16_t sequenceId;
+} TimestampIdentity;
+
 #endif /*DATATYPES_DEP_H_*/

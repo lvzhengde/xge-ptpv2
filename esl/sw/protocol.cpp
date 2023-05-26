@@ -549,30 +549,12 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
     //get current RTC value for event message
 	//as a time reference for late timestamp processing
 	if(messageType < 8) {
-      uint32_t base, addr, data;
-      uint64_t second;
-      uint32_t nanosecond;
+      uint64_t seconds;
+      uint32_t nanoseconds;
+      m_pApp->m_ptr_sys->getRtcValue(seconds, nanoseconds);   
 
-      base = RTC_BLK_ADDR << 8;
-
-      addr = base + CUR_TM_ADDR0;
-      data = 0;
-      REG_READ(addr, data);
-      second = data;
-
-      addr = base + CUR_TM_ADDR1;
-      data = 0;
-      REG_READ(addr, data);
-      second = (second << 16) + ((data >> 16) & 0xffff);
-      nanosecond = data & 0xffff;
-
-      addr = base + CUR_TM_ADDR2;
-      data = 0;
-      REG_READ(addr, data);
-      nanosecond = (nanosecond << 16) + ((data >> 16) & 0xffff);
-
-      time.seconds = second;
-      time.nanoseconds = nanosecond;
+      time.seconds = seconds;
+      time.nanoseconds = nanoseconds;
 	}
 
 	/*

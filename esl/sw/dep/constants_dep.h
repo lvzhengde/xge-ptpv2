@@ -130,5 +130,7 @@
 //#define LOG_DAEMON 0
 #define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
 
+//set period of intxms to 7.8125ms or 10ms
+#define INT7_8125MS    1
 
 #endif /*CONSTANTS_DEP_H_*/

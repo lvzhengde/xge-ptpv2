@@ -72,33 +72,16 @@ public:
   
   double getRand(void);
   
-  #if !defined(__APPLE__)
-  Boolean adjFreq(Integer32 adj);
+  Boolean adjTickRate(Integer32 adj);
+
+  void getRtcValue(uint64_t &seconds, uint32_t &nanoseconds);
+
+  void setRtcValue(int64_t sec_offset, int32_t ns_offset);
   
-  void setTimexFlags(int flags, Boolean quiet);
-  
-  void unsetTimexFlags(int flags, Boolean quiet);
-  
-  int getTimexFlags(void);
-  
-  Boolean checkTimexFlags(int flags);
-  
-  #if defined(MOD_TAI) &&  NTP_API == 4
-  void setKernelUtcOffset(int utc_offset); 
-  #endif /* MOD_TAI */
-  
-  #else
-  
-  void adjTime(Integer32 nanoseconds);
-  
-  #endif /* __APPLE__ */
-  
-  
-  #if 0 && defined (linux)  /* NOTE: This is actually not used */
-  
-  long get_current_tickrate(void);
-  
-  #endif  /* defined(linux) */
+  void getTxTimestampIdentity(TimestampIdentity &tsId);
+
+  void getRxTimestampIdentity(TimestampIdentity &tsId);
+
 };
 
 #endif // _SYS_H__

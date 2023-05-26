@@ -633,222 +633,165 @@ sys::getRand(void)
 }
 
 
+Boolean sys::adjTickRate(Integer32 adj)
+{
 
+    return true;
 
+}
 
-/*
- * TODO: this function should have been coded in a way to manipulate both the frequency and the tick,
- * to avoid having to call setTime() when the clock is very far away.
- * This would result in situations we would force the kernel clock to run the clock twice as slow,
- * in order to avoid stepping time backwards
+/**
+ * get the current value of RTC located in PTP hardware 
+*/
+void sys::getRtcValue(uint64_t &seconds, uint32_t &nanoseconds)
+{
+    uint32_t base, addr, data = 0;
+    base = RTC_BLK_ADDR << 8;
+
+    addr = base + CUR_TM_ADDR0;
+    REG_READ(addr, data);
+    seconds = data;
+
+    addr = base + CUR_TM_ADDR1;
+    REG_READ(addr, data);
+    seconds = (seconds << 16) + ((data >> 16) & 0xffff);
+    nanoseconds = data & 0xffff;
+
+    addr = base + CUR_TM_ADDR2;
+    REG_READ(addr, data);
+    nanoseconds = (nanoseconds << 16) + ((data >> 16) & 0xffff);
+}
+
+/**
+ * adjust the value of RTC 
+ *     new RTC value = Current RTC value + Offset Value
+ * parameters
+ * sec_offset : offset of seconds field
+ * ns_offset:   offset of nanoseconds field
  */
-#if !defined(__APPLE__)
-Boolean
-sys::adjFreq(Integer32 adj)
+void sys::setRtcValue(int64_t sec_offset, int32_t ns_offset)
 {
-	//struct timex t;
+    uint32_t base, addr, data = 0;
 
-	//memset(&t, 0, sizeof(t));
-	if (adj > ADJ_FREQ_MAX){
-		adj = ADJ_FREQ_MAX;
-	} else if (adj < -ADJ_FREQ_MAX){
-		adj = -ADJ_FREQ_MAX;
-	}
+    base = RTC_BLK_ADDR << 8;
 
-	//t.modes = MOD_FREQUENCY;
-	//t.freq = adj * ((1 << 16) / 1000);
+    //set RTC
+    addr = base + SC_OFST_ADDR0;
+    data = (sec_offset >> 32) & 0xffff;
+    REG_WRITE(addr, data);
 
-	///* do calculation in double precision, instead of Integer32 */
-	//int t1 = t.freq;
-	//int t2;
-	//
-	//float f = (adj + 0.0) * (((1 << 16) + 0.0) / 1000.0);  /* could be float f = adj * 65.536 */
-	//t2 = t1;  // just to avoid compiler warning
-	//t2 = (int)round(f);
-	//t.freq = t2;
+    addr = base + SC_OFST_ADDR1;
+    data = sec_offset & 0xffffffff;
+    REG_WRITE(addr, data);
 
-	//DBG2("        adj is %d;  t freq is %d       (float: %f Integer32: %d)\n", adj, t.freq,  f, t1);
-	
-	//return !adjtimex(&t);
+    addr = base + NS_OFST_ADDR;
+    data = ns_offset;
+    REG_WRITE(addr, data);
 
-	return true;
+    addr = base + RTC_CTL_ADDR;
+    //adjust rtc and set timer interval to 7.8125ms/10ms;
+    data = 0x1 | (INT7_8125MS << 2); 
+    REG_WRITE(addr, data);
 }
 
-void
-sys::setTimexFlags(int flags, Boolean quiet)
+void sys::getTxTimestampIdentity(TimestampIdentity &tsId)
 {
-//	struct timex tmx;
-//	int ret;
-//
-//	memset(&tmx, 0, sizeof(tmx));
-//
-//	tmx.modes = MOD_STATUS;
-//
-//	tmx.status = getTimexFlags();
-//	if(tmx.status == -1) 
-//		return;
-//	/* unset all read-only flags */
-//	tmx.status &= ~STA_RONLY;
-//	tmx.status |= flags;
-//
-//	ret = adjtimex(&tmx);
-//
-//	if (ret < 0)
-//		PERROR("Could not set adjtimex flags: %s", strerror(errno));
-//
-//	if(!quiet && ret > 2) {
-//		switch (ret) {
-//		case TIME_OOP:
-//			WARNING("Adjtimex: leap second already in progress\n");
-//			break;
-//		case TIME_WAIT:
-//			WARNING("Adjtimex: leap second already occurred\n");
-//			break;
-//#if !defined(TIME_BAD)
-//		case TIME_ERROR:
-//#else
-//		case TIME_BAD:
-//#endif /* TIME_BAD */
-//		default:
-//			DBGV("unsetTimexFlags: adjtimex() returned TIME_BAD\n");
-//			break;
-//		}
-//	}
+    uint32_t base, addr, data = 0;
+    base = TSU_BLK_ADDR << 8;
+
+    //get timestamp
+    addr = base + TX_TS_ADDR0;
+    REG_READ(addr, data);
+    tsId.seconds = data;
+
+    addr = base + TX_TS_ADDR1;
+    REG_READ(addr, data);
+    tsId.seconds = (tsId.seconds << 16) | ((data >> 16) & 0xffff);
+    tsId.nanoseconds = data & 0xffff;
+
+    addr = base + TX_TS_ADDR2;
+    REG_READ(addr, data);
+    tsId.nanoseconds = (tsId.nanoseconds << 16) | ((data >> 16) & 0xffff);
+    tsId.frac_nanoseconds = data & 0xffff;
+
+    //get sourcePortIdentity
+    addr = base + TX_SPF_ADDR0;
+    REG_READ(addr, data);
+    tsId.sourcePortIdentity[0] = (data >> 24) & 0xff;
+    tsId.sourcePortIdentity[1] = (data >> 16) & 0xff;
+    tsId.sourcePortIdentity[2] = (data >> 8) & 0xff;
+    tsId.sourcePortIdentity[3] = data & 0xff;
+
+    addr = base + TX_SPF_ADDR1;
+    REG_READ(addr, data);
+    tsId.sourcePortIdentity[4] = (data >> 24) & 0xff;
+    tsId.sourcePortIdentity[5] = (data >> 16) & 0xff;
+    tsId.sourcePortIdentity[6] = (data >> 8) & 0xff;
+    tsId.sourcePortIdentity[7] = data & 0xff;
+
+    addr = base + TX_SPF_ADDR2;
+    REG_READ(addr, data);
+    tsId.sourcePortIdentity[8] = (data >> 24) & 0xff;
+    tsId.sourcePortIdentity[9] = (data >> 16) & 0xff;
+    tsId.flagField[0] = (data >> 8) & 0xff;
+    tsId.flagField[1] = data & 0xff;
+
+    addr = base + TX_TVID_ADDR;
+    REG_READ(addr, data);
+    tsId.majorSdoId  = (data >> 28) & 0xf;
+    tsId.messageType = (data >> 24) & 0xf;
+    tsId.minorVersionPTP = (data >> 20) & 0xf;
+    tsId.versionPTP      = (data >> 16) & 0xf;
+    tsId.sequenceId      = data & 0xffff;
 }
 
-void
-sys::unsetTimexFlags(int flags, Boolean quiet) 
+void sys::getRxTimestampIdentity(TimestampIdentity &tsId)
 {
-//	struct timex tmx;
-//	int ret;
-//
-//	memset(&tmx, 0, sizeof(tmx));
-//
-//	tmx.modes = MOD_STATUS;
-//
-//	tmx.status = getTimexFlags();
-//	if(tmx.status == -1) 
-//		return;
-//	/* unset all read-only flags */
-//	tmx.status &= ~STA_RONLY;
-//	tmx.status &= ~flags;
-//
-//	ret = adjtimex(&tmx);
-//
-//	if (ret < 0)
-//		PERROR("Could not unset adjtimex flags: %s", strerror(errno));
-//
-//	if(!quiet && ret > 2) {
-//		switch (ret) {
-//		case TIME_OOP:
-//			WARNING("Adjtimex: leap second already in progress\n");
-//			break;
-//		case TIME_WAIT:
-//			WARNING("Adjtimex: leap second already occurred\n");
-//			break;
-//#if !defined(TIME_BAD)
-//		case TIME_ERROR:
-//#else
-//		case TIME_BAD:
-//#endif /* TIME_BAD */
-//		default:
-//			DBGV("unsetTimexFlags: adjtimex() returned TIME_BAD\n");
-//			break;
-//		}
-//	}
+    uint32_t base, addr, data = 0;
+    base = TSU_BLK_ADDR << 8;
+
+    //get timestamp
+    addr = base + RX_TS_ADDR0;
+    REG_READ(addr, data);
+    tsId.seconds = data;
+
+    addr = base + RX_TS_ADDR1;
+    REG_READ(addr, data);
+    tsId.seconds = (tsId.seconds << 16) | ((data >> 16) & 0xffff);
+    tsId.nanoseconds = data & 0xffff;
+
+    addr = base + RX_TS_ADDR2;
+    REG_READ(addr, data);
+    tsId.nanoseconds = (tsId.nanoseconds << 16) | ((data >> 16) & 0xffff);
+    tsId.frac_nanoseconds = data & 0xffff;
+
+    //get sourcePortIdentity
+    addr = base + RX_SPF_ADDR0;
+    REG_READ(addr, data);
+    tsId.sourcePortIdentity[0] = (data >> 24) & 0xff;
+    tsId.sourcePortIdentity[1] = (data >> 16) & 0xff;
+    tsId.sourcePortIdentity[2] = (data >> 8) & 0xff;
+    tsId.sourcePortIdentity[3] = data & 0xff;
+
+    addr = base + RX_SPF_ADDR1;
+    REG_READ(addr, data);
+    tsId.sourcePortIdentity[4] = (data >> 24) & 0xff;
+    tsId.sourcePortIdentity[5] = (data >> 16) & 0xff;
+    tsId.sourcePortIdentity[6] = (data >> 8) & 0xff;
+    tsId.sourcePortIdentity[7] = data & 0xff;
+
+    addr = base + RX_SPF_ADDR2;
+    REG_READ(addr, data);
+    tsId.sourcePortIdentity[8] = (data >> 24) & 0xff;
+    tsId.sourcePortIdentity[9] = (data >> 16) & 0xff;
+    tsId.flagField[0] = (data >> 8) & 0xff;
+    tsId.flagField[1] = data & 0xff;
+
+    addr = base + RX_TVID_ADDR;
+    REG_READ(addr, data);
+    tsId.majorSdoId  = (data >> 28) & 0xf;
+    tsId.messageType = (data >> 24) & 0xf;
+    tsId.minorVersionPTP = (data >> 20) & 0xf;
+    tsId.versionPTP      = (data >> 16) & 0xf;
+    tsId.sequenceId      = data & 0xffff;
 }
-
-int sys::getTimexFlags(void)
-{
-	//struct timex tmx;
-	//int ret;
-
-	//memset(&tmx, 0, sizeof(tmx));
-
-	//tmx.modes = 0;
-	//ret = adjtimex(&tmx);
-	//if (ret < 0) {
-	//	PERROR("Could not read adjtimex flags: %s", strerror(errno));
-	//	return(-1);
-
-	//}
-
-	//return( tmx.status );
-
-	return 0;
-}
-
-Boolean
-sys::checkTimexFlags(int flags) {
-
-    int tflags = getTimexFlags();
-    if (tflags == -1) 
-	    return FALSE;
-    return ((tflags & flags) == flags);
-}
-
-/*
- * TODO: track NTP API changes - NTP API version check
- * is required - the method of setting the TAI offset
- * may change with next API versions
- */
-
-#if defined(MOD_TAI) &&  NTP_API == 4
-void
-sys::setKernelUtcOffset(int utc_offset) {
-
-	struct timex tmx;
-	int ret;
-
-	memset(&tmx, 0, sizeof(tmx));
-
-	tmx.modes = MOD_TAI;
-	tmx.constant = utc_offset;
-
-	DBG2("Kernel NTP API supports TAI offset. "
-	     "Setting TAI offset to %d", utc_offset);
-
-	ret = adjtimex(&tmx);
-
-	if (ret < 0) {
-		PERROR("Could not set kernel TAI offset: %s", strerror(errno));
-	}
-}
-#endif /* MOD_TAI */
-
-
-#else
-
-void
-sys::adjTime(Integer32 nanoseconds)
-{
-
-	struct timeval t;
-
-	t.tv_sec = 0;
-	t.tv_usec = nanoseconds / 1000;
-
-	if (adjtime(&t, NULL) < 0)
-		PERROR("failed to ajdtime");
-
-}
-
-#endif /* __APPLE__ */
-
-
-
-#if 0 && defined (linux)  /* NOTE: This is actually not used */
-
-long
-sys::get_current_tickrate(void)
-{
-	struct timex t;
-
-	t.modes = 0;
-	adjtimex(&t);
-	DBG2(" (Current tick rate is %d)\n", t.tick );
-
-	return (t.tick);
-}
-
-#endif  /* defined(linux) */

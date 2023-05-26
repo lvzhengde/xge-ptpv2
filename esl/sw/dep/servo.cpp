@@ -80,7 +80,7 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 #if !defined(__APPLE__)
 
 	if (!rtOpts->noAdjust)
-		m_pApp->m_ptr_sys->adjFreq(0);
+		m_pApp->m_ptr_sys->adjTickRate(0);
 	ptpClock->observed_drift = 0;
 #endif /* apple */
 
@@ -447,7 +447,7 @@ void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	m_pApp->m_ptr_arith->subTime(&timeTmp, &timeTmp, &ptpClock->offsetFromMaster);
 
 	WARNING("     Performing hard frequency reset, by setting frequency to zero\n");
-	m_pApp->m_ptr_sys->adjFreq(0);
+	m_pApp->m_ptr_sys->adjTickRate(0);
 	ptpClock->observed_drift = 0;
 
 	m_pApp->m_ptr_sys->setTime(&timeTmp);
@@ -488,22 +488,22 @@ void servo::warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock
 
 
 /*
- * this is a wrapper around adjFreq to abstract extra operations
+ * this is a wrapper around adjTickRate to abstract extra operations
  */
-void servo::adjFreq_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
+void servo::adjTickRate_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
 {
 
 
    
 	if (rtOpts->noAdjust){
-		DBGV("adjFreq2: noAdjust on, returning\n");
+		DBGV("adjTickRate2: noAdjust on, returning\n");
 		return;
 	}
 
 
 	// call original adjtime
-	DBG2("     adjFreq2: call adjfreq to %d us \n", adj / DBG_UNIT);
-	m_pApp->m_ptr_sys->adjFreq(adj);
+	DBG2("     adjTickRate2: call adjfreq to %d us \n", adj / DBG_UNIT);
+	m_pApp->m_ptr_sys->adjTickRate(adj);
 
 	warn_operator_fast_slewing(rtOpts, ptpClock, adj);
 
@@ -577,7 +577,7 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 				ptpClock->observed_drift = adj;
 
 				warn_operator_slow_slewing(rtOpts, ptpClock);
-				adjFreq_wrapper(rtOpts, ptpClock, -adj);
+				adjTickRate_wrapper(rtOpts, ptpClock, -adj);
 
 				/* its not clear how the APPLE case works for large jumps */
 #endif /* __APPLE__ */
@@ -632,7 +632,7 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 #if defined(__APPLE__)
 			adjTime(ptpClock->offsetFromMaster.nanoseconds);
 #else
-		adjFreq_wrapper(rtOpts, ptpClock, -adj);
+		adjTickRate_wrapper(rtOpts, ptpClock, -adj);
 #endif /* __APPLE__ */
 	}
 

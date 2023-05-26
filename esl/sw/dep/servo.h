@@ -30,7 +30,7 @@ public:
   
   void warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock );
   
-  void adjFreq_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj);
+  void adjTickRate_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj);
   
   void updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock);
 
