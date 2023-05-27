@@ -702,6 +702,14 @@ typedef struct {
 	int debug_level;
 #endif
 
+    //HW engine related options
+    int networkProtocol;   
+    int layer2Encap;       //0: ether2, 1: SNAP, 2: PPPoE
+    int vlanTag;           //0: no vlan, 1: single vlan, 2: double vlan
+    int int7_8125ms;       //0: 10 ms interval, 1: 7.8125 ms interval 
+    int one_step;          //0: two step, 1: one step
+    int emb_ingressTime;   //0: unchanged, 1: embed ingress time in received event frame
+
 } RunTimeOpts;
 
 //for converting to object-oriented design

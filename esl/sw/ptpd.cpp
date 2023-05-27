@@ -114,6 +114,14 @@ void ptpd::exec()
 	m_rtOpts.initial_delayreq = DEFAULT_DELAYREQ_INTERVAL;
 	m_rtOpts.subsequent_delayreq = DEFAULT_DELAYREQ_INTERVAL;      // this will be updated if -g is given
 
+    //HW engine related options
+    m_rtOpts.networkProtocol  = IEEE_802_3;   
+    m_rtOpts.layer2Encap      = 0;       //0: ether2, 1: SNAP, 2: PPPoE
+    m_rtOpts.vlanTag          = 0;       //0: no vlan, 1: single vlan, 2: double vlan
+    m_rtOpts.int7_8125ms      = 1;       //0: 10 ms interval, 1: 7.8125 ms interval 
+    m_rtOpts.one_step         = 1;       //0: two step, 1: one step
+    m_rtOpts.emb_ingressTime  = 1;       //0: unchanged, 1: embed ingress time in received event frame
+
 	/* Initialize run time options with command line arguments */
 	int argc = 3;
 	char *argv[] = {(char *)"ptpv2d", (char *)"-e", (char *)"-z"};

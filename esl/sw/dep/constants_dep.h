@@ -15,67 +15,13 @@
 
 /* platform dependent */
 
-#if 0
-
-#if !defined(linux) && !defined(__NetBSD__) && !defined(__FreeBSD__) && \
-  !defined(__APPLE__)
-#error Not ported to this architecture, please update.
-#endif
-
-#ifdef	linux
-#include<netinet/in.h>
-#include<net/if.h>
-#include<net/if_arp.h>
-#define IFACE_NAME_LENGTH         IF_NAMESIZE
-#define NET_ADDRESS_LENGTH        INET_ADDRSTRLEN
-
-#define IFCONF_LENGTH 10
-
-#include<endian.h>
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-#define PTPD_LSBF
-#elif __BYTE_ORDER == __BIG_ENDIAN
-#define PTPD_MSBF
-#endif
-#endif /* linux */
-
-
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__APPLE__)
-# include <sys/types.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <net/if.h>
-# include <net/if_dl.h>
-# include <net/if_types.h>
-# if defined(__FreeBSD__) || defined(__APPLE__)
-#  include <net/ethernet.h>
-#  include <sys/uio.h>
-# else
-#  include <net/if_ether.h>
-# endif
-# include <ifaddrs.h>
-# define IFACE_NAME_LENGTH         IF_NAMESIZE
-# define NET_ADDRESS_LENGTH        INET_ADDRSTRLEN
-
-# define IFCONF_LENGTH 10
-
-# define adjtimex ntp_adjtime
-
-# include <machine/endian.h>
-# if BYTE_ORDER == LITTLE_ENDIAN
-#   define PTPD_LSBF
-# elif BYTE_ORDER == BIG_ENDIAN
-#   define PTPD_MSBF
-# endif
-#endif
-
-#endif  //#if 0
 
 #include <climits>
 
 #define IFACE_NAME_LENGTH         128
 #define MAXHOSTNAMELEN            128
-//#define PATH_MAX                  512 //already defined in <climits>
+
+#define DEFAULT_IFACE_NAME        "eth-ptpv2"
 
 #define CLOCK_IDENTITY_LENGTH 8
 #define ADJ_FREQ_MAX  512000
@@ -95,16 +41,6 @@
 
 #define PTP_EVENT_PORT    319
 #define PTP_GENERAL_PORT  320
-
-#define DEFAULT_PTP_DOMAIN_ADDRESS     "224.0.1.129"
-#define PEER_PTP_DOMAIN_ADDRESS        "224.0.0.107"
-
-/* used for -I option */
-#define ALTERNATE_PTP_DOMAIN1_ADDRESS  "224.0.1.130"
-#define ALTERNATE_PTP_DOMAIN2_ADDRESS  "224.0.1.131"
-#define ALTERNATE_PTP_DOMAIN3_ADDRESS  "224.0.1.132"
-
-
 
 #define MM_STARTING_BOUNDARY_HOPS  0x7fff
 
@@ -129,8 +65,5 @@
 
 //#define LOG_DAEMON 0
 #define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
-
-//set period of intxms to 7.8125ms or 10ms
-#define INT7_8125MS    1
 
 #endif /*CONSTANTS_DEP_H_*/

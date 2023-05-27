@@ -55,19 +55,6 @@
 #include "common.h"
 
 
-#if defined(linux)
-#  include <netinet/ether.h>
-#elif defined( __FreeBSD__ )
-#  include <net/ethernet.h>
-#elif defined( __NetBSD__ )
-#  include <net/if_ether.h>
-#elif defined( __OpenBSD__ )
-#  include <some ether header>  // force build error
-#endif
-
-/* only C99 has the round function built-in */
-double round (double __x);
-
 #if defined(PTPD_LSBF)
 Integer16 flip16(Integer16 x)
 {
@@ -690,7 +677,8 @@ void sys::setRtcValue(int64_t sec_offset, int32_t ns_offset)
 
     addr = base + RTC_CTL_ADDR;
     //adjust rtc and set timer interval to 7.8125ms/10ms;
-    data = 0x1 | (INT7_8125MS << 2); 
+	uint32_t intxms = (m_pApp->m_rtOpts.int7_8125ms != 0) ? 1 : 0;
+    data = 0x1 | (intxms << 2); 
     REG_WRITE(addr, data);
 }
 

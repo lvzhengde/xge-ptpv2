@@ -54,20 +54,6 @@
 
 #include "common.h"
 
-/* choose kernel-level nanoseconds or microseconds resolution on the client-side */
-//#if !defined(SO_TIMESTAMPNS) && !defined(SO_TIMESTAMP) && !defined(SO_BINTIME)
-//#error kernel-level timestamps not detected
-//#endif
-
-/**
- * shutdown the IPv4 multicast for specific address
- *
- * @param netPath
- * @param multicastAddr
- * 
- * @return TRUE if successful
- */
-
 
 //constructor
 net::net(ptpd *pApp)
@@ -75,26 +61,10 @@ net::net(ptpd *pApp)
     BASE_MEMBER_ASSIGN 
 }
 
-Boolean
-net::netShutdownMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
-{
-	struct ip_mreq imr;
-
-	/* Close General Multicast */
-	imr.imr_multiaddr.s_addr = multicastAddr;
-	imr.imr_interface.s_addr = netPath->interfaceAddr.s_addr;
-
-	setsockopt(netPath->eventSock, IPPROTO_IP, IP_DROP_MEMBERSHIP, 
-		   &imr, sizeof(struct ip_mreq));
-	setsockopt(netPath->generalSock, IPPROTO_IP, IP_DROP_MEMBERSHIP, 
-		   &imr, sizeof(struct ip_mreq));
-	
-	return TRUE;
-}
-
 
 /**
  * shutdown the multicast (both General and Peer)
+ * just a stub function 
  *
  * @param netPath 
  * 
@@ -103,295 +73,24 @@ net::netShutdownMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
 Boolean
 net::netShutdownMulticast(NetPath * netPath)
 {
-	/* Close General Multicast */
-	netShutdownMulticastIPv4(netPath, netPath->multicastAddr);
-	netPath->multicastAddr = 0;
-
-	/* Close Peer Multicast */
-	netShutdownMulticastIPv4(netPath, netPath->peerMulticastAddr);
-	netPath->peerMulticastAddr = 0;
-	
 	return TRUE;
 }
 
 
-/* shut down the UDP stuff */
+/* just a stub function */
 Boolean 
 net::netShutdown(NetPath * netPath)
 {
 	netShutdownMulticast(netPath);
 
-	netPath->unicastAddr = 0;
-
-	/* Close sockets */
-	if (netPath->eventSock > 0)
-		close(netPath->eventSock);
-	netPath->eventSock = -1;
-
-	if (netPath->generalSock > 0)
-		close(netPath->generalSock);
-	netPath->generalSock = -1;
-
-	return TRUE;
-}
-
-Boolean
-net::chooseMcastGroup(RunTimeOpts * rtOpts, struct in_addr *netAddr)
-{
-
-	string addrStr;
-
-#ifdef PTP_EXPERIMENTAL
-	switch(rtOpts->mcast_group_Number){
-	case 0:
-		addrStr = DEFAULT_PTP_DOMAIN_ADDRESS;
-		break;
-
-	case 1:
-		addrStr = ALTERNATE_PTP_DOMAIN1_ADDRESS;
-		break;
-	case 2:
-		addrStr = ALTERNATE_PTP_DOMAIN2_ADDRESS;
-		break;
-	case 3:
-		addrStr = ALTERNATE_PTP_DOMAIN3_ADDRESS;
-		break;
-
-	default:
-		ERROR("Unk group %d\n", rtOpts->mcast_group_Number);
-		exit(3);
-		break;
-	}
-#else
-	addrStr = DEFAULT_PTP_DOMAIN_ADDRESS;
-#endif
-
-	//if (!inet_pton(AF_INET, addrStr, netAddr)) {
-	//	ERROR_("failed to encode multicast address: %s\n", addrStr);
-	//	return FALSE;
-	//}
-	return TRUE;
-}
-
-
-/*Test if network layer is OK for PTP*/
-UInteger8 
-net::lookupCommunicationTechnology(UInteger8 communicationTechnology)
-{
-#if 0 //defined(linux)
-	switch (communicationTechnology) {
-	case ARPHRD_ETHER:
-	case ARPHRD_EETHER:
-	case ARPHRD_IEEE802:
-		return PTP_ETHER;
-
-	default:
-		break;
-	}
-#endif  /* defined(linux) */
-
-	return PTP_DEFAULT;
-}
-
-
- /* Find the local network interface */
-UInteger32 
-net::findIface(Octet * ifaceName, UInteger8 * communicationTechnology,
-    Octet * uuid, NetPath * netPath)
-{
-#if 0 //defined(linux)
-
-	/* depends on linux specific ioctls (see 'netdevice' man page) */
-	int i, flags;
-	struct ifconf data;
-	struct ifreq device[IFCONF_LENGTH];
-
-	data.ifc_len = sizeof(device);
-	data.ifc_req = device;
-
-	memset(data.ifc_buf, 0, data.ifc_len);
-
-	flags = IFF_UP | IFF_RUNNING | IFF_MULTICAST;
-
-	/* look for an interface if none specified */
-	if (ifaceName[0] != '\0') {
-		i = 0;
-		memcpy(device[i].ifr_name, ifaceName, IFACE_NAME_LENGTH);
-
-		if (ioctl(netPath->eventSock, SIOCGIFHWADDR, &device[i]) < 0)
-			DBGV("failed to get hardware address\n");
-		else if ((*communicationTechnology = 
-			  lookupCommunicationTechnology(
-				  device[i].ifr_hwaddr.sa_family)) 
-			 == PTP_DEFAULT)
-			DBGV("unsupported communication technology (%d)\n", 
-			     *communicationTechnology);
-		else
-			memcpy(uuid, device[i].ifr_hwaddr.sa_data, 
-			       PTP_UUID_LENGTH);
-	} else {
-		/* no iface specified */
-		/* get list of network interfaces */
-		if (ioctl(netPath->eventSock, SIOCGIFCONF, &data) < 0) {
-			PERROR("failed query network interfaces");
-			return 0;
-		}
-		if (data.ifc_len >= sizeof(device))
-			DBG("device list may exceed allocated space\n");
-
-		/* search through interfaces */
-		for (i = 0; i < data.ifc_len / sizeof(device[0]); ++i) {
-			DBGV("%d %s %s\n", i, device[i].ifr_name, 
-			     inet_ntoa(((struct sockaddr_in *)
-					&device[i].ifr_addr)->sin_addr));
-
-			if (ioctl(netPath->eventSock, SIOCGIFFLAGS, 
-				  &device[i]) < 0)
-				DBGV("failed to get device flags\n");
-			else if ((device[i].ifr_flags & flags) != flags)
-				DBGV("does not meet requirements"
-				     "(%08x, %08x)\n", device[i].ifr_flags, 
-				     flags);
-			else if (ioctl(netPath->eventSock, SIOCGIFHWADDR, 
-				       &device[i]) < 0)
-				DBGV("failed to get hardware address\n");
-			else if ((*communicationTechnology = 
-				  lookupCommunicationTechnology(
-					  device[i].ifr_hwaddr.sa_family)) 
-				 == PTP_DEFAULT)
-				DBGV("unsupported communication technology"
-				     "(%d)\n", *communicationTechnology);
-			else {
-				DBGV("found interface (%s)\n", 
-				     device[i].ifr_name);
-				memcpy(uuid, device[i].ifr_hwaddr.sa_data, 
-				       PTP_UUID_LENGTH);
-				memcpy(ifaceName, device[i].ifr_name, 
-				       IFACE_NAME_LENGTH);
-				break;
-			}
-		}
-	}
-
-	if (ifaceName[0] == '\0') {
-		ERROR("failed to find a usable interface\n");
-		return 0;
-	}
-	if (ioctl(netPath->eventSock, SIOCGIFADDR, &device[i]) < 0) {
-		PERROR("failed to get ip address");
-		return 0;
-	}
-	return ((struct sockaddr_in *)&device[i].ifr_addr)->sin_addr.s_addr;
-
-#else /* usually *BSD */
-
-	//struct ifaddrs *if_list, *ifv4, *ifh;
-
-	//if (getifaddrs(&if_list) < 0) {
-	//	PERROR("getifaddrs() failed");
-	//	return FALSE;
-	//}
-	///* find an IPv4, multicast, UP interface, right name(if supplied) */
-	//for (ifv4 = if_list; ifv4 != NULL; ifv4 = ifv4->ifa_next) {
-	//	if ((ifv4->ifa_flags & IFF_UP) == 0)
-	//		continue;
-	//	if ((ifv4->ifa_flags & IFF_RUNNING) == 0)
-	//		continue;
-	//	if ((ifv4->ifa_flags & IFF_LOOPBACK))
-	//		continue;
-	//	if ((ifv4->ifa_flags & IFF_MULTICAST) == 0)
-	//		continue;
- //               /* must have IPv4 address */
-	//	if (ifv4->ifa_addr->sa_family != AF_INET)
-	//		continue;
-	//	if (ifaceName[0] && strncmp(ifv4->ifa_name, ifaceName, 
-	//				    IF_NAMESIZE) != 0)
-	//		continue;
-	//	break;
-	//}
-
-	//if (ifv4 == NULL) {
-	//	if (ifaceName[0]) {
-	//		ERROR("interface \"%s\" does not exist,"
-	//		      "or is not appropriate\n", ifaceName);
-	//		return FALSE;
-	//	}
-	//	ERROR("no suitable interfaces found!");
-	//	return FALSE;
-	//}
-	///* find the AF_LINK info associated with the chosen interface */
-	//for (ifh = if_list; ifh != NULL; ifh = ifh->ifa_next) {
-	//	if (ifh->ifa_addr->sa_family != AF_LINK)
-	//		continue;
-	//	if (strncmp(ifv4->ifa_name, ifh->ifa_name, IF_NAMESIZE) == 0)
-	//		break;
-	//}
-
-	//if (ifh == NULL) {
-	//	ERROR("could not get hardware address for interface \"%s\"\n", 
-	//	      ifv4->ifa_name);
-	//	return FALSE;
-	//}
-	///* check that the interface TYPE is OK */
-	//if (((struct sockaddr_dl *)ifh->ifa_addr)->sdl_type != IFT_ETHER) {
-	//	ERROR("\"%s\" is not an ethernet interface!\n", ifh->ifa_name);
-	//	return FALSE;
-	//}
-	//DBG("==> %s %s %s\n", ifv4->ifa_name,
-	//    inet_ntoa(((struct sockaddr_in *)ifv4->ifa_addr)->sin_addr),
-	//    ether_ntoa((struct ether_addr *)
-	//	       LLADDR((struct sockaddr_dl *)ifh->ifa_addr))
-	//    );
-
-	//*communicationTechnology = PTP_ETHER;
-	//memcpy(ifaceName, ifh->ifa_name, IFACE_NAME_LENGTH);
-	//memcpy(uuid, LLADDR((struct sockaddr_dl *)ifh->ifa_addr), 
-	//       PTP_UUID_LENGTH);
-
-	//return ((struct sockaddr_in *)ifv4->ifa_addr)->sin_addr.s_addr;
-
-    return 0;
-
-#endif
-}
-
-/**
- * Init the multcast for specific IPv4 address
- * 
- * @param netPath 
- * @param multicastAddr 
- * 
- * @return TRUE if successful
- */
-Boolean
-net::netInitMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
-{
-	struct ip_mreq imr;
-
-	/* multicast send only on specified interface */
-	imr.imr_multiaddr.s_addr = multicastAddr;
-	imr.imr_interface.s_addr = netPath->interfaceAddr.s_addr;
-	//if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_MULTICAST_IF, 
-	//	       &imr.imr_interface.s_addr, sizeof(struct in_addr)) < 0
-	//    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_MULTICAST_IF, 
-	//		  &imr.imr_interface.s_addr, sizeof(struct in_addr)) 
-	//    < 0) {
-	//	PERROR("failed to enable multi-cast on the interface");
-	//	return FALSE;
-	//}
-	/* join multicast group (for receiving) on specified interface */
-	//if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_ADD_MEMBERSHIP, 
-	//	       &imr, sizeof(struct ip_mreq)) < 0
-	//    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_ADD_MEMBERSHIP, 
-	//		  &imr, sizeof(struct ip_mreq)) < 0) {
-	//	PERROR("failed to join the multi-cast group");
-	//	return FALSE;
-	//}
 	return TRUE;
 }
 
 /**
+ * stub function
+ * (
  * Init the multcast (both General and Peer)
+ * )
  * 
  * @param netPath 
  * @param rtOpts 
@@ -401,38 +100,11 @@ net::netInitMulticastIPv4(NetPath * netPath, Integer32 multicastAddr)
 Boolean
 net::netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts)
 {
-	struct in_addr netAddr;
-	char addrStr[NET_ADDRESS_LENGTH];
-	
-	/* Init General multicast IP address */
-	if(!chooseMcastGroup(rtOpts, &netAddr)){
-		return FALSE;
-	}
-	netPath->multicastAddr = netAddr.s_addr;
-	if(!netInitMulticastIPv4(netPath, netPath->multicastAddr)) {
-		return FALSE;
-	}
-	/* End of General multicast Ip address init */
-
-
-	/* Init Peer multicast IP address */
-	memcpy(addrStr, PEER_PTP_DOMAIN_ADDRESS, NET_ADDRESS_LENGTH);
-
-	if (!inet_pton(AF_INET, addrStr, &netAddr)) {
-		ERROR_("failed to encode multi-cast address: %s\n", addrStr);
-		return FALSE;
-	}
-	netPath->peerMulticastAddr = netAddr.s_addr;
-	if(!netInitMulticastIPv4(netPath, netPath->peerMulticastAddr)) {
-		return FALSE;
-	}
-	/* End of Peer multicast Ip address init */
-	
 	return TRUE;
 }
 
 /**
- * Initialize timestamping of packets
+ * Initialize timestamping  engine
  *
  * @param netPath 
  * 
@@ -441,52 +113,33 @@ net::netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts)
 Boolean 
 net::netInitTimestamping(NetPath * netPath)
 {
-	int val = 1;
-	Boolean result = TRUE;
+    int val = 1;
+    Boolean result = TRUE;
 	
-#if defined(SO_TIMESTAMPNS) /* Linux, Apple */
-	DBG("netInitTimestamping: trying to use SO_TIMESTAMPNS\n");
-	
-	if (setsockopt(netPath->eventSock, SOL_SOCKET, SO_TIMESTAMPNS, &val, sizeof(int)) < 0
-	    || setsockopt(netPath->generalSock, SOL_SOCKET, SO_TIMESTAMPNS, &val, sizeof(int)) < 0) {
-		PERROR("netInitTimestamping: failed to enable SO_TIMESTAMPNS");
-		result = FALSE;
-	}
-#elif defined(SO_BINTIME) /* FreeBSD */
-	DBG("netInitTimestamping: trying to use SO_BINTIME\n");
-		
-	if (setsockopt(netPath->eventSock, SOL_SOCKET, SO_BINTIME, &val, sizeof(int)) < 0
-	    || setsockopt(netPath->generalSock, SOL_SOCKET, SO_BINTIME, &val, sizeof(int)) < 0) {
-		PERROR("netInitTimestamping: failed to enable SO_BINTIME");
-		result = FALSE;
-	}
-#else
-	result = FALSE;
-#endif
-			
-/* fallback method */
-#if defined(SO_TIMESTAMP) /* Linux, Apple, FreeBSD */
-	if (!result) {
-		DBG("netInitTimestamping: trying to use SO_TIMESTAMP\n");
-		
-		if (setsockopt(netPath->eventSock, SOL_SOCKET, SO_TIMESTAMP, &val, sizeof(int)) < 0
-		    || setsockopt(netPath->generalSock, SOL_SOCKET, SO_TIMESTAMP, &val, sizeof(int)) < 0) {
-			PERROR("netInitTimestamping: failed to enable SO_TIMESTAMP");
-			result = FALSE;
-		}
-		result = TRUE;
-	}
-#endif
+    uint32_t base, addr, data = 0;
+    base = TSU_BLK_ADDR << 8;
+    addr = base + TSU_CFG_ADDR;
+
+    uint32_t one_step   = (m_pApp->m_rtOpts.one_step != 0) ? 1 : 0;
+    uint32_t peer_delay = (m_pApp->m_rtOpts.delayMechanism == P2P) ? 1 : 0;
+	uint32_t emb_ingressTime = (m_pApp->m_rtOpts.emb_ingressTime != 0) ? 1 : 0;
+
+    data = one_step | (peer_delay << 2) | (emb_ingressTime << 5);
+    REG_WRITE(addr, data);
 
 	return result;
 }
 
 
 /**
+ * initialize network configuration
+ * (
+ * original description:
  * start all of the UDP stuff 
  * must specify 'subdomainName', and optionally 'ifaceName', 
  * if not then pass ifaceName == "" 
  * on socket options, see the 'socket(7)' and 'ip' man pages 
+ * )
  *
  * @param netPath 
  * @param rtOpts 
@@ -497,145 +150,25 @@ net::netInitTimestamping(NetPath * netPath)
 Boolean 
 net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-	int temp;
-	struct in_addr interfaceAddr, netAddr;
-	struct sockaddr_in addr;
-
 	DBG("netInit\n");
 
-	/* open sockets */
-	if ((netPath->eventSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0
-	    || (netPath->generalSock = socket(PF_INET, SOCK_DGRAM, 
-					      IPPROTO_UDP)) < 0) {
-		PERROR("failed to initalize sockets");
-		return FALSE;
-	}
-	/* find a network interface */
-	if (!(interfaceAddr.s_addr = 
-	      findIface(rtOpts->ifaceName, 
-			&ptpClock->port_communication_technology,
-			ptpClock->port_uuid_field, netPath)))
-		return FALSE;
+    //initialize ifaceName
+	char ifaceName[] = DEFAULT_IFACE_NAME;
+    strncpy(rtOpts->ifaceName, ifaceName, sizeof(ifaceName));
 
-	/* save interface address for IGMP refresh */
-	netPath->interfaceAddr = interfaceAddr;
-	
-	DBG("Local IP address used : %s \n", inet_ntoa(interfaceAddr));
+	//initialize transport object
+	m_pApp->m_ptr_transport->init(rtOpts->networkProtocol, rtOpts->layer2Encap, rtOpts->vlanTag, rtOpts->delayMechanism);
 
-	temp = 1;			/* allow address reuse */
-	if (setsockopt(netPath->eventSock, SOL_SOCKET, SO_REUSEADDR, 
-		       &temp, sizeof(int)) < 0
-	    || setsockopt(netPath->generalSock, SOL_SOCKET, SO_REUSEADDR, 
-			  &temp, sizeof(int)) < 0) {
-		DBG("failed to set socket reuse\n");
-	}
-	/* bind sockets */
-	/*
-	 * need INADDR_ANY to allow receipt of multi-cast and uni-cast
-	 * messages
-	 */
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port = htons(PTP_EVENT_PORT);
-	if (bind(netPath->eventSock, (struct sockaddr *)&addr, 
-		 sizeof(struct sockaddr_in)) < 0) {
-		PERROR("failed to bind event socket");
-		return FALSE;
-	}
-	addr.sin_port = htons(PTP_GENERAL_PORT);
-	if (bind(netPath->generalSock, (struct sockaddr *)&addr, 
-		 sizeof(struct sockaddr_in)) < 0) {
-		PERROR("failed to bind general socket");
-		return FALSE;
-	}
+    /* stub only, init Multicast*/
+    if (!netInitMulticast(netPath, rtOpts)) {
+      return FALSE;
+    }
 
-
-
-#ifdef USE_BINDTODEVICE
-#ifdef linux
-	/*
-	 * The following code makes sure that the data is only received on the specified interface.
-	 * Without this option, it's possible to receive PTP from another interface, and confuse the protocol.
-	 * Calling bind() with the IP address of the device instead of INADDR_ANY does not work.
-	 *
-	 * More info:
-	 *   http://developerweb.net/viewtopic.php?id=6471
-	 *   http://stackoverflow.com/questions/1207746/problems-with-so-bindtodevice-linux-socket-option
-	 */
-#ifdef PTP_EXPERIMENTAL
-	if ( !rtOpts->do_hybrid_mode )
-#endif
-	if (setsockopt(netPath->eventSock, SOL_SOCKET, SO_BINDTODEVICE,
-			rtOpts->ifaceName, strlen(rtOpts->ifaceName)) < 0
-		|| setsockopt(netPath->generalSock, SOL_SOCKET, SO_BINDTODEVICE,
-			rtOpts->ifaceName, strlen(rtOpts->ifaceName)) < 0){
-		PERROR("failed to call SO_BINDTODEVICE on the interface");
-		return FALSE;
-	}
-#endif
-#endif
-
-
-	/* send a uni-cast address if specified (useful for testing) */
-	if (rtOpts->unicastAddress[0]) {
-		///* Attempt a DNS lookup first. */
-		//struct hostent *host;
-		//host = gethostbyname2(rtOpts->unicastAddress, AF_INET);
-  //              if (host != NULL) {
-		//	if (host->h_length != 4) {
-		//		PERROR("unicast host resolved to non ipv4"
-		//		       "address");
-		//		return FALSE;
-		//	}
-		//	netPath->unicastAddr = 
-		//		*(uint32_t *)host->h_addr_list[0];
-		//} else {
-		//	/* Maybe it's a dotted quad. */
-		//	if (!inet_aton(rtOpts->unicastAddress, &netAddr)) {
-		//		ERROR("failed to encode uni-cast address: %s\n",
-		//		      rtOpts->unicastAddress);
-		//		return FALSE;
-		//		netPath->unicastAddr = netAddr.s_addr;
-		//	}
-  //              }
-		;
-	} else {
-                netPath->unicastAddr = 0;
-	}
-
-	/* init UDP Multicast on both Default and Pear addresses */
-	if (!netInitMulticast(netPath, rtOpts)) {
-		return FALSE;
-	}
-
-	/* set socket time-to-live to 1 */
-
-	if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_MULTICAST_TTL, 
-		       &rtOpts->ttl, sizeof(int)) < 0
-	    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_MULTICAST_TTL, 
-			  &rtOpts->ttl, sizeof(int)) < 0) {
-		PERROR("failed to set the multi-cast time-to-live");
-		return FALSE;
-	}
-
-	/* enable loopback */
-	temp = 1;
-
-	DBG("Going to set IP_MULTICAST_LOOP with %d \n", temp);
-
-	if (setsockopt(netPath->eventSock, IPPROTO_IP, IP_MULTICAST_LOOP, 
-		       &temp, sizeof(int)) < 0
-	    || setsockopt(netPath->generalSock, IPPROTO_IP, IP_MULTICAST_LOOP, 
-			  &temp, sizeof(int)) < 0) {
-		PERROR("failed to enable multi-cast loopback");
-		return FALSE;
-	}
-
-	/* make timestamps available through recvmsg() */
-	if (!netInitTimestamping(netPath)) {
-		ERROR_("failed to enable receive time stamps");
-		return FALSE;
-	}
+    /* configure HW timestamp engine */
+    if (!netInitTimestamping(netPath)) {
+      ERROR_("failed to enable receive time stamps");
+      return FALSE;
+    }
 
 	return TRUE;
 }
@@ -696,7 +229,8 @@ ssize_t net::netSend(Octet * buf, UInteger16 length, Enumeration4 messageType)
 }
 
 /*
- * refresh IGMP on a timeout
+ * stub function in fact
+ * (refresh IGMP on a timeout)
  */
 /*
  * @return TRUE if successful
@@ -706,17 +240,14 @@ net::netRefreshIGMP(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock
 {
 	DBG("netRefreshIGMP\n");
 	
-#if 0
 	netShutdownMulticast(netPath);
 	
 	/* suspend process 100 milliseconds, to make sure the kernel sends the IGMP_leave properly */
-	usleep(100*1000);
-	//Sleep(10);
+	//usleep(100*1000);
 
 	if (!netInitMulticast(netPath, rtOpts)) {
 		return FALSE;
 	}
-#endif
 	
 	INFO("refreshed IGMP multicast memberships\n");
 	return TRUE;

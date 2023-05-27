@@ -8,21 +8,10 @@ class net : public base_data
 public:
   //member methods
   net(ptpd *pApp);
-
-  Boolean netShutdownMulticastIPv4(NetPath * netPath, Integer32 multicastAddr);
   
   Boolean netShutdownMulticast(NetPath * netPath);
   
   Boolean netShutdown(NetPath * netPath);
-  
-  Boolean chooseMcastGroup(RunTimeOpts * rtOpts, struct in_addr *netAddr);
-  
-  UInteger8 lookupCommunicationTechnology(UInteger8 communicationTechnology);
-  
-  UInteger32 findIface(Octet * ifaceName, UInteger8 * communicationTechnology,
-      Octet * uuid, NetPath * netPath);
-  
-  Boolean netInitMulticastIPv4(NetPath * netPath, Integer32 multicastAddr);
   
   Boolean netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts);
   

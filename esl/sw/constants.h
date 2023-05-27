@@ -35,7 +35,7 @@
 #define DEFAULT_OUTBOUND_LATENCY     	0       /* in nsec */
 #define DEFAULT_NO_RESET_CLOCK       	FALSE
 #define DEFAULT_DOMAIN_NUMBER        	0
-#define DEFAULT_DELAY_MECHANISM      	E2E     // TODO
+#define DEFAULT_DELAY_MECHANISM      	P2P     // TODO
 #define DEFAULT_AP                   	10
 #define DEFAULT_AI                   	1000
 #define DEFAULT_DELAY_S              	6
