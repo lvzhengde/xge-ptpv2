@@ -159,6 +159,8 @@ net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	//initialize transport object
 	m_pApp->m_ptr_transport->init(rtOpts->networkProtocol, rtOpts->layer2Encap, rtOpts->vlanTag, rtOpts->delayMechanism);
 
+    memcpy(ptpClock->port_uuid_field, m_pApp->m_ptr_transport->m_mac_sa, 6);
+
     /* stub only, init Multicast*/
     if (!netInitMulticast(netPath, rtOpts)) {
       return FALSE;

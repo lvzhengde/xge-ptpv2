@@ -54,16 +54,8 @@
 
 #include "common.h"
 
-
-#define US_TIMER_INTERVAL (62500)
-
-/*
- * original code calls sigalarm every fixed 1ms. This highly pollutes the debug_log, and causes more interrupted instructions
- * This was later modified to have a fixed granularity of 1s.
- *
- * Currently this has a configured granularity, and timerStart() guarantees that clocks expire ASAP when the granularity is too small.
- * Timers must now be explicitelly canceled with timerStop (instead of timerStart(0.0))
- */
+//ptp timer interrupt interval is 7.8125 ms
+#define US_TIMER_INTERVAL (7812.5)
 
 
 //constructor
@@ -74,6 +66,10 @@ ptp_timer::ptp_timer(ptpd *pApp)
     operator_warned_interval_too_small = 0; 
 }
 
+//call this function in the interrupt service routine of intxms
+//which is located in m_pController->isr_thread()
+//in real application, it should be registered as a callback function
+//for signal or interrupt
 void 
 ptp_timer::catch_alarm(int sig)
 {
@@ -81,22 +77,35 @@ ptp_timer::catch_alarm(int sig)
 	/* be sure to NOT call DBG in asynchronous handlers! */
 }
 
+//do not depend on OS timer in fact
+//relay on PTP HW timer interrupt
 void 
 ptp_timer::initTimer(void)
 {
-	//struct itimerval itimer;
-
 	DBG("initTimer\n");
+	m_pController->ptr_ptp_timer = NULL;
 
-	//signal(SIGALRM, SIG_IGN);
+    uint32_t addr = INT_BASE_ADDR + INT_MSK_OFT;
+    uint32_t data = 0;
 
+    REG_READ(addr, data);
+
+    //disable intxms interrupt
+    data &= 0xb;
+	REG_WRITE(addr, data);
+
+    //wait 1 us
+	wait(1.0, SC_US);
+
+    //clear intrrupt tick counter
 	elapsed = 0;
-	//itimer.it_value.tv_sec = itimer.it_interval.tv_sec = 0;
-	//itimer.it_value.tv_usec = itimer.it_interval.tv_usec = US_TIMER_INTERVAL;
 
-	//signal(SIGALRM, catch_alarm);
-	//setitimer(ITIMER_REAL, &itimer, 0);
-	//StartEventTime(0);
+    //enable intxms interrupt
+	data |= 0x4;
+	REG_WRITE(addr, data);
+
+	//register this object in controller
+	m_pController->ptr_ptp_timer = this;
 }
 
 void 

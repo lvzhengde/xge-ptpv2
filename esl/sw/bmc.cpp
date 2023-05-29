@@ -70,7 +70,7 @@ void bmc::initData(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 	DBG("initData\n");
 	
 	/* Default data set */
-	ptpClock->twoStepFlag = TWO_STEP_FLAG;
+	ptpClock->twoStepFlag = (m_pApp->m_rtOpts.one_step == 0) ? TRUE : FALSE;
 
 	/*
 	 * init clockIdentity with MAC address and 0xFF and 0xFE. see

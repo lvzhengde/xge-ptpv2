@@ -1718,7 +1718,7 @@ protocol::issueSync(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 {
 	Timestamp originTimestamp;
 	TimeInternal internalTime;
-	m_pApp->m_ptr_sys->getTime(&internalTime);
+	m_pApp->m_ptr_sys->getOsTime(&internalTime);
 	m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
 
 	m_pApp->m_ptr_msg->msgPackSync(ptpClock->msgObuf,&originTimestamp,ptpClock);
@@ -1761,7 +1761,7 @@ protocol::issueDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 	DBG("==> Issue DelayReq (%d)\n", ptpClock->sentDelayReqSequenceId );
 
 	/* call GTOD. This time is later replaced on handle_delayreq, to get the actual send timestamp from the OS */
-	m_pApp->m_ptr_sys->getTime(&internalTime);
+	m_pApp->m_ptr_sys->getOsTime(&internalTime);
 	m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
 
 	// uses current sentDelayReqSequenceId
@@ -1796,7 +1796,7 @@ protocol::issuePDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 {
 	Timestamp originTimestamp;
 	TimeInternal internalTime;
-	m_pApp->m_ptr_sys->getTime(&internalTime);
+	m_pApp->m_ptr_sys->getOsTime(&internalTime);
 	m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
 	
 	m_pApp->m_ptr_msg->msgPackPDelayReq(ptpClock->msgObuf,&originTimestamp,ptpClock);

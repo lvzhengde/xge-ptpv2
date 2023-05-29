@@ -99,7 +99,7 @@ section 7.6.2.5, page 56:
 /* features, only change to refelect changes in implementation */
 #define NUMBER_PORTS      	1
 #define VERSION_PTP       	2
-#define TWO_STEP_FLAG    	TRUE
+#define TWO_STEP_FLAG       FALSE	
 #define BOUNDARY_CLOCK    	FALSE
 #define SLAVE_ONLY		FALSE
 #define NO_ADJUST		FALSE

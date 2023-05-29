@@ -66,9 +66,9 @@ public:
   
   Boolean nanoSleep(TimeInternal * t);
   
-  void getTime(TimeInternal * time);
+  void getOsTime(TimeInternal * time);
   
-  void setTime(TimeInternal * time);
+  void setOsTime(TimeInternal * time);
   
   double getRand(void);
   

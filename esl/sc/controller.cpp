@@ -7,7 +7,7 @@
 #include "reporting.h"               	 // reporting macros
 
 #define CONTROLLER_ITSELF              // it's controller itself
-#include "controller.h"                // controller declarations
+#include "common.h"
 
 using namespace std;
 
@@ -38,6 +38,8 @@ controller::controller
   m_ptxn = new tlm::tlm_generic_payload;
   m_data_ptr = new unsigned char [512];
   m_ptxn->set_data_ptr(m_data_ptr);
+
+  ptr_ptp_timer = NULL;
 }
 
 /// Destructor
@@ -61,7 +63,7 @@ void controller::controller_thread(void)
     pApp = new ptpd(this);
   else
     sc_stop();
-  
+
   //don't use (async_)reset_signal_is()
   //to prevent chaos caused by sc_mutex in the same thread
   if(m_has_reset == false) 
@@ -149,6 +151,10 @@ void controller::isr_thread (void)
       msg << "Clock ID: " << dec << m_clock_id
           << " Controller: " << m_ID << " xms Timer Interrupt received! ";
       REPORT_INFO(filename, __FUNCTION__, msg.str());
+
+      if(ptr_ptp_timer != NULL) {
+        ptr_ptp_timer->catch_alarm(0);
+      }
     }
 
     if((data & (mask << 3)) && ptp_rcved == false)  //notify normal frame except ptp message received interrupt

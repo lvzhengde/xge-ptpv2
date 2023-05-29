@@ -286,7 +286,7 @@ int arith::check_timestamp_is_fresh2(TimeInternal * timeA, TimeInternal * timeB)
 int arith::check_timestamp_is_fresh(TimeInternal * timeA)
 {
 	TimeInternal timeB;
-	m_pApp->m_ptr_sys->getTime(&timeB);
+	m_pApp->m_ptr_sys->getOsTime(&timeB);
 
 	return check_timestamp_is_fresh2(timeA, &timeB);
 }
@@ -303,7 +303,7 @@ arith::secondsToMidnight(void)
 {
 	TimeInternal now;
 
-	m_pApp->m_ptr_sys->getTime(&now);
+	m_pApp->m_ptr_sys->getOsTime(&now);
 
 	Integer32 stmI = (now.seconds - (now.seconds % 86400) + 86400) - 
 		now.seconds;

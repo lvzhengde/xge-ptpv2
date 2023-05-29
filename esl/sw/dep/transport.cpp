@@ -37,6 +37,7 @@ void transport::init(int networkProtocol, int layer2Encap, int vlanTag, int dela
     for(int i = 0; i < 4; i++) {
       m_mac_sa[i] = mac_sa_tmp[i];  
     }
+    m_mac_sa[2] = m_pController->m_clock_id;
     m_mac_sa[4] = m_pController->m_clock_id;
     m_mac_sa[5] = m_pController->m_clock_id;
 

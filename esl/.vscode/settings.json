@@ -3,6 +3,7 @@
     "C_Cpp.dimInactiveRegions": false,
     "cmake.sourceDirectory": "/home/zhengde/opensource/xge-ptpv2/esl/solution",
     "files.associations": {
-        "*.def": "cpp"
+        "*.def": "cpp",
+        "limits": "cpp"
     }
 }

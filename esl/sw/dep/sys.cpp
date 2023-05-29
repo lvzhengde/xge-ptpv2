@@ -445,7 +445,7 @@ sys::displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	}
 	memset(sbuf, ' ', sizeof(sbuf));
 
-	getTime(&now);
+	getOsTime(&now);
 
 	/*
 	 * print one log entry per X seconds, to reduce disk usage.
@@ -578,7 +578,7 @@ sys::nanoSleep(TimeInternal * t)
 }
 
 void 
-sys::getTime(TimeInternal * time)
+sys::getOsTime(TimeInternal * time)
 {
 //#if defined(linux) || defined(__APPLE__)
 //
@@ -598,7 +598,7 @@ sys::getTime(TimeInternal * time)
 }
 
 void 
-sys::setTime(TimeInternal * time)
+sys::setOsTime(TimeInternal * time)
 {
 	//struct timeval tv;
  //

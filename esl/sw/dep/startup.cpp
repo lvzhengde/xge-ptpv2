@@ -87,7 +87,8 @@ startup::startup(ptpd *pApp)
     sigusr2_received = 0;
 }
 
-/*
+/**
+ * Stub function (should defined as static function in real application)
  * Function to catch signals asynchronously.
  * Assuming that the daemon periodically calls check_signals(), then all operations are safely done synchrously at a later opportunity.
  *
@@ -935,13 +936,15 @@ startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpt
 	/* if syslog is on, send all messages to syslog only  */
 	rtOpts->syslog_startup_messages_also_to_stdout = FALSE;   
 
-	
+#if 0	
+    //stub code for reference only
 	/* use new synchronous signal handlers */
-	//signal(SIGINT,  catch_signals);
-	//signal(SIGTERM, catch_signals);
-	//signal(SIGHUP,  catch_signals);
-	//signal(SIGUSR1, catch_signals);
-	//signal(SIGUSR2, catch_signals);
+	signal(SIGINT,  startup::catch_signals);
+	signal(SIGTERM, startup::catch_signals);
+	signal(SIGHUP,  startup::catch_signals);
+	signal(SIGUSR1, startup::catch_signals);
+	signal(SIGUSR2, startup::catch_signals);
+#endif
 
 	*ret = 0;
 

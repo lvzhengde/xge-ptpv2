@@ -119,7 +119,7 @@ void ptpd::exec()
     m_rtOpts.layer2Encap      = 0;       //0: ether2, 1: SNAP, 2: PPPoE
     m_rtOpts.vlanTag          = 0;       //0: no vlan, 1: single vlan, 2: double vlan
     m_rtOpts.int7_8125ms      = 1;       //0: 10 ms interval, 1: 7.8125 ms interval 
-    m_rtOpts.one_step         = 1;       //0: two step, 1: one step
+    m_rtOpts.one_step         = (!TWO_STEP_FLAG) ? 1 : 0;       //0: two step, 1: one step
     m_rtOpts.emb_ingressTime  = 1;       //0: unchanged, 1: embed ingress time in received event frame
 
 	/* Initialize run time options with command line arguments */
@@ -149,6 +149,8 @@ void ptpd::exec()
 //exit test and clean up
 void ptpd::exit()
 {
+  m_pController->ptr_ptp_timer = NULL; 
+  
   if(m_ptr_msg        != NULL) delete m_ptr_msg       ; 
   if(m_ptr_net        != NULL) delete m_ptr_net       ;
   if(m_ptr_ptp_timer  != NULL) delete m_ptr_ptp_timer ;

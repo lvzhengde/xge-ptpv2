@@ -9,6 +9,8 @@
 #include "tlm.h"                        // TLM headers
 #include "ptp_memmap.h"
 
+class ptp_timer;
+
 class controller                       	// controller
 : public sc_core::sc_module             // sc_module
 {
@@ -45,7 +47,10 @@ class controller                       	// controller
   void burst_read(const uint32_t addr, unsigned char *data, const unsigned  int length);
 
   void burst_write(const uint32_t addr, const unsigned char *data, const unsigned  int length); 
-  
+
+  //pointer to the ptp_timer object
+  ptp_timer *ptr_ptp_timer;
+
 //=============================================================================
 // Member Variables 
   public:	
@@ -67,6 +72,7 @@ class controller                       	// controller
   sc_mutex m_bus_mutex;                             // mutex to bus access through sc_fifo
 
   bool m_has_reset;                                 // has reset or not
+
 
   public:
 

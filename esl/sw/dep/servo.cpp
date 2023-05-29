@@ -443,14 +443,14 @@ void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
 	TimeInternal timeTmp;
 	
-	m_pApp->m_ptr_sys->getTime(&timeTmp);
+	m_pApp->m_ptr_sys->getOsTime(&timeTmp);
 	m_pApp->m_ptr_arith->subTime(&timeTmp, &timeTmp, &ptpClock->offsetFromMaster);
 
 	WARNING("     Performing hard frequency reset, by setting frequency to zero\n");
 	m_pApp->m_ptr_sys->adjTickRate(0);
 	ptpClock->observed_drift = 0;
 
-	m_pApp->m_ptr_sys->setTime(&timeTmp);
+	m_pApp->m_ptr_sys->setOsTime(&timeTmp);
 	initClock(rtOpts, ptpClock);
 	m_pApp->m_ptr_protocol->toState(PTP_FAULTY, rtOpts, ptpClock);		/* make a full protocol reset */
 }
