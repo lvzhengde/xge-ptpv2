@@ -870,15 +870,9 @@ startup::ptpdStartup(int argc, char **argv, Integer16 * ret, RunTimeOpts * rtOpt
 		*ret = 1;
 		return 0;
 	}
-
-#ifdef PTP_EXPERIMENTAL
-	if(rtOpts->do_unicast_mode && rtOpts->do_hybrid_mode){
-		ERROR_("Cant specify both -u and -U\n");
-		*ret = 3;
-		return 0;
+	else if(mode_selected == 1){
+	    rtOpts->slaveOnly = TRUE;
 	}
-#endif
-
 
 	ptpClock = (PtpClock *) calloc(1, sizeof(PtpClock));
 	if (!ptpClock) {

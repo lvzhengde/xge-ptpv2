@@ -56,6 +56,10 @@
 
 #define NANOSECONDS_MAX 999999999
 
+#define SECONDS_MAX     ((1<<48)-1)
+
+#define INITIAL_TICK_INC  (0x1999999a)
+
 
 // limit operator messages to once every X seconds
 #define OPERATOR_MESSAGES_INTERVAL 300.0

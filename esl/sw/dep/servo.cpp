@@ -72,19 +72,51 @@ void servo::reset_operator_messages(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 void 
 servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-
 	DBG("initClock\n");
+
+    uint32_t base, addr, data = 0;
+    base = RTC_BLK_ADDR << 8;
+
+    //stop RTC
+	m_pApp->m_ptr_sys->adjTickRate(0);
+
+    //clear RTC
+    addr = base + RTC_CTL_ADDR;
+	REG_READ(addr, data);
+	data |= 0x2;
+    REG_WRITE(addr, data);
+
+    //initial RTC using OS time
+    TimeInternal  time;
+	m_pApp->m_ptr_sys->getOsTime(&time);
+
+    //write RTC offset registers
+	uint64_t seconds = time.seconds + (int64_t)100.0 * (m_pController->m_clock_id + m_pApp->m_ptr_sys->getRand());
+    addr = base + SC_OFST_ADDR0;
+    data = (seconds >> 32) & 0xffff;
+    REG_WRITE(addr, data);
+
+    addr = base + SC_OFST_ADDR1;
+    data = seconds & 0xffffffff;
+    REG_WRITE(addr, data);
+
+    addr = base + NS_OFST_ADDR;
+    data = time.nanoseconds;
+    REG_WRITE(addr, data);
+
+    //cause adjustment to take effect
+    addr = base + RTC_CTL_ADDR;
+	REG_READ(addr, data);
+	data |= 0x1;
+    REG_WRITE(addr, data);
+
+    //start RTC, set to initial tick increment value
+	m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK_INC);
+	
 	/* clear vars */
 	ptpClock->owd_filt.s_exp = 0;	/* clears one-way delay filter */
-
-#if !defined(__APPLE__)
-
-	if (!rtOpts->noAdjust)
-		m_pApp->m_ptr_sys->adjTickRate(0);
 	ptpClock->observed_drift = 0;
-#endif /* apple */
 
-	
 	/* clean more original filter variables */
 	m_pApp->m_ptr_arith->clearTime(&ptpClock->offsetFromMaster);
 	m_pApp->m_ptr_arith->clearTime(&ptpClock->meanPathDelay);
@@ -101,11 +133,6 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	ptpClock->char_last_msg='I';
 
 	reset_operator_messages(rtOpts, ptpClock);
-#ifdef PTP_EXPERIMENTAL
-	/* For Hybrid mode */
-	ptpClock->MasterAddr = 0;
-#endif
-
 }
 
 void 

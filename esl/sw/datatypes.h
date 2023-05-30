@@ -426,8 +426,8 @@ typedef struct {
 * \brief Time structure to handle Linux time information
  */
 typedef struct {
-	Integer32 seconds;
-	Integer32 nanoseconds;
+	int64_t seconds;
+	int32_t nanoseconds;
 } TimeInternal;
 
 /**

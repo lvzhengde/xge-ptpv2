@@ -82,7 +82,7 @@ display::uInteger48_display(UInteger48 * bigint)
 void
 display::timeInternal_display(TimeInternal * timeInternal)
 {
-	DBGV("seconds : %d \n", timeInternal->seconds);
+	DBGV("seconds : %lld \n", timeInternal->seconds);
 	DBGV("nanoseconds %d \n", timeInternal->nanoseconds);
 }
 

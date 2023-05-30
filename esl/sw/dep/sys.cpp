@@ -134,7 +134,7 @@ sys::snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
 	len += snprintf(&s[len], max_len - len, "%c",
 		m_pApp->m_ptr_arith->isTimeInternalNegative(p)? '-':' ');
 
-	len += snprintf(&s[len], max_len - len, "%d.%09d",
+	len += snprintf(&s[len], max_len - len, "%lld.%09d",
 	    abs(p->seconds), abs(p->nanoseconds));
 
 	return len;
@@ -580,21 +580,10 @@ sys::nanoSleep(TimeInternal * t)
 void 
 sys::getOsTime(TimeInternal * time)
 {
-//#if defined(linux) || defined(__APPLE__)
-//
-//	struct timeval tv;
-//	gettimeofday(&tv, 0);
-//	time->seconds = tv.tv_sec;
-//	time->nanoseconds = tv.tv_usec * 1000;
-//#else
-//	struct timespec tp;
-//	if (clock_gettime(CLOCK_REALTIME, &tp) < 0) {
-//		PERROR("clock_gettime() failed, exiting.");
-//		exit(0);
-//	}
-//	time->seconds = tp.tv_sec;
-//	time->nanoseconds = tp.tv_nsec;
-//#endif /* linux || __APPLE__ */
+	struct timeval tv;
+	gettimeofday(&tv, 0);
+	time->seconds = tv.tv_sec;
+	time->nanoseconds = tv.tv_usec * 1000;
 }
 
 void 
@@ -622,9 +611,15 @@ sys::getRand(void)
 
 Boolean sys::adjTickRate(Integer32 adj)
 {
+    uint32_t base, addr, data = 0;
+
+    base = RTC_BLK_ADDR << 8;
+    addr = base + TICK_INC_ADDR;
+    data = adj;
+
+    REG_WRITE(addr, data);
 
     return true;
-
 }
 
 /**

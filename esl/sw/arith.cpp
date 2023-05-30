@@ -109,14 +109,14 @@ arith::fromInternalTime(TimeInternal * internal, Timestamp * external)
 	 * so there is no problem here.
 	 */
 
-	if ((internal->seconds & ~INT_MAX) || 
-	    (internal->nanoseconds & ~INT_MAX)) {
+	if ((internal->seconds < 0) || 
+	    (internal->nanoseconds < 0)) {
 		DBG("Negative value canno't be converted into timestamp \n");
 		return;
 	} else {
-		external->secondsField.lsb = internal->seconds;
+		external->secondsField.lsb = internal->seconds & 0xffffffff;
 		external->nanosecondsField = internal->nanoseconds;
-		external->secondsField.msb = 0;
+		external->secondsField.msb = (internal->seconds >> 32) & 0xffff;
 	}
 
 }
@@ -125,15 +125,8 @@ void
 arith::toInternalTime(TimeInternal * internal, Timestamp * external)
 {
 
-	/* Program will not run after 2038... */
-	if (external->secondsField.lsb < INT_MAX) {
-		internal->seconds = external->secondsField.lsb;
-		internal->nanoseconds = external->nanosecondsField;
-	} else {
-		DBG("Clock servo canno't be executed : "
-		    "seconds field is higher than signed integer (32bits) \n");
-		return;
-	}
+	internal->seconds = ((int64_t)external->secondsField.msb << 32) + external->secondsField.lsb;
+	internal->nanoseconds = external->nanosecondsField;
 }
 
 void 
