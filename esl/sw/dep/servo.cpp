@@ -111,7 +111,7 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     REG_WRITE(addr, data);
 
     //start RTC, set to initial tick increment value
-	m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK_INC);
+	m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK);
 	
 	/* clear vars */
 	ptpClock->owd_filt.s_exp = 0;	/* clears one-way delay filter */

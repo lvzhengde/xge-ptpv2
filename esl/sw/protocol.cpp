@@ -89,8 +89,12 @@ protocol::protocolExec(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 			DBGV("activity\n");
 		}
 
+        //stub only in SystemC TLM simulation
 		/* Perform the heavy signal processing synchronously */
 		m_pApp->m_ptr_startup->check_signals(rtOpts, ptpClock);
+
+        //give other threads a chance
+		wait(SC_ZERO_TIME);
 	}
 }
 
@@ -400,22 +404,22 @@ protocol::doState(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 
 			/* FIXME: Path delay should also rearm its timer with the value received from the Master */
 		}
-
-                if (ptpClock->leap59 || ptpClock->leap61) {
-                        DBGV("seconds to midnight: %.3f\n",m_pApp->m_ptr_arith->secondsToMidnight());
+#if 0  //leap second, not take into consideration
+       if (ptpClock->leap59 || ptpClock->leap61) {
+               DBGV("seconds to midnight: %.3f\n",m_pApp->m_ptr_arith->secondsToMidnight());
 				}
 
-                /* leap second period is over */
-                 if(m_pApp->m_ptr_ptp_timer->timerExpired(LEAP_SECOND_PAUSE_TIMER,ptpClock->itimer) &&
-                    ptpClock->leapSecondInProgress) {
-                            /* 
-                             * do not unpause offset calculation just
-                             * yet, just indicate and it will be
-                             * unpaused in handleAnnounce()
-                            */
-                            ptpClock->leapSecondPending = FALSE;
-                            m_pApp->m_ptr_ptp_timer->timerStop(LEAP_SECOND_PAUSE_TIMER,ptpClock->itimer);
-                    } 
+       /* leap second period is over */
+        if(m_pApp->m_ptr_ptp_timer->timerExpired(LEAP_SECOND_PAUSE_TIMER,ptpClock->itimer) &&
+           ptpClock->leapSecondInProgress) {
+                   /* 
+                    * do not unpause offset calculation just
+                    * yet, just indicate and it will be
+                    * unpaused in handleAnnounce()
+                   */
+                   ptpClock->leapSecondPending = FALSE;
+                   m_pApp->m_ptr_ptp_timer->timerStop(LEAP_SECOND_PAUSE_TIMER,ptpClock->itimer);
+           } 
 		/* check if leap second is near and if we should pause updates */
 		if( ptpClock->leapSecondPending &&
 		    !ptpClock->leapSecondInProgress &&
@@ -424,16 +428,6 @@ protocol::doState(RunTimeOpts *rtOpts, PtpClock *ptpClock)
                             WARNING("=== Leap second event imminent - pausing "
 				    "clock and offset updates\n");
                             ptpClock->leapSecondInProgress = TRUE;
-#if !defined(__APPLE__)
-      //                      if(!checkTimexFlags(ptpClock->leap61 ? 
-						//STA_INS : STA_DEL)) {
-      //                              WARNING("=== Kernel leap second flags have "
-					 //   "been unset - attempting to set "
-					 //   "again");
-      //                              setTimexFlags(ptpClock->leap61 ? 
-						//  STA_INS : STA_DEL, FALSE);
-      //                      }
-#endif /* apple */
 			    /*
 			     * start pause timer from now until [pause] after
 			     * midnight, plus an extra second if inserting
@@ -445,7 +439,7 @@ protocol::doState(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 				       m_pApp->m_ptr_arith->getPauseAfterMidnight(ptpClock->logAnnounceInterval),
 				       ptpClock->itimer);
 		}
-
+#endif  //leap second
 		break;
 
 	case PTP_MASTER:

@@ -98,8 +98,8 @@ void ptpd::exec()
 	 */
 	m_rtOpts.slaveOnly = TRUE;
 	m_rtOpts.ignore_delayreq_interval_master = FALSE;
-	m_rtOpts.do_IGMP_refresh = TRUE;
-	m_rtOpts.useSysLog       = TRUE;
+	m_rtOpts.do_IGMP_refresh = FALSE;
+	m_rtOpts.useSysLog       = FALSE;
 	m_rtOpts.syslog_startup_messages_also_to_stdout = TRUE;		/* used to print inital messages both to syslog and screen */
 	m_rtOpts.announceReceiptTimeout  = DEFAULT_ANNOUNCE_RECEIPT_TIMEOUT;
 #ifdef RUNTIME_DEBUG

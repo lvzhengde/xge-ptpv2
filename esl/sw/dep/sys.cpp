@@ -84,8 +84,6 @@ sys::sys(ptpd *pApp)
 */
 char *sys::dump_TimeInternal(const TimeInternal * p)
 {
-	//static char buf[100];
-
 	snprint_TimeInternal(buf0, 100, p);
 	return buf0;
 }
@@ -97,7 +95,6 @@ char *sys::dump_TimeInternal(const TimeInternal * p)
 */
 char *sys::dump_TimeInternal2(const char *st1, const TimeInternal * p1, const char *st2, const TimeInternal * p2)
 {
-	//static char buf[BUF_SIZE];
 	int n = 0;
 
 	/* display Timestamps */
@@ -123,8 +120,6 @@ char *sys::dump_TimeInternal2(const char *st1, const TimeInternal * p1, const ch
 	return buf1;
 }
 
-
-
 int 
 sys::snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
 {
@@ -144,8 +139,6 @@ sys::snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
 /* debug aid: convert a time variable into a static char */
 char *sys::time2st(const TimeInternal * p)
 {
-	//static char buf[1000];
-
 	snprint_TimeInternal(buf2, sizeof(buf2), p);
 	return buf2;
 }
@@ -229,80 +222,6 @@ sys::snprint_ClockIdentity_mac(char *s, int max_len, const ClockIdentity id)
 	return len;
 }
 
-
-/*
- * wrapper that caches the latest value of ether_ntohost
- * this function will NOT check the last accces time of /etc/ethers,
- * so it only have different output on a failover or at restart
- *
- */
-int sys::ether_ntohost_cache(char *hostname, struct ether_addr *addr)
-{
-//	static int valid = 0;
-//	static struct ether_addr prev_addr;
-//	static char buf[BUF_SIZE];
-//
-//#if defined(linux) || defined(__NetBSD__)
-//	if (memcmp(addr->ether_addr_octet, &prev_addr, 
-//		  sizeof(struct ether_addr )) != 0) {
-//		valid = 0;
-//	}
-//#else // e.g. defined(__FreeBSD__)
-//	if (memcmp(addr->octet, &prev_addr, 
-//		  sizeof(struct ether_addr )) != 0) {
-//		valid = 0;
-//	}
-//#endif
-//
-//	if (!valid) {
-//		if(ether_ntohost(buf, addr)){
-//			sprintf(buf, "%s", "unknown");
-//		}
-//
-//		/* clean possible commas from the string */
-//		while (strchr(buf, ',') != NULL) {
-//			*(strchr(buf, ',')) = '_';
-//		}
-//
-//		prev_addr = *addr;
-//	}
-//
-//	valid = 1;
-//	strcpy(hostname, buf);
-	return 0;
-}
-
-
-/* Show the hostname configured in /etc/ethers */
-int
-sys::snprint_ClockIdentity_ntohost(char *s, int max_len, const ClockIdentity id)
-{
-	int len = 0;
-//	int i,j;
-//	char  buf[100];
-//	struct ether_addr e;
-//
-//	/* extract mac address */
-//	for (i = 0, j = 0; i< CLOCK_IDENTITY_LENGTH ; i++ ){
-//		/* skip bytes 3 and 4 */
-//		if(!((i==3) || (i==4))){
-//#if defined(linux) || defined(__NetBSD__)
-//			e.ether_addr_octet[j] = (uint8_t) id[i];
-//#else // e.g. defined(__FreeBSD__)
-//			e.octet[j] = (uint8_t) id[i];
-//#endif
-//			j++;
-//		}
-//	}
-//
-//	/* convert and print hostname */
-//	ether_ntohost_cache(buf, &e);
-//	len += snprintf(&s[len], max_len - len, "(%s)", buf);
-
-	return len;
-}
-
-
 int 
 sys::snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
 {
@@ -314,9 +233,8 @@ sys::snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
 	len += snprint_ClockIdentity(&s[len], max_len - len, id->clockIdentity);
 #endif
 
-	len += snprint_ClockIdentity_ntohost(&s[len], max_len - len, id->clockIdentity);
-
 	len += snprintf(&s[len], max_len - len, "/%02x", (unsigned) id->portNumber);
+
 	return len;
 }
 
@@ -340,7 +258,6 @@ sys::message(int priority, const char * format, ...)
 #endif
 
 	if (m_pApp->m_rtOpts.useSysLog) {
-		//static Boolean logOpened;
 #ifdef RUNTIME_DEBUG
 		/*
 		 *  Syslog only has 8 message levels (3 bits)
@@ -368,9 +285,6 @@ sys::message(int priority, const char * format, ...)
 		char time_str[MAXTIMESTR];
 		struct timeval now;
 
-		//extern string translatePortState(PtpClock *ptpClock);
-		//extern PtpClock *G_ptpClock;
-
 		fprintf(stderr, "    %s   (ptpd %-9s ", m_pApp->m_cpu_str.c_str(),
 			priority == LOG_EMERG   ? "emergency)" :
 			priority == LOG_ALERT   ? "alert)" :
@@ -389,7 +303,12 @@ sys::message(int priority, const char * format, ...)
 		 * it also can cause problems in nested debug statements (which are solved by turning the signal
 		 *  handling synchronous, and not calling this function inside assycnhonous signal processing)
 		 */
-		gettimeofday(&now, 0);
+	    uint64_t seconds;
+	    uint32_t nanoseconds;
+        getRtcValue(seconds, nanoseconds);
+	    now.tv_sec = seconds;
+	    now.tv_usec = nanoseconds / 1000;
+
 		strftime(time_str, MAXTIMESTR, "%X", localtime(&now.tv_sec));
 		fprintf(stderr, "%s.%06d ", time_str, (int)now.tv_usec  );
 		fprintf(stderr, " (%s)  ", m_pApp->m_ptr_ptpClock ?
@@ -424,12 +343,10 @@ sys::decreaseMaxDelayThreshold()
 void 
 sys::displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-	//static int start = 1;
-	//static char sbuf[SCREEN_BUFSZ];
 	int len = 0;
 	TimeInternal now;
 	time_t time_s;
-	//static TimeInternal prev_now;
+
 	char time_str[MAXTIMESTR];
 
 	if (!rtOpts->displayStats) {
@@ -445,7 +362,11 @@ sys::displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	}
 	memset(sbuf, ' ', sizeof(sbuf));
 
-	getOsTime(&now);
+	uint64_t seconds;
+	uint32_t nanoseconds;
+    getRtcValue(seconds, nanoseconds);
+	now.seconds = seconds;
+	now.nanoseconds = nanoseconds;
 
 	/*
 	 * print one log entry per X seconds, to reduce disk usage.
@@ -562,17 +483,21 @@ sys::recordSync(RunTimeOpts * rtOpts, UInteger16 sequenceId, TimeInternal * time
 Boolean 
 sys::nanoSleep(TimeInternal * t)
 {
-	//struct timespec ts, tr;
+#if 0  //used in real application
+	struct timespec ts, tr;
 
-	//ts.tv_sec = t->seconds;
-	//ts.tv_nsec = t->nanoseconds;
+	ts.tv_sec = t->seconds;
+	ts.tv_nsec = t->nanoseconds;
 
-	//if (nanosleep(&ts, &tr) < 0) {
-	//	t->seconds = tr.tv_sec;
-	//	t->nanoseconds = tr.tv_nsec;
-	//	return FALSE;
-	//}
-	//Sleep(DWORD(t->nanoseconds/1000000));
+	if (nanosleep(&ts, &tr) < 0) {
+		t->seconds = tr.tv_sec;
+		t->nanoseconds = tr.tv_nsec;
+		return FALSE;
+	}
+#endif
+
+    //used in SystemC TLM simulation
+    wait(t->nanoseconds, SC_NS);
 
 	return TRUE;
 }
@@ -586,18 +511,20 @@ sys::getOsTime(TimeInternal * time)
 	time->nanoseconds = tv.tv_usec * 1000;
 }
 
+//set OS time
+//not used in TLM simulation
 void 
 sys::setOsTime(TimeInternal * time)
 {
-	//struct timeval tv;
- //
-	//tv.tv_sec = time->seconds;
-	//tv.tv_usec = time->nanoseconds / 1000;
-	//WARNING("Going to step the system clock to %ds %dns\n",
-	//       time->seconds, time->nanoseconds);
-	//settimeofday(&tv, 0);
-	//WARNING("Finished stepping the system clock to %ds %dns\n",
-	//       time->seconds, time->nanoseconds);
+	struct timeval tv;
+ 
+	tv.tv_sec = time->seconds;
+	tv.tv_usec = time->nanoseconds / 1000;
+	WARNING("Going to step the system clock to %ds %dns\n",
+	       time->seconds, time->nanoseconds);
+	settimeofday(&tv, 0);
+	WARNING("Finished stepping the system clock to %ds %dns\n",
+	       time->seconds, time->nanoseconds);
 }
 
 
@@ -612,6 +539,17 @@ sys::getRand(void)
 Boolean sys::adjTickRate(Integer32 adj)
 {
     uint32_t base, addr, data = 0;
+
+	int32_t max_dev = (int32_t)(FREQ_VARIANCE * (1e-6) * CLOCK_PERIOD * (1 << DOT_POS) + 0.5);
+	int32_t max_tick = INITIAL_TICK + max_dev;
+	int32_t min_tick = INITIAL_TICK - max_dev;
+
+    if(adj > max_tick){
+		adj = max_tick;
+	}
+	else if (adj < min_tick) {
+		adj = min_tick;
+	}
 
     base = RTC_BLK_ADDR << 8;
     addr = base + TICK_INC_ADDR;

@@ -47,11 +47,6 @@ public:
   
   int snprint_ClockIdentity_mac(char *s, int max_len, const ClockIdentity id);
   
-  int ether_ntohost_cache(char *hostname, struct ether_addr *addr);
-  
-  int snprint_ClockIdentity_ntohost(char *s, int max_len, const ClockIdentity id);
-  
-  
   int snprint_PortIdentity(char *s, int max_len, const PortIdentity *id);
   
   void message(int priority, const char * format, ...);
