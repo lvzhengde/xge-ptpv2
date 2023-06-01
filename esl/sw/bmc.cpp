@@ -237,6 +237,8 @@ void bmc::s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTime
         ptpClock->ptpTimescale = IS_SET(header->flagField1, PTPT);
         ptpClock->timeSource = announce->timeSource;
 
+#if 0 //do not consider UTC offset and leap second
+
 #if defined(MOD_TAI) &&  NTP_API == 4
 	/*
 	 * update kernel TAI offset, but only if timescale is
@@ -250,7 +252,7 @@ void bmc::s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTime
 
 	/* Leap second handling */
 
-        if (ptpClock->portState == PTP_SLAVE) {
+    if (ptpClock->portState == PTP_SLAVE) {
 		if(ptpClock->leap59 && ptpClock->leap61) {
 			ERROR_("Both Leap59 and Leap61 flags set!\n");
 			m_pApp->m_ptr_protocol->toState(PTP_FAULTY, rtOpts, ptpClock);
@@ -265,10 +267,8 @@ void bmc::s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTime
 			WARNING("=== Leap second event aborted by GM!");
 			ptpClock->leapSecondPending = FALSE;
 			ptpClock->leapSecondInProgress = FALSE;
-			m_pApp->m_ptr_ptp_timer->timerStop(LEAP_SECOND_PAUSE_TIMER, ptpClock->itimer);
-#if !defined(__APPLE__)
-			//unsetTimexFlags(STA_INS | STA_DEL,TRUE);
-#endif /* apple */
+			m_pApp->m_ptr_ptp_timer->timerStop(LEAP_SECOND_PAUSE_TIMER, ptpClock->itimer)
+			; //action to do
 		}
 
 		/*
@@ -283,13 +283,8 @@ void bmc::s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTime
 #if !defined(__APPLE__)
 			WARNING("=== Leap second pending! Setting kernel to %s "
 				"one second at midnight\n",
-				ptpClock->leap61 ? "add" : "delete");
-		    //if (!checkTimexFlags(ptpClock->leap61 ? STA_INS : STA_DEL)) {
-			   // unsetTimexFlags(ptpClock->leap61 ? STA_DEL : STA_INS,
-					 //   TRUE);
-			   // setTimexFlags(ptpClock->leap61 ? STA_INS : STA_DEL,
-					 // FALSE);
-		    //}
+				ptpClock->leap61 ? "add" : "delete")
+				;  //action to do
 #else
 			WARNING("=== Leap second pending! No kernel leap second "
 				"API support - expect a clock jump at "
@@ -310,6 +305,7 @@ void bmc::s1(MsgHeader *header,MsgAnnounce *announce,PtpClock *ptpClock, RunTime
 				previousUtcOffset,ptpClock->currentUtcOffset);
 		}
 	}
+#endif  //leap second and UTC offset
 }
 
 

@@ -1294,16 +1294,19 @@ msg::msgUnpackHeader(Octet * buf, MsgHeader * header)
 {
 	header->transportSpecific = (*(Nibble *) (buf + 0)) >> 4;
 	header->messageType = (*(Enumeration4 *) (buf + 0)) & 0x0F;
+	header->reserved0 = (*(UInteger4 *) (buf + 1)) & 0xF0;
 	header->versionPTP = (*(UInteger4 *) (buf + 1)) & 0x0F;
-	/* force reserved bit to zero if not */
 	header->messageLength = flip16(*(UInteger16 *) (buf + 2));
 	header->domainNumber = (*(UInteger8 *) (buf + 4));
+	header->reserved1 = (*(Octet *) (buf + 5));
 	header->flagField0 = (*(Octet *) (buf + 6));
 	header->flagField1 = (*(Octet *) (buf + 7));
 	memcpy(&header->correctionField.msb, (buf + 8), 4);
 	memcpy(&header->correctionField.lsb, (buf + 12), 4);
 	header->correctionField.msb = flip32(header->correctionField.msb);
 	header->correctionField.lsb = flip32(header->correctionField.lsb);
+	memcpy(&header->reserved2, (buf + 16), 4);
+	header->reserved2 = flip32(header->reserved2);
 	copyClockIdentity(header->sourcePortIdentity.clockIdentity, (buf + 20));
 	header->sourcePortIdentity.portNumber =
 		flip16(*(UInteger16 *) (buf + 28));

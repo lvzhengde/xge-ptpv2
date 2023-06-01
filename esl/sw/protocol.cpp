@@ -539,12 +539,12 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 	 * these are then adjusted to the same timebase of the Master (+34 leap seconds, as of 2011)
 	 *
 	 */
-	#if 0
+	#if 0 //for RTC in HW, neglect UTC offset 
 	DBGV("__UTC_offset: %d %d \n", ptpClock->currentUtcOffsetValid, ptpClock->currentUtcOffset);
 	if (ptpClock->currentUtcOffsetValid) {
 		time.seconds += ptpClock->currentUtcOffset;
 	}
-	#endif
+	#endif //UTC offset
 
 	ptpClock->message_activity = TRUE;
 
@@ -577,10 +577,9 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 	if (!isFromSelf && time.seconds > 0)
 		m_pApp->m_ptr_arith->subTime(&time, &time, &rtOpts->inboundLatency);
 
-
 #ifdef PTPD_DBG
 	/* easy display of received messages */
-	char *st;
+	string st;
 
 	switch(ptpClock->msgTmpHeader.messageType)
 	{
@@ -606,12 +605,11 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 		st = "Unk";
 		break;
 	}
-	DBG("      ==> %s received\n", st);
+	DBG("      ==> %s received\n", st.c_str());
 #endif
 
 	/*
 	 *  on the table below, note that only the event messsages are passed the local time,
-	 *  (collected by us by loopback+kernel TS, and adjusted with UTC seconds
 	 *
 	 *  (SYNC / DELAY_REQ / PDELAY_REQ / PDELAY_RESP)
 	 */
@@ -727,6 +725,7 @@ protocol::handleAnnounce(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 			memcpy(&ptpClock->foreign[ptpClock->foreign_record_best].announce,
 			       &ptpClock->msgTmp.announce,sizeof(MsgAnnounce));
 
+#if 0 //neglect leap second processing
 			if(ptpClock->leapSecondInProgress) {
 				/*
 				 * if leap second period is over
@@ -735,16 +734,17 @@ protocol::handleAnnounce(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 				 * (received first announce after leap
 				 * second)
 				*/
-				//if (!ptpClock->leapSecondPending) {
-				//	WARNING("=== Leap second event over - "
-				//		"resuming clock and offset updates\n");
-				//	ptpClock->leapSecondInProgress=FALSE;
-				//	ptpClock->leap59 = FALSE;
-				//	ptpClock->leap61 = FALSE;
-				//	unsetTimexFlags(STA_INS | STA_DEL, TRUE);
-				//}
+				if (!ptpClock->leapSecondPending) {
+					WARNING("=== Leap second event over - "
+						"resuming clock and offset updates\n");
+					ptpClock->leapSecondInProgress=FALSE;
+					ptpClock->leap59 = FALSE;
+					ptpClock->leap61 = FALSE;
+					; //action to do
+				}
 				;
 			}
+#endif  //leap second processing
 			DBG2("___ Announce: received Announce from current Master, so reset the Announce timer\n");
 	   		/*Reset Timer handling Announce receipt timeout*/
 	   		m_pApp->m_ptr_ptp_timer->timerStart(ANNOUNCE_RECEIPT_TIMER,
@@ -752,11 +752,6 @@ protocol::handleAnnounce(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 				   (pow((float)2, (float)ptpClock->logAnnounceInterval)), 
 				   ptpClock->itimer);
 
-#ifdef PTP_EXPERIMENTAL
-			// remember IP address of our master for -U option
-			// todo: add this to bmc(), to cover the very first packet
-			ptpClock->MasterAddr = ptpClock->netPath.lastRecvAddr;
-#endif
 			break;
 
 		case FALSE:
@@ -958,14 +953,19 @@ protocol::handleSync(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 			DBGV("HandleSync: Sync message received from "
 			     "another Master  \n");
 			break;
-		} if (ptpClock->twoStepFlag) {
+		} 
+		
+#if 0  //not issue FollowUp here
+		if (ptpClock->twoStepFlag) {
 			DBGV("HandleSync: going to send followup message\n ");
 
 			/*Add latency*/
 			m_pApp->m_ptr_arith->addTime(time,time,&rtOpts->outboundLatency);
 			issueFollowup(time,rtOpts,ptpClock);
 			break;
-		} else {
+		}
+#endif
+		else {
 			DBGV("HandleSync: Sync message received from self\n ");
 		}
 	}
