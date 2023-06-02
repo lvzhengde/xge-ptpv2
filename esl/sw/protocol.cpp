@@ -903,6 +903,31 @@ protocol::handleSync(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 						   pow((float)2, (float)ptpClock->logMinPdelayReqInterval),
 						   ptpClock->itimer);
 			}
+            
+			//check timestamp embedded in header or not
+            if(rtOpts->emb_ingressTime){
+                int32_t t_ns = header->reserved2;
+
+				if(t_ns < time->nanoseconds) {
+					time->nanoseconds = t_ns;
+				}
+				else {   //wrap around occurred in nanoseconds
+					time->seconds += 1;
+					time->nanoseconds = t_ns;
+				}
+			}
+			else {
+				TimestampIdentity tsId;
+
+				m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
+				if(m_pApp->m_ptr_sys->compareIdentity(&tsId, header)) {
+					time->seconds = tsId.seconds;
+					time->nanoseconds = tsId.nanoseconds;
+				}
+				else {
+                    DBGV("HandleSync: Identity of timestamp mismatch \n");
+				}
+			}
 
 			ptpClock->sync_receive_time.seconds = time->seconds;
 			ptpClock->sync_receive_time.nanoseconds = time->nanoseconds;

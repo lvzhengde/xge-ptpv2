@@ -535,6 +535,12 @@ sys::getRand(void)
 	return ((rand() * 1.0) / RAND_MAX);
 }
 
+/*
+ * In PTP hardware
+ * the byte order of normal register is little endian
+ * but rx/tx frame buffer store data in network order (big endian)
+ * 
+*/
 
 Boolean sys::adjTickRate(Integer32 adj)
 {
@@ -715,4 +721,39 @@ void sys::getRxTimestampIdentity(TimestampIdentity &tsId)
     tsId.minorVersionPTP = (data >> 20) & 0xf;
     tsId.versionPTP      = (data >> 16) & 0xf;
     tsId.sequenceId      = data & 0xffff;
+}
+
+/**
+ * compare the identity got from timestamp registers with that of PTP header
+ * parameters
+ * pT : pointer to timestampidentity 
+ * pH : pointer to PTP header
+ * return
+ *   TRUE： match 
+ *   FALSE: not match
+ */
+Boolean sys::compareIdentity(TimestampIdentity *pT, MsgHeader *pH)
+{
+    Boolean isMatch = TRUE; 
+
+	if(pT->messageType != pH->messageType) {
+        isMatch = FALSE;
+		return isMatch;
+	}
+
+    if(pT->sequenceId != pH->sequenceId) {
+		isMatch = FALSE;
+		return isMatch;
+	}
+
+    PortIdentity portId;
+	m_pApp->m_ptr_msg->copyClockIdentity(portId.clockIdentity, (Octet*)pT->sourcePortIdentity);
+	portId.portNumber = flip16(*(UInteger16 *) (pT->sourcePortIdentity + 8));	
+
+    if(memcmp(portId.clockIdentity, pH->sourcePortIdentity.clockIdentity, CLOCK_IDENTITY_LENGTH) 
+	    || (portId.portNumber != pH->sourcePortIdentity.portNumber)) {
+        isMatch = FALSE;
+	}
+
+    return isMatch;
 }

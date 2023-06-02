@@ -96,7 +96,7 @@ void ptpd::exec()
 	/*
 	 * defaults for new options
 	 */
-	m_rtOpts.slaveOnly = TRUE;
+	m_rtOpts.slaveOnly = FALSE;
 	m_rtOpts.ignore_delayreq_interval_master = FALSE;
 	m_rtOpts.do_IGMP_refresh = FALSE;
 	m_rtOpts.useSysLog       = FALSE;
@@ -121,6 +121,9 @@ void ptpd::exec()
     m_rtOpts.int7_8125ms      = 1;       //0: 10 ms interval, 1: 7.8125 ms interval 
     m_rtOpts.one_step         = (!TWO_STEP_FLAG) ? 1 : 0;       //0: two step, 1: one step
     m_rtOpts.emb_ingressTime  = 1;       //0: unchanged, 1: embed ingress time in received event frame
+
+	m_rtOpts.maxDelay         = 100000;   //100us
+	m_rtOpts.maxReset         = 0;        
 
 	/* Initialize run time options with command line arguments */
 	int argc = 3;

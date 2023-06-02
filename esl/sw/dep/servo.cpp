@@ -377,12 +377,13 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
     offset_from_master_filter * ofm_filt, RunTimeOpts * rtOpts, PtpClock * ptpClock, TimeInternal * correctionField)
 {
 
-
+#if 0  //skip UTCOffset, leap second
 	DBGV("UTCOffset: %d | leap 59: %d |  leap61: %d\n", 
 	     ptpClock->currentUtcOffset,ptpClock->leap59,ptpClock->leap61);
         /* updates paused, leap second pending - do nothing */
         if(ptpClock->leapSecondInProgress)
 		return;
+#endif
 
 	DBGV("==> updateOffset\n");
 
@@ -468,18 +469,10 @@ void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 		return;
 	}
 
-	TimeInternal timeTmp;
-	
-	m_pApp->m_ptr_sys->getOsTime(&timeTmp);
-	m_pApp->m_ptr_arith->subTime(&timeTmp, &timeTmp, &ptpClock->offsetFromMaster);
-
-	WARNING("     Performing hard frequency reset, by setting frequency to zero\n");
-	m_pApp->m_ptr_sys->adjTickRate(0);
+	m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK);
 	ptpClock->observed_drift = 0;
 
-	m_pApp->m_ptr_sys->setOsTime(&timeTmp);
-	initClock(rtOpts, ptpClock);
-	m_pApp->m_ptr_protocol->toState(PTP_FAULTY, rtOpts, ptpClock);		/* make a full protocol reset */
+	m_pApp->m_ptr_sys->setRtcValue(ptpClock->offsetFromMaster.seconds, ptpClock->offsetFromMaster.nanoseconds);
 }
 
 
@@ -543,9 +536,11 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	Integer32 adj;
 	//TimeInternal timeTmp;
 
+#if 0   //skip leap second processing 
 	/* updates paused, leap second pending - do nothing */
         if(ptpClock->leapSecondInProgress)
             return;
+#endif //leap second
 
 	DBGV("==> updateClock\n");
 
@@ -596,7 +591,6 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 				 * potential problem:    "-1.1" is   a) -1:0.1 or b) -1:-0.1?
 				 * if this code is right it implies the second case
 				 */
-#if !defined(__APPLE__)
 				adj = ptpClock->offsetFromMaster.nanoseconds
 					> 0 ? ADJ_FREQ_MAX : -ADJ_FREQ_MAX;
 
@@ -607,8 +601,6 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 				adjTickRate_wrapper(rtOpts, ptpClock, -adj);
 
 				/* its not clear how the APPLE case works for large jumps */
-#endif /* __APPLE__ */
-
 			}
 		}
 	} else {

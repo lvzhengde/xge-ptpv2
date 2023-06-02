@@ -77,6 +77,8 @@ public:
 
   void getRxTimestampIdentity(TimestampIdentity &tsId);
 
+  Boolean compareIdentity(TimestampIdentity *pT, MsgHeader *pH);
+
 };
 
 #endif // _SYS_H__
