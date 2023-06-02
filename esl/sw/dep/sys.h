@@ -67,7 +67,7 @@ public:
   
   double getRand(void);
   
-  Boolean adjTickRate(Integer32 adj);
+  Boolean adjTickRate(Integer32 tick_inc);
 
   void getRtcValue(uint64_t &seconds, uint32_t &nanoseconds);
 

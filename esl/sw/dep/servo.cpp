@@ -512,22 +512,18 @@ void servo::warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock
  */
 void servo::adjTickRate_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj)
 {
-
-
-   
 	if (rtOpts->noAdjust){
 		DBGV("adjTickRate2: noAdjust on, returning\n");
 		return;
 	}
 
+	// compute corresponding PPM value 
+	double ppm_tmp = (1e-6) * CLOCK_PERIOD * (1 << DOT_POS);
+	DBG2("     adjTickRate2: call adjTickRate to %f ppm \n", adj / ppm_tmp );
 
-	// call original adjtime
-	DBG2("     adjTickRate2: call adjfreq to %d us \n", adj / DBG_UNIT);
-	m_pApp->m_ptr_sys->adjTickRate(adj);
+	m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK + adj);
 
 	warn_operator_fast_slewing(rtOpts, ptpClock, adj);
-
-
 }
 
 void 

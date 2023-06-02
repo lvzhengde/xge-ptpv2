@@ -24,7 +24,6 @@
 #define DEFAULT_IFACE_NAME        "eth-ptpv2"
 
 #define CLOCK_IDENTITY_LENGTH 8
-#define ADJ_FREQ_MAX  512000
 
 /* UDP/IPv4 dependent */
 #ifndef INADDR_LOOPBACK
@@ -65,6 +64,8 @@
 #define DOT_POS        (26)      //position of fractional point
 
 #define INITIAL_TICK   ((uint32_t)(CLOCK_PERIOD * (1 << DOT_POS) + 0.5))
+
+#define ADJ_FREQ_MAX   ((int32_t)(FREQ_VARIANCE * (1e-6) * CLOCK_PERIOD * (1 << DOT_POS) + 0.5))
 
 // limit operator messages to once every X seconds
 #define OPERATOR_MESSAGES_INTERVAL 300.0

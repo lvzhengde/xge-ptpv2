@@ -542,24 +542,23 @@ sys::getRand(void)
  * 
 */
 
-Boolean sys::adjTickRate(Integer32 adj)
+Boolean sys::adjTickRate(Integer32 tick_inc)
 {
     uint32_t base, addr, data = 0;
 
-	int32_t max_dev = (int32_t)(FREQ_VARIANCE * (1e-6) * CLOCK_PERIOD * (1 << DOT_POS) + 0.5);
-	int32_t max_tick = INITIAL_TICK + max_dev;
-	int32_t min_tick = INITIAL_TICK - max_dev;
+	int32_t max_tick = INITIAL_TICK + ADJ_FREQ_MAX;
+	int32_t min_tick = INITIAL_TICK - ADJ_FREQ_MAX;
 
-    if(adj > max_tick){
-		adj = max_tick;
+    if(tick_inc > max_tick){
+		tick_inc = max_tick;
 	}
-	else if (adj < min_tick) {
-		adj = min_tick;
+	else if (tick_inc < min_tick) {
+		tick_inc = min_tick;
 	}
 
     base = RTC_BLK_ADDR << 8;
     addr = base + TICK_INC_ADDR;
-    data = adj;
+    data = tick_inc;
 
     REG_WRITE(addr, data);
 
