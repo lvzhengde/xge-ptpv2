@@ -36,8 +36,8 @@
 #define DEFAULT_NO_RESET_CLOCK       	FALSE
 #define DEFAULT_DOMAIN_NUMBER        	0
 #define DEFAULT_DELAY_MECHANISM      	P2P     // TODO
-#define DEFAULT_AP                   	10
-#define DEFAULT_AI                   	1000
+#define DEFAULT_AP                      2	
+#define DEFAULT_AI                      8	
 #define DEFAULT_DELAY_S              	6
 #define DEFAULT_ANNOUNCE_INTERVAL    	1      /* 0 in 802.1AS */
 #define LEAP_SECOND_PAUSE_PERIOD        2      /* how long before/after leap */

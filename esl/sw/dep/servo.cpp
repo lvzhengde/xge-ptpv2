@@ -472,7 +472,10 @@ void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 	m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK);
 	ptpClock->observed_drift = 0;
 
-	m_pApp->m_ptr_sys->setRtcValue(ptpClock->offsetFromMaster.seconds, ptpClock->offsetFromMaster.nanoseconds);
+	int64_t sec_offset = - ptpClock->offsetFromMaster.seconds;
+	int32_t ns_offset  = - ptpClock->offsetFromMaster.nanoseconds;
+
+	m_pApp->m_ptr_sys->setRtcValue(sec_offset, ns_offset);
 }
 
 
@@ -494,15 +497,16 @@ void servo::warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock
 		ptpClock->warned_operator_slow_slewing = 1;
 		ptpClock->warned_operator_fast_slewing = 1;
 
-		/* rule of thumb: at tick rate 10000, slewing at the maximum speed took 0.5ms per second */
-		float estimated = (((abs(ptpClock->offsetFromMaster.seconds)) + 0.0) * 2.0 * 1000.0 / 3600.0);
+		/* 100 PPM frequency deviation, slewing at the maximum speed took 0.1ms per second */
+		Integer32 adj = ptpClock->observed_drift;
 
+		float estimated = (((abs(ptpClock->offsetFromMaster.seconds)) + 0.0) 
+		                   / (abs(adj+0.0) / INITIAL_TICK) / 3600.0);
 
 		ALERT("Servo: %d seconds offset detected, will take %.1f hours to slew\n",
 			ptpClock->offsetFromMaster.seconds,
 			estimated
 		);
-		
 	}
 }
 
@@ -620,8 +624,6 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 		ptpClock->observed_drift += 
 			ptpClock->offsetFromMaster.nanoseconds / ai;
 
-		// ADJ_FREQ_MAX: 512 000
-
 		/* clamp the accumulator to ADJ_FREQ_MAX for sanity */
 		if (ptpClock->observed_drift > ADJ_FREQ_MAX)
 			ptpClock->observed_drift = ADJ_FREQ_MAX;
@@ -637,18 +639,7 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 		DBG("     After PI: Adj: %d   Drift: %d   OFM %d\n",
 			adj, ptpClock->observed_drift , ptpClock->offsetFromMaster.nanoseconds);
 
-
-		DBG2("     Observed_drift with AI component: %d\n",
-			ptpClock->observed_drift / DBG_UNIT );
-
-		DBG2("     After PI: Adj: %d   Drift: %d   OFM %d\n",
-			adj, ptpClock->observed_drift / DBG_UNIT, ptpClock->offsetFromMaster.nanoseconds / DBG_UNIT);
-
-#if defined(__APPLE__)
-			adjTime(ptpClock->offsetFromMaster.nanoseconds);
-#else
 		adjTickRate_wrapper(rtOpts, ptpClock, -adj);
-#endif /* __APPLE__ */
 	}
 
 display:
