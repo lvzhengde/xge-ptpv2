@@ -67,6 +67,14 @@
 
 #define ADJ_FREQ_MAX   ((int32_t)(FREQ_VARIANCE * (1e-6) * CLOCK_PERIOD * (1 << DOT_POS) + 0.5))
 
+#define PI_UNIT        (1e9/(CLOCK_PERIOD * (1 << DOT_POS)) / 2.0)   //corresponding to f_clk/2
+
+#define DEFAULT_AP     (3.0 * PI_UNIT)  
+
+#define DEFAULT_AI     (9.0 * PI_UNIT)       
+
+#define DEFAULT_DELAY_S    	6
+
 // limit operator messages to once every X seconds
 #define OPERATOR_MESSAGES_INTERVAL 300.0
 

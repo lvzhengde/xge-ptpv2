@@ -614,10 +614,11 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 		 */
 
 		/* no negative or zero attenuation */
-		if (ap < 1)
-			ap = 1;
-		if (ai < 1)
-			ai = 1;
+		/* FIXME: for strict analysis in PLL theory*/
+		if (ap < PI_UNIT)
+			ap = PI_UNIT;
+		if (ai < PI_UNIT)
+			ai = PI_UNIT;
 
 		/* the accumulator for the I component */
 		// original PI servo
