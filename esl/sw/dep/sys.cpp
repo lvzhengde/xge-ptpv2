@@ -723,7 +723,7 @@ void sys::getRxTimestampIdentity(TimestampIdentity &tsId)
 }
 
 /**
- * compare the identity got from timestamp registers with that of PTP header
+ * compare the RX identity got from timestamp registers with that of received PTP header
  * parameters
  * pT : pointer to timestampidentity 
  * pH : pointer to PTP header
@@ -731,7 +731,7 @@ void sys::getRxTimestampIdentity(TimestampIdentity &tsId)
  *   TRUE： match 
  *   FALSE: not match
  */
-Boolean sys::compareIdentity(TimestampIdentity *pT, MsgHeader *pH)
+Boolean sys::compareRxIdentity(TimestampIdentity *pT, MsgHeader *pH)
 {
     Boolean isMatch = TRUE; 
 

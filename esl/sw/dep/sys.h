@@ -77,7 +77,7 @@ public:
 
   void getRxTimestampIdentity(TimestampIdentity &tsId);
 
-  Boolean compareIdentity(TimestampIdentity *pT, MsgHeader *pH);
+  Boolean compareRxIdentity(TimestampIdentity *pT, MsgHeader *pH);
 
 };
 

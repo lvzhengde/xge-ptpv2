@@ -570,13 +570,6 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 	isFromSelf = (ptpClock->portIdentity.portNumber == ptpClock->msgTmpHeader.sourcePortIdentity.portNumber
 		      && !memcmp(ptpClock->msgTmpHeader.sourcePortIdentity.clockIdentity, ptpClock->portIdentity.clockIdentity, CLOCK_IDENTITY_LENGTH));
 
-	/*
-	 * subtract the inbound latency adjustment if it is not a loop
-	 *  back and the time stamp seems reasonable 
-	 */
-	if (!isFromSelf && time.seconds > 0)
-		m_pApp->m_ptr_arith->subTime(&time, &time, &rtOpts->inboundLatency);
-
 #ifdef PTPD_DBG
 	/* easy display of received messages */
 	string st;
@@ -920,7 +913,7 @@ protocol::handleSync(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 				TimestampIdentity tsId;
 
 				m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
-				if(m_pApp->m_ptr_sys->compareIdentity(&tsId, header)) {
+				if(m_pApp->m_ptr_sys->compareRxIdentity(&tsId, header)) {
 					time->seconds = tsId.seconds;
 					time->nanoseconds = tsId.nanoseconds;
 				}
@@ -928,6 +921,13 @@ protocol::handleSync(MsgHeader *header, Octet *msgIbuf, ssize_t length,
                     DBGV("HandleSync: Identity of timestamp mismatch \n");
 				}
 			}
+
+        	/*
+        	 * subtract the inbound latency adjustment if it is not a loop
+        	 *  back and the time stamp seems reasonable 
+        	 */
+        	if (!isFromSelf && time->seconds > 0)
+        		m_pApp->m_ptr_arith->subTime(time, time, &rtOpts->inboundLatency);
 
 			ptpClock->sync_receive_time.seconds = time->seconds;
 			ptpClock->sync_receive_time.nanoseconds = time->nanoseconds;
@@ -1109,51 +1109,45 @@ protocol::handleDelayReq(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 			return;
 
 		case PTP_SLAVE:
-			if (isFromSelf)	{
-				DBG("==> Handle DelayReq (%d)\n",
-					 header->sequenceId);
-				
-				if ((ptpClock->sentDelayReqSequenceId - 1) != header->sequenceId) {
-					INFO("HandledelayReq : disregard delayreq because of wrong SeqNo\n");
-					break;
-				}
-
-				/*
-				 * Get sending timestamp from IP stack
-				 * with SO_TIMESTAMP
-				 */
-
-				/*
-				 *  Make sure we process the REQ _before_ the RESP. While we could do this by any order,
-				 *  (because it's implicitly indexed by (ptpClock->sentDelayReqSequenceId - 1), this is
-				 *  now made explicit
-				 */
-				ptpClock->waitingForDelayResp = TRUE;
-
-				ptpClock->delay_req_send_time.seconds = 
-					time->seconds;
-				ptpClock->delay_req_send_time.nanoseconds = 
-					time->nanoseconds;
-
-				/*Add latency*/
-				m_pApp->m_ptr_arith->addTime(&ptpClock->delay_req_send_time,
-					&ptpClock->delay_req_send_time,
-					&rtOpts->outboundLatency);
-				break;
-			} else {
-				DBG2("HandledelayReq : disreguard delayreq from other client\n");
-			}
+			DBG2("HandledelayReq : disreguard delayreq in PTP_SLAVE state\n");
 			break;
 
 		case PTP_MASTER:
+			//check timestamp embedded in header or not
+            if(rtOpts->emb_ingressTime){
+                int32_t t_ns = header->reserved2;
+
+				if(t_ns < time->nanoseconds) {
+					time->nanoseconds = t_ns;
+				}
+				else {   //wrap around occurred in nanoseconds
+					time->seconds += 1;
+					time->nanoseconds = t_ns;
+				}
+			}
+			else {
+				TimestampIdentity tsId;
+
+				m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
+				if(m_pApp->m_ptr_sys->compareRxIdentity(&tsId, header)) {
+					time->seconds = tsId.seconds;
+					time->nanoseconds = tsId.nanoseconds;
+				}
+				else {
+                    DBGV("handleDelayReq: Identity of timestamp mismatch \n");
+				}
+			}
+
+        	/*
+        	 * subtract the inbound latency adjustment if it is not a loop
+        	 *  back and the time stamp seems reasonable 
+        	 */
+        	if (!isFromSelf && time->seconds > 0)
+        		m_pApp->m_ptr_arith->subTime(time, time, &rtOpts->inboundLatency);
+
 			m_pApp->m_ptr_msg->msgUnpackHeader(ptpClock->msgIbuf,
 					&ptpClock->delayReqHeader);
 
-#ifdef PTP_EXPERIMENTAL
-			// remember IP address of this client for -U option
-			ptpClock->LastSlaveAddr = ptpClock->netPath.lastRecvAddr;
-#endif
-					
 			issueDelayResp(time,&ptpClock->delayReqHeader,
 				       rtOpts,ptpClock);
 			break;
@@ -1232,7 +1226,7 @@ protocol::handleDelayResp(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 					&correctionField);
 				
 				/*
-					send_time = delay_req_send_time (received as CMSG in handleEvent)
+					send_time = delay_req_send_time (got after issueDelayReq)
 					recv_time = requestReceiptTimestamp (received inside delayResp)
 				*/
 
@@ -1775,32 +1769,62 @@ void
 protocol::issueDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 {
 	Timestamp originTimestamp;
-	TimeInternal internalTime;
 
 	DBG("==> Issue DelayReq (%d)\n", ptpClock->sentDelayReqSequenceId );
 
-	/* call GTOD. This time is later replaced on handle_delayreq, to get the actual send timestamp from the OS */
-	m_pApp->m_ptr_sys->getOsTime(&internalTime);
+    //according to 11.3.2 of IEEE1588-2008
+	//The originTimestamp shall be set to 0 or an estimate no worse than ±1 s of the egress time of
+    //the Delay_Req message
+#if 0
+    uint64_t seconds;
+    uint32_t nanoseconds;
+	TimeInternal internalTime;
+
+    m_pApp->m_ptr_sys->getRtcValue(seconds, nanoseconds);   
+    internalTime.seconds = seconds;
+    internalTime.nanoseconds = nanoseconds;
+
 	m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
+#endif
+    
+	//set to 0 to save the time to access register
+    memset(&originTimestamp, 0, sizeof(originTimestamp));
 
 	// uses current sentDelayReqSequenceId
 	m_pApp->m_ptr_msg->msgPackDelayReq(ptpClock->msgObuf,&originTimestamp,ptpClock);
-
-	Integer32 dst = 0;
-#ifdef PTP_EXPERIMENTAL
-	if (rtOpts->do_hybrid_mode) {
-		dst = ptpClock->MasterAddr;
-	}
-#endif
 
 	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, DELAY_REQ_LENGTH, DELAY_REQ)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("delayReq message can't be sent -> FAULTY state \n");
 	} else {
 		DBGV("DelayReq MSG sent ! \n");
-		ptpClock->sentDelayReqSequenceId++;
+
+        //wait tx frame completed and timestamp generated
+        wait(WAIT_TX, SC_US, m_pController->m_ev_tx);
+
+		//get tx timestamp and identity
+		TimestampIdentity tsId;
+
+		m_pApp->m_ptr_sys->getTxTimestampIdentity(tsId);
+		
+		//for tx, It's enough to just compare messageType and sequenceId 
+		if(tsId.messageType == 0x01 && tsId.sequenceId == ptpClock->sentDelayReqSequenceId) {
+			ptpClock->waitingForDelayResp = TRUE;
+
+			ptpClock->delay_req_send_time.seconds = tsId.seconds;
+			ptpClock->delay_req_send_time.nanoseconds = tsId.nanoseconds;
+
+			/*Add latency*/
+			m_pApp->m_ptr_arith->addTime(&ptpClock->delay_req_send_time,
+				&ptpClock->delay_req_send_time,
+				&rtOpts->outboundLatency);
+		}
+		else {
+            DBGV("issueDelayReq: Identity of tx timestamp mismatch \n");
+		}
 
 		/* From now on, we will only accept delayreq and delayresp of (sentDelayReqSequenceId - 1) */
+		ptpClock->sentDelayReqSequenceId++;
 
 		/* Explicitelly re-arm timer for sending the next delayReq */
 		m_pApp->m_ptr_ptp_timer->timerStart_random(DELAYREQ_INTERVAL_TIMER,
@@ -1855,13 +1879,6 @@ protocol::issueDelayResp(TimeInternal *time,MsgHeader *header,RunTimeOpts *rtOpt
 	m_pApp->m_ptr_arith->fromInternalTime(time,&requestReceiptTimestamp);
 	m_pApp->m_ptr_msg->msgPackDelayResp(ptpClock->msgObuf,header,&requestReceiptTimestamp,
 			 ptpClock);
-
-	Integer32 dst = 0;
-#ifdef PTP_EXPERIMENTAL
-	if (rtOpts->do_hybrid_mode) {
-		dst = ptpClock->LastSlaveAddr;
-	}
-#endif
 
 	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, DELAY_RESP_LENGTH, DELAY_RESP)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);

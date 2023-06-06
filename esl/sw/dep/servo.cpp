@@ -138,10 +138,11 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 void 
 servo::updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClock * ptpClock, TimeInternal * correctionField)
 {
-
+#if 0  //skip leap second processing
 	/* updates paused, leap second pending - do nothing */
-        if(ptpClock->leapSecondInProgress)
+    if(ptpClock->leapSecondInProgress)
 		return;
+#endif
 
 	/* todo: do all intermediate calculations on temp vars */
 	TimeInternal prev_meanPathDelay = ptpClock->meanPathDelay;
@@ -149,7 +150,7 @@ servo::updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClo
 	ptpClock->char_last_msg='D';
 
 	{
-		//perform basic checks, using local variables only
+	//perform basic checks, using local variables only
 	TimeInternal slave_to_master_delay;
 
 	
@@ -233,8 +234,8 @@ servo::updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClo
 
 		
 		if (ptpClock->meanPathDelay.seconds) {
-			DBG(" update delay: cannot filter with large OFM, clearing filter \n");
-			INFO("Servo: Ignoring delayResp because of large OFM\n");
+			DBG(" update delay: cannot filter with large OWD, clearing filter \n");
+			INFO("Servo: Ignoring delayResp because of large OWD\n");
 			
 			owd_filt->s_exp = owd_filt->nsec_prev = 0;
 			ptpClock->meanPathDelay = prev_meanPathDelay;   /* revert back to previous value */

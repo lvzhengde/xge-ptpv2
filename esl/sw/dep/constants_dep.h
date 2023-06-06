@@ -73,7 +73,9 @@
 
 #define DEFAULT_AI     (9.0 * PI_UNIT)       
 
-#define DEFAULT_DELAY_S    	6
+#define DEFAULT_DELAY_S    	(6)
+
+#define WAIT_TX        (10)    //in microseconds
 
 // limit operator messages to once every X seconds
 #define OPERATOR_MESSAGES_INTERVAL 300.0
