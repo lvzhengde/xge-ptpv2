@@ -71,13 +71,19 @@ public:
 
   void getRtcValue(uint64_t &seconds, uint32_t &nanoseconds);
 
+  void getRtcValue(TimeInternal *time);
+
   void setRtcValue(int64_t sec_offset, int32_t ns_offset);
+
+  void setRtcValue(TimeInternal *time);
   
   void getTxTimestampIdentity(TimestampIdentity &tsId);
 
   void getRxTimestampIdentity(TimestampIdentity &tsId);
 
   Boolean compareRxIdentity(TimestampIdentity *pT, MsgHeader *pH);
+
+  void getPreciseRxTime(MsgHeader *header, TimeInternal *time,  RunTimeOpts *rtOpts, string strPrompt);
 
 };
 

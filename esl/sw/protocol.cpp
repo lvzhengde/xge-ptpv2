@@ -526,12 +526,7 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
     //get current RTC value for event message
 	//as a time reference for late timestamp processing
 	if(messageType < 8) {
-      uint64_t seconds;
-      uint32_t nanoseconds;
-      m_pApp->m_ptr_sys->getRtcValue(seconds, nanoseconds);   
-
-      time.seconds = seconds;
-      time.nanoseconds = nanoseconds;
+      m_pApp->m_ptr_sys->getRtcValue(&time);   
 	}
 
 	/*
@@ -897,37 +892,8 @@ protocol::handleSync(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 						   ptpClock->itimer);
 			}
             
-			//check timestamp embedded in header or not
-            if(rtOpts->emb_ingressTime){
-                int32_t t_ns = header->reserved2;
-
-				if(t_ns < time->nanoseconds) {
-					time->nanoseconds = t_ns;
-				}
-				else {   //wrap around occurred in nanoseconds
-					time->seconds += 1;
-					time->nanoseconds = t_ns;
-				}
-			}
-			else {
-				TimestampIdentity tsId;
-
-				m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
-				if(m_pApp->m_ptr_sys->compareRxIdentity(&tsId, header)) {
-					time->seconds = tsId.seconds;
-					time->nanoseconds = tsId.nanoseconds;
-				}
-				else {
-                    DBGV("HandleSync: Identity of timestamp mismatch \n");
-				}
-			}
-
-        	/*
-        	 * subtract the inbound latency adjustment if it is not a loop
-        	 *  back and the time stamp seems reasonable 
-        	 */
-        	if (!isFromSelf && time->seconds > 0)
-        		m_pApp->m_ptr_arith->subTime(time, time, &rtOpts->inboundLatency);
+			//get precise RX timestamp
+		    m_pApp->m_ptr_sys->getPreciseRxTime(header, time,  rtOpts, "HandleSync");
 
 			ptpClock->sync_receive_time.seconds = time->seconds;
 			ptpClock->sync_receive_time.nanoseconds = time->nanoseconds;
@@ -1113,37 +1079,8 @@ protocol::handleDelayReq(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 			break;
 
 		case PTP_MASTER:
-			//check timestamp embedded in header or not
-            if(rtOpts->emb_ingressTime){
-                int32_t t_ns = header->reserved2;
-
-				if(t_ns < time->nanoseconds) {
-					time->nanoseconds = t_ns;
-				}
-				else {   //wrap around occurred in nanoseconds
-					time->seconds += 1;
-					time->nanoseconds = t_ns;
-				}
-			}
-			else {
-				TimestampIdentity tsId;
-
-				m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
-				if(m_pApp->m_ptr_sys->compareRxIdentity(&tsId, header)) {
-					time->seconds = tsId.seconds;
-					time->nanoseconds = tsId.nanoseconds;
-				}
-				else {
-                    DBGV("handleDelayReq: Identity of timestamp mismatch \n");
-				}
-			}
-
-        	/*
-        	 * subtract the inbound latency adjustment if it is not a loop
-        	 *  back and the time stamp seems reasonable 
-        	 */
-        	if (!isFromSelf && time->seconds > 0)
-        		m_pApp->m_ptr_arith->subTime(time, time, &rtOpts->inboundLatency);
+			//get precise RX timestamp
+		    m_pApp->m_ptr_sys->getPreciseRxTime(header, time,  rtOpts, "handleDelayReq");
 
 			m_pApp->m_ptr_msg->msgUnpackHeader(ptpClock->msgIbuf,
 					&ptpClock->delayReqHeader);

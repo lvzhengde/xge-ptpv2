@@ -587,6 +587,16 @@ void sys::getRtcValue(uint64_t &seconds, uint32_t &nanoseconds)
     nanoseconds = (nanoseconds << 16) + ((data >> 16) & 0xffff);
 }
 
+void sys::getRtcValue(TimeInternal *time)
+{
+    uint64_t seconds;
+    uint32_t nanoseconds;
+    getRtcValue(seconds, nanoseconds);   
+
+    time->seconds = seconds;
+    time->nanoseconds = nanoseconds;
+}
+
 /**
  * adjust the value of RTC 
  *     new RTC value = Current RTC value + Offset Value
@@ -618,6 +628,11 @@ void sys::setRtcValue(int64_t sec_offset, int32_t ns_offset)
 	uint32_t intxms = (m_pApp->m_rtOpts.int7_8125ms != 0) ? 1 : 0;
     data = 0x1 | (intxms << 2); 
     REG_WRITE(addr, data);
+}
+
+void sys::setRtcValue(TimeInternal *time)
+{
+    setRtcValue(time->seconds, time->nanoseconds);
 }
 
 void sys::getTxTimestampIdentity(TimestampIdentity &tsId)
@@ -755,4 +770,35 @@ Boolean sys::compareRxIdentity(TimestampIdentity *pT, MsgHeader *pH)
 	}
 
     return isMatch;
+}
+
+void sys::getPreciseRxTime(MsgHeader *header, TimeInternal *time,  RunTimeOpts *rtOpts, string strPrompt)
+{
+    //check timestamp embedded in header or not
+    if(rtOpts->emb_ingressTime){
+        int32_t t_ns = header->reserved2;
+    
+    	if(t_ns < time->nanoseconds) {
+    		time->nanoseconds = t_ns;
+    	}
+    	else {   //wrap around occurred in nanoseconds
+    		time->seconds += 1;
+    		time->nanoseconds = t_ns;
+    	}
+    }
+    else {
+    	TimestampIdentity tsId;
+    
+    	m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
+    	if(m_pApp->m_ptr_sys->compareRxIdentity(&tsId, header)) {
+    		time->seconds = tsId.seconds;
+    		time->nanoseconds = tsId.nanoseconds;
+    	}
+    	else {
+            DBGV("%s: Identity of timestamp mismatch \n", strPrompt.c_str());
+    	}
+    }
+    
+    /* subtract the inbound latency adjustment */
+    m_pApp->m_ptr_arith->subTime(time, time, &rtOpts->inboundLatency);
 }
