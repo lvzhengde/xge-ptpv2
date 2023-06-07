@@ -1608,6 +1608,7 @@ msg::msgPackPDelayResp(Octet * buf, MsgHeader * header, Timestamp * requestRecei
 	*(UInteger8 *) (buf + 4) = header->domainNumber;
 	memset((buf + 8), 0, 8);
 
+	*(UInteger32 *) (buf + 16) = flip32(header->reserved2);
 
 	*(UInteger16 *) (buf + 30) = flip16(header->sequenceId);
 

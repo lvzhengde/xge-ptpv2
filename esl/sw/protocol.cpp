@@ -1235,26 +1235,20 @@ protocol::handlePDelayReq(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 		case PTP_SLAVE:
 		case PTP_MASTER:
 		case PTP_PASSIVE:
-			if (isFromSelf) {
-				/*
-				 * Get sending timestamp from IP stack
-				 * with SO_TIMESTAMP
-				 */
-				ptpClock->pdelay_req_send_time.seconds = 
-					time->seconds;
-				ptpClock->pdelay_req_send_time.nanoseconds = 
-					time->nanoseconds;
-			
-				/*Add latency*/
-				m_pApp->m_ptr_arith->addTime(&ptpClock->pdelay_req_send_time,
-					&ptpClock->pdelay_req_send_time,
-					&rtOpts->outboundLatency);
-				break;
-			} else {
+			if (!isFromSelf) {
+			    //get precise RX timestamp
+		        m_pApp->m_ptr_sys->getPreciseRxTime(header, time,  rtOpts, "HandlePdelayReq");
+
 				m_pApp->m_ptr_msg->msgUnpackHeader(ptpClock->msgIbuf,
 						&ptpClock->PdelayReqHeader);
-				issuePDelayResp(time, header, rtOpts, 
-						ptpClock);	
+				
+				header->reserved2 = 0;  //clear messageTypeSpecific
+				if(rtOpts->one_step) {   //one-step clock
+				    header->reserved2 = time->nanoseconds;
+					memset(time, 0, sizeof(TimeInternal));
+				}
+
+				issuePDelayResp(time, header, rtOpts, ptpClock);	
 				break;
 			}
 		default:
@@ -1272,7 +1266,6 @@ protocol::handlePDelayResp(MsgHeader *header, Octet *msgIbuf, TimeInternal *time
 		 RunTimeOpts *rtOpts, PtpClock *ptpClock)
 {
 	if (ptpClock->delayMechanism == P2P) {
-		/* Boolean isFromCurrentParent = FALSE; NOTE: This is never used in this function */
 		TimeInternal requestReceiptTimestamp;
 		TimeInternal correctionField;
 	
@@ -1293,30 +1286,19 @@ protocol::handlePDelayResp(MsgHeader *header, Octet *msgIbuf, TimeInternal *time
 			DBGV("HandlePdelayResp : disregard\n");
 			return;
 
+		case PTP_PASSIVE:
 		case PTP_SLAVE:
 		case PTP_MASTER:
-			if (ptpClock->twoStepFlag && isFromSelf) {
-				m_pApp->m_ptr_arith->addTime(time,time,&rtOpts->outboundLatency);
-				issuePDelayRespFollowUp(time,
-							&ptpClock->PdelayReqHeader,
-							rtOpts,ptpClock);
-				break;
-			}
-			m_pApp->m_ptr_msg->msgUnpackPDelayResp(ptpClock->msgIbuf,
-					    &ptpClock->msgTmp.presp);
-		
-#if 0  /* NOTE: This is never used in this function. Should it? */
-			isFromCurrentParent = !memcmp(ptpClock->parentPortIdentity.clockIdentity,
-						      header->sourcePortIdentity.clockIdentity,CLOCK_IDENTITY_LENGTH) && 
-				(ptpClock->parentPortIdentity.portNumber == 
-				 header->sourcePortIdentity.portNumber);
-#endif	
-			if (!((ptpClock->sentPDelayReqSequenceId == 
-			       header->sequenceId) && 
-			      (!memcmp(ptpClock->portIdentity.clockIdentity,ptpClock->msgTmp.presp.requestingPortIdentity.clockIdentity,CLOCK_IDENTITY_LENGTH))
-				 && ( ptpClock->portIdentity.portNumber == ptpClock->msgTmp.presp.requestingPortIdentity.portNumber)))	{
+            //get precise RX timestamp
+            m_pApp->m_ptr_sys->getPreciseRxTime(header, time,  rtOpts, "HandlePdelayResp");
 
-                                /* Two Step Clock */
+			m_pApp->m_ptr_msg->msgUnpackPDelayResp(ptpClock->msgIbuf, &ptpClock->msgTmp.presp);
+		
+			if (((ptpClock->sentPDelayReqSequenceId-1) == header->sequenceId) && 
+			    (!memcmp(ptpClock->portIdentity.clockIdentity,ptpClock->msgTmp.presp.requestingPortIdentity.clockIdentity,CLOCK_IDENTITY_LENGTH))
+				 && ( ptpClock->portIdentity.portNumber == ptpClock->msgTmp.presp.requestingPortIdentity.portNumber))	{
+
+                /* Two Step Clock */
 				if ((header->flagField0 & PTP_TWO_STEP) == PTP_TWO_STEP) {
 					/*Store t4 (Fig 35)*/
 					ptpClock->pdelay_resp_receive_time.seconds = time->seconds;
@@ -1330,7 +1312,8 @@ protocol::handlePDelayResp(MsgHeader *header, Octet *msgIbuf, TimeInternal *time
 					m_pApp->m_ptr_arith->integer64_to_internalTime(header->correctionField,&correctionField);
 					ptpClock->lastPdelayRespCorrectionField.seconds = correctionField.seconds;
 					ptpClock->lastPdelayRespCorrectionField.nanoseconds = correctionField.nanoseconds;
-				} else {
+				} 
+				else {
 				/* One step Clock */
 					/*Store t4 (Fig 35)*/
 					ptpClock->pdelay_resp_receive_time.seconds = time->seconds;
@@ -1341,7 +1324,8 @@ protocol::handlePDelayResp(MsgHeader *header, Octet *msgIbuf, TimeInternal *time
 				}
 				ptpClock->recvPDelayRespSequenceId = header->sequenceId;
 				break;
-			} else {
+			} 
+			else {
 				DBGV("HandlePdelayResp : Pdelayresp doesn't "
 				     "match with the PdelayReq. \n");
 				break;
@@ -1713,14 +1697,9 @@ protocol::issueDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 	//The originTimestamp shall be set to 0 or an estimate no worse than ±1 s of the egress time of
     //the Delay_Req message
 #if 0
-    uint64_t seconds;
-    uint32_t nanoseconds;
 	TimeInternal internalTime;
 
-    m_pApp->m_ptr_sys->getRtcValue(seconds, nanoseconds);   
-    internalTime.seconds = seconds;
-    internalTime.nanoseconds = nanoseconds;
-
+    m_pApp->m_ptr_sys->getRtcValue(&internalTime);   
 	m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
 #endif
     
@@ -1775,16 +1754,51 @@ void
 protocol::issuePDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 {
 	Timestamp originTimestamp;
+
+	DBG("==> Issue PDelayReq (%d)\n", ptpClock->sentPDelayReqSequenceId );
+
+    //according to 11.4.3 of IEEE1588-2008
+	//The originTimestamp shall be set to 0 or an estimate no worse than ±1 s of the egress time of
+    //the PDelay_Req message
+#if 0
 	TimeInternal internalTime;
-	m_pApp->m_ptr_sys->getOsTime(&internalTime);
-	m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
-	
+
+    m_pApp->m_ptr_sys->getRtcValue(&internalTime);   
+	m_pApp->m_ptr_arith->fromInternalTime(&internalTime, &originTimestamp);
+#endif
+
+	//set to 0 to save the time to access register
+    memset(&originTimestamp, 0, sizeof(originTimestamp));
+
 	m_pApp->m_ptr_msg->msgPackPDelayReq(ptpClock->msgObuf,&originTimestamp,ptpClock);
 	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, PDELAY_REQ_LENGTH, PDELAY_REQ)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("PdelayReq message can't be sent -> FAULTY state \n");
 	} else {
 		DBGV("PDelayReq MSG sent ! \n");
+
+        //wait tx frame completed and timestamp generated
+        wait(WAIT_TX, SC_US, m_pController->m_ev_tx);
+
+		//get tx timestamp and identity
+		TimestampIdentity tsId;
+
+		m_pApp->m_ptr_sys->getTxTimestampIdentity(tsId);
+
+		//for tx, It's enough to just compare messageType and sequenceId 
+		if(tsId.messageType == 0x02 && tsId.sequenceId == ptpClock->sentPDelayReqSequenceId) {
+			ptpClock->pdelay_req_send_time.seconds = tsId.seconds;
+			ptpClock->pdelay_req_send_time.nanoseconds = tsId.nanoseconds;
+			
+			/*Add latency*/
+			m_pApp->m_ptr_arith->addTime(&ptpClock->pdelay_req_send_time,
+				&ptpClock->pdelay_req_send_time,
+				&rtOpts->outboundLatency);
+		}
+		else {
+            DBGV("issuePDelayReq: Identity of tx timestamp mismatch \n");
+		}
+
 		ptpClock->sentPDelayReqSequenceId++;
 	}
 }
@@ -1802,8 +1816,32 @@ protocol::issuePDelayResp(TimeInternal *time,MsgHeader *header,RunTimeOpts *rtOp
 	if (!m_pApp->m_ptr_net->netSend(ptpClock->msgObuf, PDELAY_RESP_LENGTH, PDELAY_RESP)) {
 		toState(PTP_FAULTY,rtOpts,ptpClock);
 		DBGV("PdelayResp message can't be sent -> FAULTY state \n");
-	} else {
+	} 
+	else {
 		DBGV("PDelayResp MSG sent ! \n");
+
+        //issue Pdelay_Resp_Follow_up message for two-step clock
+        if (ptpClock->twoStepFlag) {
+            //wait tx frame completed and timestamp generated
+            wait(WAIT_TX, SC_US, m_pController->m_ev_tx);
+
+		    //get tx timestamp and identity
+		    TimestampIdentity tsId;
+		    m_pApp->m_ptr_sys->getTxTimestampIdentity(tsId);
+
+		    //for tx, It's enough to just compare messageType and sequenceId 
+		    if(tsId.messageType == 0x03 && tsId.sequenceId == header->sequenceId) {
+		    	TimeInternal tx_time;
+		    	tx_time.seconds = tsId.seconds;
+		    	tx_time.nanoseconds = tsId.nanoseconds;
+
+		    	m_pApp->m_ptr_arith->addTime(&tx_time, &tx_time, &rtOpts->outboundLatency);
+		    	issuePDelayRespFollowUp(&tx_time, &ptpClock->PdelayReqHeader, rtOpts,ptpClock);
+		    }
+		    else {
+                DBGV("issuePDelayRespFollowUp: Identity of tx timestamp mismatch \n");
+		    }
+		}
 	}
 }
 
