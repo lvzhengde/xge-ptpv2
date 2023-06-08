@@ -945,17 +945,6 @@ protocol::handleSync(MsgHeader *header, Octet *msgIbuf, ssize_t length,
 			     "another Master  \n");
 			break;
 		} 
-		
-#if 0  //not issue FollowUp here
-		if (ptpClock->twoStepFlag) {
-			DBGV("HandleSync: going to send followup message\n ");
-
-			/*Add latency*/
-			m_pApp->m_ptr_arith->addTime(time,time,&rtOpts->outboundLatency);
-			issueFollowup(time,rtOpts,ptpClock);
-			break;
-		}
-#endif
 		else {
 			DBGV("HandleSync: Sync message received from self\n ");
 		}
@@ -1662,6 +1651,30 @@ protocol::issueSync(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 		DBGV("Sync message can't be sent -> FAULTY state \n");
 	} else {
 		DBGV("Sync MSG sent ! \n");
+
+        //issue Follow_Up message for two-step clock
+        if (ptpClock->twoStepFlag) {
+            //wait tx frame completed and timestamp generated
+            wait(WAIT_TX, SC_US, m_pController->m_ev_tx);
+
+		    //get tx timestamp and identity
+		    TimestampIdentity tsId;
+		    m_pApp->m_ptr_sys->getTxTimestampIdentity(tsId);
+
+		    //for tx, It's enough to just compare messageType and sequenceId 
+		    if(tsId.messageType == 0x0 && tsId.sequenceId == ptpClock->sentSyncSequenceId) {
+		    	TimeInternal tx_time;
+		    	tx_time.seconds = tsId.seconds;
+		    	tx_time.nanoseconds = tsId.nanoseconds;
+
+		    	m_pApp->m_ptr_arith->addTime(&tx_time, &tx_time, &rtOpts->outboundLatency);
+			    issueFollowup(&tx_time, rtOpts, ptpClock);
+		    }
+		    else {
+                DBGV("issueFollowUp: Identity of tx timestamp mismatch \n");
+		    }
+		}
+
 		ptpClock->sentSyncSequenceId++;
 	}
 }
@@ -1977,7 +1990,7 @@ protocol::addForeign(Octet *buf,MsgHeader *header,PtpClock *ptpClock)
 		
 		/*
 		 * header and announce field of each Foreign Master are
-		 * usefull to run Best Master Clock Algorithm
+		 * useful to run Best Master Clock Algorithm
 		 */
 		m_pApp->m_ptr_msg->msgUnpackHeader(buf,&ptpClock->foreign[j].header);
 		m_pApp->m_ptr_msg->msgUnpackAnnounce(buf,&ptpClock->foreign[j].announce);

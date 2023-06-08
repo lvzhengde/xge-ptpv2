@@ -1456,8 +1456,8 @@ msg::msgPackFollowUp(Octet * buf, Timestamp * preciseOriginTimestamp, PtpClock *
 	*(char *)(buf + 0) = *(char *)(buf + 0) | 0x08;
 	/* Table 19 */
 	*(UInteger16 *) (buf + 2) = flip16(FOLLOW_UP_LENGTH);
-	*(UInteger16 *) (buf + 30) = flip16(ptpClock->sentSyncSequenceId - 1);
-	/* sentSyncSequenceId has already been incremented in "issueSync" */
+	*(UInteger16 *) (buf + 30) = flip16(ptpClock->sentSyncSequenceId);
+	/* sentSyncSequenceId incremented after issueFollowUp in "issueSync" */
 	*(UInteger8 *) (buf + 32) = 0x02;
 	/* Table 23 */
 	*(Integer8 *) (buf + 33) = ptpClock->logSyncInterval;
