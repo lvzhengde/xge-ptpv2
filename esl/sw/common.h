@@ -47,17 +47,17 @@
 
 /* NOTE: this macro can be refactored into a function */ 
 #define XMALLOC(ptr,size) \
-	if(!((ptr)= (Octet*)malloc(size))) { \
-		PERROR("failed to allocate memory"); \
-		this->m_pApp->m_ptr_startup->ptpdShutdown(ptpClock); \
-		exit(1); \
-	}
+    if(!((ptr)= (Octet*)malloc(size))) { \
+        PERROR("failed to allocate memory"); \
+        this->m_pApp->m_ptr_startup->ptpdShutdown(ptpClock); \
+        exit(1); \
+    }
 
 #define IS_SET(data, bitpos) \
-	((data & ( 0x1 << bitpos )) == (0x1 << bitpos))
+    ((data & ( 0x1 << bitpos )) == (0x1 << bitpos))
 
 #define SET_FIELD(data, bitpos) \
-	data << bitpos
+    data << bitpos
 #ifndef min
 #define min(a,b)     (((a)<(b))?(a):(b))
 #endif
