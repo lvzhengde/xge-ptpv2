@@ -24,8 +24,6 @@
 #endif
 
 
-
-
  /** \name System messages*/
  /**\{*/
 
@@ -60,16 +58,6 @@
 #define INFO(x, ...)   MESSAGE(LOG_INFO, x, ##__VA_ARGS__)
 
 
-/*
-  list of per-module defines:
-
-./dep/sys.c:#define PRINT_MAC_ADDRESSES
-./dep/timer.c:#define US_TIMER_INTERVAL 125000
-*/
-#define USE_BINDTODEVICE
-
-
-
 // enable this line to show debug numbers in nanoseconds instead of microseconds 
 // #define DEBUG_IN_NS
 
@@ -81,8 +69,6 @@
 #else
 #define DBG_UNIT DBG_UNIT_US
 #endif
-
-
 
 
 /** \}*/
@@ -126,38 +112,7 @@
 /** \name Endian corrections*/
  /**\{*/
 
-#if defined(PTPD_MSBF)
-#define shift8(x,y)   ( (x) << ((3-y)<<3) )
-#define shift16(x,y)  ( (x) << ((1-y)<<4) )
-#elif defined(PTPD_LSBF)
-#define shift8(x,y)   ( (x) << ((y)<<3) )
-#define shift16(x,y)  ( (x) << ((y)<<4) )
-#endif
-
-//#define flip16(x) htons(x)
-//#define flip32(x) htonl(x)
-
-/* i don't know any target platforms that do not have htons and htonl,
-   but here are generic funtions just in case */
-#define PTPD_LSBF
-#if defined(PTPD_MSBF)
-#define flip16(x) (x)
-#define flip32(x) (x)
-#elif defined(PTPD_LSBF)
-Integer16 flip16(Integer16 x);
-Integer32 flip32(Integer32 x);
-#endif
-
-/** \}*/
-
-
-/** \name Bit array manipulations*/
- /**\{*/
-
-#define getFlag(x,y)  !!( *(UInteger8*)((x)+((y)<8?1:0)) &   (1<<((y)<8?(y):(y)-8)) )
-#define setFlag(x,y)    ( *(UInteger8*)((x)+((y)<8?1:0)) |=   1<<((y)<8?(y):(y)-8)  )
-#define clearFlag(x,y)  ( *(UInteger8*)((x)+((y)<8?1:0)) &= ~(1<<((y)<8?(y):(y)-8)) )
-/** \}*/
+#define PTPD_LSBF   //little endian
 
 
 #endif /*PTPD_DEP_H_*/

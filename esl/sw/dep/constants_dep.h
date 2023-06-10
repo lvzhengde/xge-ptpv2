@@ -1,4 +1,3 @@
-
 /* constants_dep.h */
 
 #ifndef CONSTANTS_DEP_H
@@ -25,21 +24,13 @@
 
 #define CLOCK_IDENTITY_LENGTH 8
 
-/* UDP/IPv4 dependent */
-#ifndef INADDR_LOOPBACK
-#define INADDR_LOOPBACK 0x7f000001UL
-#endif
-
 #define SUBDOMAIN_ADDRESS_LENGTH  4
 #define PORT_ADDRESS_LENGTH       2
 #define PTP_UUID_LENGTH           6
-#define CLOCK_IDENTITY_LENGTH	  8
+#define CLOCK_IDENTITY_LENGTH     8
 #define FLAG_FIELD_LENGTH         2
 
 #define PACKET_SIZE  300 //ptpdv1 value kept because of use of TLV...
-
-#define PTP_EVENT_PORT    319
-#define PTP_GENERAL_PORT  320
 
 #define MM_STARTING_BOUNDARY_HOPS  0x7fff
 
@@ -73,17 +64,15 @@
 
 #define DEFAULT_AI     (9.0 * PI_UNIT)       
 
-#define DEFAULT_DELAY_S    	(6)
+#define DEFAULT_DELAY_S     (6)
 
 #define WAIT_TX        (10)    //in microseconds
 
 // limit operator messages to once every X seconds
 #define OPERATOR_MESSAGES_INTERVAL 300.0
 
-
 #define MAXTIMESTR 32
 
-//#define LOG_DAEMON 0
 #define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
 
 #endif /*CONSTANTS_DEP_H_*/

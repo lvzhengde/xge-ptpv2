@@ -55,6 +55,12 @@
 #include "common.h"
 
 
+/**
+ * The parameter "netPath" in the following functions is unuseful.
+ * It is just reserved to keep up with original design.
+ */
+
+
 //constructor
 net::net(ptpd *pApp)
 {
@@ -73,7 +79,7 @@ net::net(ptpd *pApp)
 Boolean
 net::netShutdownMulticast(NetPath * netPath)
 {
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -81,9 +87,9 @@ net::netShutdownMulticast(NetPath * netPath)
 Boolean 
 net::netShutdown(NetPath * netPath)
 {
-	netShutdownMulticast(netPath);
+    netShutdownMulticast(netPath);
 
-	return TRUE;
+    return TRUE;
 }
 
 /**
@@ -100,7 +106,7 @@ net::netShutdown(NetPath * netPath)
 Boolean
 net::netInitMulticast(NetPath * netPath,  RunTimeOpts * rtOpts)
 {
-	return TRUE;
+    return TRUE;
 }
 
 /**
@@ -115,19 +121,19 @@ net::netInitTimestamping(NetPath * netPath)
 {
     int val = 1;
     Boolean result = TRUE;
-	
+    
     uint32_t base, addr, data = 0;
     base = TSU_BLK_ADDR << 8;
     addr = base + TSU_CFG_ADDR;
 
     uint32_t one_step   = (m_pApp->m_rtOpts.one_step != 0) ? 1 : 0;
     uint32_t peer_delay = (m_pApp->m_rtOpts.delayMechanism == P2P) ? 1 : 0;
-	uint32_t emb_ingressTime = (m_pApp->m_rtOpts.emb_ingressTime != 0) ? 1 : 0;
+    uint32_t emb_ingressTime = (m_pApp->m_rtOpts.emb_ingressTime != 0) ? 1 : 0;
 
     data = one_step | (peer_delay << 2) | (emb_ingressTime << 5);
     REG_WRITE(addr, data);
 
-	return result;
+    return result;
 }
 
 
@@ -150,14 +156,14 @@ net::netInitTimestamping(NetPath * netPath)
 Boolean 
 net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-	DBG("netInit\n");
+    DBG("netInit\n");
 
     //initialize ifaceName
-	char ifaceName[] = DEFAULT_IFACE_NAME;
+    char ifaceName[] = DEFAULT_IFACE_NAME;
     strncpy(rtOpts->ifaceName, ifaceName, sizeof(ifaceName));
 
-	//initialize transport object
-	m_pApp->m_ptr_transport->init(rtOpts->networkProtocol, rtOpts->layer2Encap, rtOpts->vlanTag, rtOpts->delayMechanism);
+    //initialize transport object
+    m_pApp->m_ptr_transport->init(rtOpts->networkProtocol, rtOpts->layer2Encap, rtOpts->vlanTag, rtOpts->delayMechanism);
 
     memcpy(ptpClock->port_uuid_field, m_pApp->m_ptr_transport->m_mac_sa, 6);
 
@@ -172,7 +178,7 @@ net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
       return FALSE;
     }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -180,17 +186,17 @@ net::netInit(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 int 
 net::netSelect(TimeInternal * timeout, NetPath * netPath)
 {
-	double wt_us = 1.0; //default to 1 us
+    double wt_us = 1.0; //default to 1 us
 
     if (timeout < 0)
-	  return FALSE;
-	
-	if(timeout) {
+      return FALSE;
+    
+    if(timeout) {
       wt_us = timeout->seconds * 1e6;
       wt_us += timeout->nanoseconds / 1000.0;
-	}
+    }
 
-	//wait event or time out
+    //wait event or time out
     uint32_t base, addr, data;
 
     wait(wt_us, SC_US, m_pController->m_ev_rx | m_pController->m_ev_rx_all);
@@ -202,7 +208,7 @@ net::netSelect(TimeInternal * timeout, NetPath * netPath)
     bool data_rdy = (data >> 15) & 0x1;
     unsigned int rx_frm_len = data & 0x1ff;
 
-	return (data_rdy && rx_frm_len > 0);
+    return (data_rdy && rx_frm_len > 0);
 }
 
 
@@ -240,17 +246,17 @@ ssize_t net::netSend(Octet * buf, UInteger16 length, Enumeration4 messageType)
 Boolean
 net::netRefreshIGMP(NetPath * netPath, RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-	DBG("netRefreshIGMP\n");
-	
-	netShutdownMulticast(netPath);
-	
-	/* suspend process 100 milliseconds, to make sure the kernel sends the IGMP_leave properly */
-	//usleep(100*1000);
+    DBG("netRefreshIGMP\n");
+    
+    netShutdownMulticast(netPath);
+    
+    /* suspend process 100 milliseconds, to make sure the kernel sends the IGMP_leave properly */
+    //usleep(100*1000);
 
-	if (!netInitMulticast(netPath, rtOpts)) {
-		return FALSE;
-	}
-	
-	INFO("refreshed IGMP multicast memberships\n");
-	return TRUE;
+    if (!netInitMulticast(netPath, rtOpts)) {
+        return FALSE;
+    }
+    
+    INFO("refreshed IGMP multicast memberships\n");
+    return TRUE;
 }

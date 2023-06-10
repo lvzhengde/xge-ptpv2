@@ -34,16 +34,16 @@ typedef unsigned char NibbleLower;
 * \brief Implementation specific of UInteger48 type
  */
 typedef struct {
-	uint32_t lsb;     /* FIXME: shouldn't uint32_t and uint16_t be used here? */
-	uint16_t msb;
+    uint32_t lsb;     /* FIXME: shouldn't uint32_t and uint16_t be used here? */
+    uint16_t msb;
 } UInteger48;
 
 /**
 * \brief Implementation specific of Integer64 type
  */
 typedef struct {
-	uint32_t lsb;     /* FIXME: shouldn't uint32_t and int32_t be used here? */
-	int32_t  msb;
+    uint32_t lsb;     /* FIXME: shouldn't uint32_t and int32_t be used here? */
+    int32_t  msb;
 } Integer64;
 
 /**
@@ -69,6 +69,7 @@ typedef struct {
 
 /**
 * \brief Struct used to store network datas
+* only useful for PTP over UDP/IPv4
  */
 
 #include <arpa/inet.h>
