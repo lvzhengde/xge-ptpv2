@@ -58,12 +58,12 @@
 #if defined(PTPD_LSBF)
 Integer16 flip16(Integer16 x)
 {
-   return (((x) >> 8) & 0x00ff) | (((x) << 8) & 0xff00);
+    return (((x) >> 8) & 0x00ff) | (((x) << 8) & 0xff00);
 }
 
 Integer32 flip32(Integer32 x)
 {
-  return (((x) >> 24) & 0x000000ff) | (((x) >> 8 ) & 0x0000ff00) |
+    return (((x) >> 24) & 0x000000ff) | (((x) >> 8 ) & 0x0000ff00) |
          (((x) << 8 ) & 0x00ff0000) | (((x) << 24) & 0xff000000);
 }
 #endif
@@ -73,9 +73,9 @@ sys::sys(ptpd *pApp)
 {
     BASE_MEMBER_ASSIGN 
 
-	logOpened = FALSE;
+    logOpened = FALSE;
 
-	start = 1;
+    start = 1;
 }
 
 /*
@@ -84,8 +84,8 @@ sys::sys(ptpd *pApp)
 */
 char *sys::dump_TimeInternal(const TimeInternal * p)
 {
-	snprint_TimeInternal(buf0, 100, p);
-	return buf0;
+    snprint_TimeInternal(buf0, 100, p);
+    return buf0;
 }
 
 
@@ -95,59 +95,59 @@ char *sys::dump_TimeInternal(const TimeInternal * p)
 */
 char *sys::dump_TimeInternal2(const char *st1, const TimeInternal * p1, const char *st2, const TimeInternal * p2)
 {
-	int n = 0;
+    int n = 0;
 
-	/* display Timestamps */
-	if (st1) {
-		n += snprintf(buf1 + n, BUF_SIZE - n, "%s ", st1);
-	}
-	n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, p1);
-	n += snprintf(buf1 + n, BUF_SIZE - n, "    ");
+    /* display Timestamps */
+    if (st1) {
+        n += snprintf(buf1 + n, BUF_SIZE - n, "%s ", st1);
+    }
+    n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, p1);
+    n += snprintf(buf1 + n, BUF_SIZE - n, "    ");
 
-	if (st2) {
-		n += snprintf(buf1 + n, BUF_SIZE - n, "%s ", st2);
-	}
-	n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, p2);
-	n += snprintf(buf1 + n, BUF_SIZE - n, " ");
+    if (st2) {
+        n += snprintf(buf1 + n, BUF_SIZE - n, "%s ", st2);
+    }
+    n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, p2);
+    n += snprintf(buf1 + n, BUF_SIZE - n, " ");
 
-	/* display difference */
-	TimeInternal r;
-	m_pApp->m_ptr_arith->subTime(&r, p1, p2);
-	n += snprintf(buf1 + n, BUF_SIZE - n, "   (diff: ");
-	n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, &r);
-	n += snprintf(buf1 + n, BUF_SIZE - n, ") ");
+    /* display difference */
+    TimeInternal r;
+    m_pApp->m_ptr_arith->subTime(&r, p1, p2);
+    n += snprintf(buf1 + n, BUF_SIZE - n, "   (diff: ");
+    n += snprint_TimeInternal(buf1 + n, BUF_SIZE - n, &r);
+    n += snprintf(buf1 + n, BUF_SIZE - n, ") ");
 
-	return buf1;
+    return buf1;
 }
 
 int 
 sys::snprint_TimeInternal(char *s, int max_len, const TimeInternal * p)
 {
-	int len = 0;
+    int len = 0;
 
-	/* always print either a space, or the leading "-". This makes the stat files columns-aligned */
-	len += snprintf(&s[len], max_len - len, "%c",
-		m_pApp->m_ptr_arith->isTimeInternalNegative(p)? '-':' ');
+    /* always print either a space, or the leading "-". This makes the stat files columns-aligned */
+    len += snprintf(&s[len], max_len - len, "%c",
+        m_pApp->m_ptr_arith->isTimeInternalNegative(p)? '-':' ');
 
-	len += snprintf(&s[len], max_len - len, "%lld.%09d",
-	    abs(p->seconds), abs(p->nanoseconds));
+    len += snprintf(&s[len], max_len - len, "%lld.%09d",
+        abs(p->seconds), abs(p->nanoseconds));
 
-	return len;
+    return len;
 }
 
 
 /* debug aid: convert a time variable into a static char */
 char *sys::time2st(const TimeInternal * p)
 {
-	snprint_TimeInternal(buf2, sizeof(buf2), p);
-	return buf2;
+    snprint_TimeInternal(buf2, sizeof(buf2), p);
+    return buf2;
 }
 
 
 
 void sys::DBG_time(const char *name, const TimeInternal  p)
 {
-	DBG("             %s:   %s\n", name, time2st(&p));
+    DBG("             %s:   %s\n", name, time2st(&p));
 
 }
 
@@ -155,44 +155,44 @@ void sys::DBG_time(const char *name, const TimeInternal  p)
 string
 sys::translatePortState(PtpClock *ptpClock)
 {
-	string s;
-	switch(ptpClock->portState) {
-	    case PTP_INITIALIZING:  s = "init";  break;
-	    case PTP_FAULTY:        s = "flt";   break;
-	    case PTP_LISTENING:
-		    /* seperate init-reset from real resets */
-		    if(ptpClock->reset_count == 1){
-		    	s = "lstn_init";
-		    } else {
-		    	s = "lstn_reset";
-		    }
-		    break;
-	    case PTP_PASSIVE:       s = "pass";  break;
-	    case PTP_UNCALIBRATED:  s = "uncl";  break;
-	    case PTP_SLAVE:         s = "slv";   break;
-	    case PTP_PRE_MASTER:    s = "pmst";  break;
-	    case PTP_MASTER:        s = "mst";   break;
-	    case PTP_DISABLED:      s = "dsbl";  break;
-	    default:                s = "?";     break;
-	}
-	return s;
+    string s;
+    switch(ptpClock->portState) {
+        case PTP_INITIALIZING:  s = "init";  break;
+        case PTP_FAULTY:        s = "flt";   break;
+        case PTP_LISTENING:
+            /* seperate init-reset from real resets */
+            if(ptpClock->reset_count == 1){
+                s = "lstn_init";
+            } else {
+                s = "lstn_reset";
+            }
+            break;
+        case PTP_PASSIVE:       s = "pass";  break;
+        case PTP_UNCALIBRATED:  s = "uncl";  break;
+        case PTP_SLAVE:         s = "slv";   break;
+        case PTP_PRE_MASTER:    s = "pmst";  break;
+        case PTP_MASTER:        s = "mst";   break;
+        case PTP_DISABLED:      s = "dsbl";  break;
+        default:                s = "?";     break;
+    }
+    return s;
 }
 
 
 int 
 sys::snprint_ClockIdentity(char *s, int max_len, const ClockIdentity id)
 {
-	int len = 0;
-	int i;
+    int len = 0;
+    int i;
 
-	for (i = 0; ;) {
-		len += snprintf(&s[len], max_len - len, "%02x", (unsigned char) id[i]);
+    for (i = 0; ;) {
+        len += snprintf(&s[len], max_len - len, "%02x", (unsigned char) id[i]);
 
-		if (++i >= CLOCK_IDENTITY_LENGTH)
-			break;
-	}
+        if (++i >= CLOCK_IDENTITY_LENGTH)
+            break;
+    }
 
-	return len;
+    return len;
 }
 
 
@@ -200,42 +200,42 @@ sys::snprint_ClockIdentity(char *s, int max_len, const ClockIdentity id)
 int
 sys::snprint_ClockIdentity_mac(char *s, int max_len, const ClockIdentity id)
 {
-	int len = 0;
-	int i;
+    int len = 0;
+    int i;
 
-	for (i = 0; ;) {
-		/* skip bytes 3 and 4 */
-		if(!((i==3) || (i==4))){
-			len += snprintf(&s[len], max_len - len, "%02x", (unsigned char) id[i]);
+    for (i = 0; ;) {
+        /* skip bytes 3 and 4 */
+        if(!((i==3) || (i==4))){
+            len += snprintf(&s[len], max_len - len, "%02x", (unsigned char) id[i]);
 
-			if (++i >= CLOCK_IDENTITY_LENGTH)
-				break;
+            if (++i >= CLOCK_IDENTITY_LENGTH)
+                break;
 
-			/* print a separator after each byte except the last one */
-			len += snprintf(&s[len], max_len - len, "%s", ":");
-		} else {
+            /* print a separator after each byte except the last one */
+            len += snprintf(&s[len], max_len - len, "%s", ":");
+        } else {
 
-			i++;
-		}
-	}
+            i++;
+        }
+    }
 
-	return len;
+    return len;
 }
 
 int 
 sys::snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
 {
-	int len = 0;
+    int len = 0;
 
 #ifdef PRINT_MAC_ADDRESSES
-	len += snprint_ClockIdentity_mac(&s[len], max_len - len, id->clockIdentity);
-#else	
-	len += snprint_ClockIdentity(&s[len], max_len - len, id->clockIdentity);
+    len += snprint_ClockIdentity_mac(&s[len], max_len - len, id->clockIdentity);
+#else   
+    len += snprint_ClockIdentity(&s[len], max_len - len, id->clockIdentity);
 #endif
 
-	len += snprintf(&s[len], max_len - len, "/%02x", (unsigned) id->portNumber);
+    len += snprintf(&s[len], max_len - len, "/%02x", (unsigned) id->portNumber);
 
-	return len;
+    return len;
 }
 
 
@@ -247,268 +247,239 @@ sys::snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
 void
 sys::message(int priority, const char * format, ...)
 {
-	//extern RunTimeOpts rtOpts;
-	va_list ap;
-	va_start(ap, format);
+    va_list ap;
+    va_start(ap, format);
 
 #ifdef RUNTIME_DEBUG
-	if ((priority >= LOG_DEBUG) && (priority > m_pApp->m_rtOpts.debug_level)) {
-		return;
-	}
+    if ((priority >= LOG_DEBUG) && (priority > m_pApp->m_rtOpts.debug_level)) {
+        return;
+    }
 #endif
 
-	if (m_pApp->m_rtOpts.useSysLog) {
+    if (m_pApp->m_rtOpts.useSysLog) {
 #ifdef RUNTIME_DEBUG
-		/*
-		 *  Syslog only has 8 message levels (3 bits)
-		 *  important: messages will only appear if "*.debug /var/log/debug" is on /etc/rsyslog.conf
-		 */
-		if(priority > LOG_DEBUG){
-			priority = LOG_DEBUG;
-		}
+        /*
+         *  Syslog only has 8 message levels (3 bits)
+         *  important: messages will only appear if "*.debug /var/log/debug" is on /etc/rsyslog.conf
+         */
+        if(priority > LOG_DEBUG){
+            priority = LOG_DEBUG;
+        }
 #endif
 
-		if (!logOpened) {
-			openlog(PTPD_PROGNAME, 0, LOG_DAEMON);
-			logOpened = TRUE;
-		}
-		vsyslog(priority, format, ap);
+        if (!logOpened) {
+            openlog(PTPD_PROGNAME, 0, LOG_DAEMON);
+            logOpened = TRUE;
+        }
+        vsyslog(priority, format, ap);
 
-		/* Also warn operator during startup only */
-		if (m_pApp->m_rtOpts.syslog_startup_messages_also_to_stdout &&
-			(priority <= LOG_WARNING)
-			){
-			va_start(ap, format);
-			vfprintf(stderr, format, ap);
-		}
-	} else {
-		char time_str[MAXTIMESTR];
-		struct timeval now;
+        /* Also warn operator during startup only */
+        if (m_pApp->m_rtOpts.syslog_startup_messages_also_to_stdout &&
+            (priority <= LOG_WARNING)
+            ){
+            va_start(ap, format);
+            vfprintf(stderr, format, ap);
+        }
+    } else {
+        char time_str[MAXTIMESTR];
+        struct timeval now;
 
-		fprintf(stderr, "    %s   (ptpd %-9s ", m_pApp->m_cpu_str.c_str(),
-			priority == LOG_EMERG   ? "emergency)" :
-			priority == LOG_ALERT   ? "alert)" :
-			priority == LOG_CRIT    ? "critical)" :
-			priority == LOG_ERR     ? "error)" :
-			priority == LOG_WARNING ? "warning)" :
-			priority == LOG_NOTICE  ? "notice)" :
-			priority == LOG_INFO    ? "info)" :
-			priority == LOG_DEBUG   ? "debug1)" :
-			priority == LOG_DEBUG2  ? "debug2)" :
-			priority == LOG_DEBUGV  ? "debug3)" :
-			"unk)");
+        fprintf(stderr, "    %s   (ptpd %-9s ", m_pApp->m_cpu_str.c_str(),
+            priority == LOG_EMERG   ? "emergency)" :
+            priority == LOG_ALERT   ? "alert)" :
+            priority == LOG_CRIT    ? "critical)" :
+            priority == LOG_ERR     ? "error)" :
+            priority == LOG_WARNING ? "warning)" :
+            priority == LOG_NOTICE  ? "notice)" :
+            priority == LOG_INFO    ? "info)" :
+            priority == LOG_DEBUG   ? "debug1)" :
+            priority == LOG_DEBUG2  ? "debug2)" :
+            priority == LOG_DEBUGV  ? "debug3)" :
+            "unk)");
 
-		/*
-		 * select debug tagged with timestamps. This will slow down PTP itself if you send a lot of messages!
-		 * it also can cause problems in nested debug statements (which are solved by turning the signal
-		 *  handling synchronous, and not calling this function inside assycnhonous signal processing)
-		 */
-	    uint64_t seconds;
-	    uint32_t nanoseconds;
+        /*
+         * select debug tagged with timestamps. This will slow down PTP itself if you send a lot of messages!
+         * it also can cause problems in nested debug statements (which are solved by turning the signal
+         *  handling synchronous, and not calling this function inside assycnhonous signal processing)
+         */
+        uint64_t seconds;
+        uint32_t nanoseconds;
         getRtcValue(seconds, nanoseconds);
-	    now.tv_sec = seconds;
-	    now.tv_usec = nanoseconds / 1000;
+        now.tv_sec = seconds;
+        now.tv_usec = nanoseconds / 1000;
 
-		strftime(time_str, MAXTIMESTR, "%X", localtime(&now.tv_sec));
-		fprintf(stderr, "%s.%06d ", time_str, (int)now.tv_usec  );
-		fprintf(stderr, " (%s)  ", m_pApp->m_ptr_ptpClock ?
-		       translatePortState(m_pApp->m_ptr_ptpClock) : "___");
+        strftime(time_str, MAXTIMESTR, "%X", localtime(&now.tv_sec));
+        fprintf(stderr, "%s.%06d ", time_str, (int)now.tv_usec  );
+        fprintf(stderr, " (%s)  ", m_pApp->m_ptr_ptpClock ?
+               translatePortState(m_pApp->m_ptr_ptpClock) : "___");
 
-		vfprintf(stderr, format, ap);
-	}
-	va_end(ap);
+        vfprintf(stderr, format, ap);
+    }
+    va_end(ap);
 }
 
 void
 sys::increaseMaxDelayThreshold()
 {
-	//extern RunTimeOpts rtOpts;
-	NOTIFY("Increasing maxDelay threshold from %i to %i\n", m_pApp->m_rtOpts.maxDelay, 
-	       m_pApp->m_rtOpts.maxDelay << 1);
+    NOTIFY("Increasing maxDelay threshold from %i to %i\n", m_pApp->m_rtOpts.maxDelay, 
+           m_pApp->m_rtOpts.maxDelay << 1);
 
-	m_pApp->m_rtOpts.maxDelay <<= 1;
+    m_pApp->m_rtOpts.maxDelay <<= 1;
 }
 
 void
 sys::decreaseMaxDelayThreshold()
 {
-	//extern RunTimeOpts rtOpts;
-	if ((m_pApp->m_rtOpts.maxDelay >> 1) < m_pApp->m_rtOpts.origMaxDelay)
-		return;
-	NOTIFY("Decreasing maxDelay threshold from %i to %i\n", 
-	       m_pApp->m_rtOpts.maxDelay, m_pApp->m_rtOpts.maxDelay >> 1);
-	m_pApp->m_rtOpts.maxDelay >>= 1;
+    if ((m_pApp->m_rtOpts.maxDelay >> 1) < m_pApp->m_rtOpts.origMaxDelay)
+        return;
+    NOTIFY("Decreasing maxDelay threshold from %i to %i\n", 
+           m_pApp->m_rtOpts.maxDelay, m_pApp->m_rtOpts.maxDelay >> 1);
+    m_pApp->m_rtOpts.maxDelay >>= 1;
 }
 
 void 
 sys::displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-	int len = 0;
-	TimeInternal now;
-	time_t time_s;
+    int len = 0;
+    TimeInternal now;
+    time_t time_s;
 
-	char time_str[MAXTIMESTR];
+    char time_str[MAXTIMESTR];
 
-	if (!rtOpts->displayStats) {
-		return;
-	}
+    if (!rtOpts->displayStats) {
+        return;
+    }
 
-	if (start) {
-		start = 0;
-		printf("# Timestamp, State, Clock ID, One Way Delay, "
-		       "Offset From Master, Slave to Master, "
-		       "Master to Slave, Drift, Discarded Packet Count, Last packet Received\n");
-		fflush(stdout);
-	}
-	memset(sbuf, ' ', sizeof(sbuf));
+    if (start) {
+        start = 0;
+        printf("# Timestamp, State, Clock ID, One Way Delay, "
+               "Offset From Master, Slave to Master, "
+               "Master to Slave, Drift, Discarded Packet Count, Last packet Received\n");
+        fflush(stdout);
+    }
+    memset(sbuf, ' ', sizeof(sbuf));
 
-	uint64_t seconds;
-	uint32_t nanoseconds;
-    getRtcValue(seconds, nanoseconds);
-	now.seconds = seconds;
-	now.nanoseconds = nanoseconds;
+    getRtcValue(&now);
 
-	/*
-	 * print one log entry per X seconds, to reduce disk usage.
-	 * This only happens to SLAVE SYNC statistics lines, which are the bulk of the log.
-	 * All other lines are printed, including delayreqs.
-	 */
+    /*
+     * print one log entry per X seconds, to reduce disk usage.
+     * This only happens to SLAVE SYNC statistics lines, which are the bulk of the log.
+     * All other lines are printed, including delayreqs.
+     */
 
-	if ((ptpClock->portState == PTP_SLAVE) && (rtOpts->log_seconds_between_message)) {
-		if(ptpClock->last_packet_was_sync){
-			ptpClock->last_packet_was_sync = FALSE;
-			if((now.seconds - prev_now.seconds) < rtOpts->log_seconds_between_message){
-				//leave early and do not print the log message to save disk space
-				DBGV("Skipped printing of Sync message because of option -V\n");
-				return;
-			}
-			prev_now = now;
-		}
-	}
-	ptpClock->last_packet_was_sync = FALSE;
+    if ((ptpClock->portState == PTP_SLAVE) && (rtOpts->log_seconds_between_message)) {
+        if(ptpClock->last_packet_was_sync){
+            ptpClock->last_packet_was_sync = FALSE;
+            if((now.seconds - prev_now.seconds) < rtOpts->log_seconds_between_message){
+                //leave early and do not print the log message to save disk space
+                DBGV("Skipped printing of Sync message because of option -V\n");
+                return;
+            }
+            prev_now = now;
+        }
+    }
+    ptpClock->last_packet_was_sync = FALSE;
 
-	time_s = now.seconds;
-	strftime(time_str, MAXTIMESTR, "%Y-%m-%d %X", localtime(&time_s));
-	len += snprintf(sbuf + len, sizeof(sbuf) - len, "%s.%06d, %s, ",
-		       time_str, (int)now.nanoseconds/1000, /* Timestamp */
-		       translatePortState(ptpClock)); /* State */
+    time_s = now.seconds;
+    strftime(time_str, MAXTIMESTR, "%Y-%m-%d %X", localtime(&time_s));
+    len += snprintf(sbuf + len, sizeof(sbuf) - len, "%s.%06d, %s, ",
+               time_str, (int)now.nanoseconds/1000, /* Timestamp */
+               translatePortState(ptpClock)); /* State */
 
-	if (ptpClock->portState == PTP_SLAVE) {
-		len += snprint_PortIdentity(sbuf + len, sizeof(sbuf) - len,
-			 &ptpClock->parentPortIdentity); /* Clock ID */
+    if (ptpClock->portState == PTP_SLAVE) {
+        len += snprint_PortIdentity(sbuf + len, sizeof(sbuf) - len,
+             &ptpClock->parentPortIdentity); /* Clock ID */
 
-		/* 
-		 * if grandmaster ID differs from parent port ID then
-		 * also print GM ID 
-		 */
-		if (memcmp(ptpClock->grandmasterIdentity, 
-			   ptpClock->parentPortIdentity.clockIdentity,
-			   CLOCK_IDENTITY_LENGTH)) {
-			len += snprint_ClockIdentity(sbuf + len,
-						     sizeof(sbuf) - len,
-						     ptpClock->grandmasterIdentity);
-		}
+        /* 
+         * if grandmaster ID differs from parent port ID then
+         * also print GM ID 
+         */
+        if (memcmp(ptpClock->grandmasterIdentity, 
+               ptpClock->parentPortIdentity.clockIdentity,
+               CLOCK_IDENTITY_LENGTH)) {
+            len += snprint_ClockIdentity(sbuf + len,
+                             sizeof(sbuf) - len,
+                             ptpClock->grandmasterIdentity);
+        }
 
-		len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
+        len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
 
-		if(rtOpts->delayMechanism == E2E) {
-			len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
-						    &ptpClock->meanPathDelay);
-		} else {
-			len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
-						    &ptpClock->peerMeanPathDelay);
-		}
+        if(rtOpts->delayMechanism == E2E) {
+            len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
+                            &ptpClock->meanPathDelay);
+        } else {
+            len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
+                            &ptpClock->peerMeanPathDelay);
+        }
 
-		len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
+        len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
 
-		len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
-		    &ptpClock->offsetFromMaster);
+        len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
+            &ptpClock->offsetFromMaster);
 
-		/* print MS and SM with sign */
-		len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
-			
-		len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
-				&(ptpClock->delaySM));
+        /* print MS and SM with sign */
+        len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
+            
+        len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
+                &(ptpClock->delaySM));
 
-		len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
+        len += snprintf(sbuf + len, sizeof(sbuf) - len, ", ");
 
-		len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
-				&(ptpClock->delayMS));
+        len += snprint_TimeInternal(sbuf + len, sizeof(sbuf) - len,
+                &(ptpClock->delayMS));
 
-		len += sprintf(sbuf + len, ", %d, %i, %c",
-			       ptpClock->observed_drift,
-			       ptpClock->discardedPacketCount,
-			       ptpClock->char_last_msg);
+        len += sprintf(sbuf + len, ", %d, %i, %c",
+                   ptpClock->observed_drift,
+                   ptpClock->discardedPacketCount,
+                   ptpClock->char_last_msg);
 
-	} else {
-		if ((ptpClock->portState == PTP_MASTER) || (ptpClock->portState == PTP_PASSIVE)) {
+    } else {
+        if ((ptpClock->portState == PTP_MASTER) || (ptpClock->portState == PTP_PASSIVE)) {
 
-			len += snprint_PortIdentity(sbuf + len, sizeof(sbuf) - len,
-				 &ptpClock->parentPortIdentity);
-							 
-			//len += snprintf(sbuf + len, sizeof(sbuf) - len, ")");
-		}
+            len += snprint_PortIdentity(sbuf + len, sizeof(sbuf) - len,
+                 &ptpClock->parentPortIdentity);
+                             
+            //len += snprintf(sbuf + len, sizeof(sbuf) - len, ")");
+        }
 
-		/* show the current reset number on the log */
-		if (ptpClock->portState == PTP_LISTENING) {
-			len += snprintf(sbuf + len,
-						     sizeof(sbuf) - len,
-						     " %d ", ptpClock->reset_count);
-		}
-	}
-	
-	/* add final \n in normal status lines */
-	len += snprintf(sbuf + len, sizeof(sbuf) - len, "\n");
+        /* show the current reset number on the log */
+        if (ptpClock->portState == PTP_LISTENING) {
+            len += snprintf(sbuf + len,
+                             sizeof(sbuf) - len,
+                             " %d ", ptpClock->reset_count);
+        }
+    }
+    
+    /* add final \n in normal status lines */
+    len += snprintf(sbuf + len, sizeof(sbuf) - len, "\n");
 
 #if 0   /* NOTE: Do we want this? */
-	if (rtOpts->nonDaemon) {
-		/* in -C mode, adding an extra \n makes stats more clear intermixed with debug comments */
-		len += snprintf(sbuf + len, sizeof(sbuf) - len, "\n");
-	}
+    if (rtOpts->nonDaemon) {
+        /* in -C mode, adding an extra \n makes stats more clear intermixed with debug comments */
+        len += snprintf(sbuf + len, sizeof(sbuf) - len, "\n");
+    }
 #endif
-	//write(1, sbuf, len);
-	printf("%s", sbuf);
+    //write(1, sbuf, len);
+    printf("%s", sbuf);
 }
 
 
 void
 sys::recordSync(RunTimeOpts * rtOpts, UInteger16 sequenceId, TimeInternal * time)
 {
-	if (rtOpts->recordFP) 
-		fprintf(rtOpts->recordFP, "%d %llu\n", sequenceId, 
-		  ((time->seconds * 1000000000ULL) + time->nanoseconds)
-		);
-}
-
-Boolean 
-sys::nanoSleep(TimeInternal * t)
-{
-#if 0  //used in real application
-	struct timespec ts, tr;
-
-	ts.tv_sec = t->seconds;
-	ts.tv_nsec = t->nanoseconds;
-
-	if (nanosleep(&ts, &tr) < 0) {
-		t->seconds = tr.tv_sec;
-		t->nanoseconds = tr.tv_nsec;
-		return FALSE;
-	}
-#endif
-
-    //used in SystemC TLM simulation
-    wait(t->nanoseconds, SC_NS);
-
-	return TRUE;
+    if (rtOpts->recordFP) 
+        fprintf(rtOpts->recordFP, "%d %llu\n", sequenceId, 
+          ((time->seconds * 1000000000ULL) + time->nanoseconds)
+        );
 }
 
 void 
 sys::getOsTime(TimeInternal * time)
 {
-	struct timeval tv;
-	gettimeofday(&tv, 0);
-	time->seconds = tv.tv_sec;
-	time->nanoseconds = tv.tv_usec * 1000;
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+    time->seconds = tv.tv_sec;
+    time->nanoseconds = tv.tv_usec * 1000;
 }
 
 //set OS time
@@ -516,15 +487,15 @@ sys::getOsTime(TimeInternal * time)
 void 
 sys::setOsTime(TimeInternal * time)
 {
-	struct timeval tv;
+    struct timeval tv;
  
-	tv.tv_sec = time->seconds;
-	tv.tv_usec = time->nanoseconds / 1000;
-	WARNING("Going to step the system clock to %ds %dns\n",
-	       time->seconds, time->nanoseconds);
-	settimeofday(&tv, 0);
-	WARNING("Finished stepping the system clock to %ds %dns\n",
-	       time->seconds, time->nanoseconds);
+    tv.tv_sec = time->seconds;
+    tv.tv_usec = time->nanoseconds / 1000;
+    WARNING("Going to step the operating system clock to %ds %dns\n",
+           time->seconds, time->nanoseconds);
+    settimeofday(&tv, 0);
+    WARNING("Finished stepping the operating system clock to %ds %dns\n",
+           time->seconds, time->nanoseconds);
 }
 
 
@@ -532,7 +503,7 @@ sys::setOsTime(TimeInternal * time)
 double 
 sys::getRand(void)
 {
-	return ((rand() * 1.0) / RAND_MAX);
+    return ((rand() * 1.0) / RAND_MAX);
 }
 
 /*
@@ -540,21 +511,21 @@ sys::getRand(void)
  * the byte order of normal register is little endian
  * but rx/tx frame buffer store data in network order (big endian)
  * 
-*/
+ */
 
 Boolean sys::adjTickRate(Integer32 tick_inc)
 {
     uint32_t base, addr, data = 0;
 
-	int32_t max_tick = INITIAL_TICK + ADJ_FREQ_MAX;
-	int32_t min_tick = INITIAL_TICK - ADJ_FREQ_MAX;
+    int32_t max_tick = INITIAL_TICK + ADJ_FREQ_MAX;
+    int32_t min_tick = INITIAL_TICK - ADJ_FREQ_MAX;
 
     if(tick_inc > max_tick){
-		tick_inc = max_tick;
-	}
-	else if (tick_inc < min_tick) {
-		tick_inc = min_tick;
-	}
+        tick_inc = max_tick;
+    }
+    else if (tick_inc < min_tick) {
+        tick_inc = min_tick;
+    }
 
     base = RTC_BLK_ADDR << 8;
     addr = base + TICK_INC_ADDR;
@@ -567,7 +538,7 @@ Boolean sys::adjTickRate(Integer32 tick_inc)
 
 /**
  * get the current value of RTC located in PTP hardware 
-*/
+ */
 void sys::getRtcValue(uint64_t &seconds, uint32_t &nanoseconds)
 {
     uint32_t base, addr, data = 0;
@@ -625,7 +596,7 @@ void sys::setRtcValue(int64_t sec_offset, int32_t ns_offset)
 
     addr = base + RTC_CTL_ADDR;
     //adjust rtc and set timer interval to 7.8125ms/10ms;
-	uint32_t intxms = (m_pApp->m_rtOpts.int7_8125ms != 0) ? 1 : 0;
+    uint32_t intxms = (m_pApp->m_rtOpts.int7_8125ms != 0) ? 1 : 0;
     data = 0x1 | (intxms << 2); 
     REG_WRITE(addr, data);
 }
@@ -750,24 +721,24 @@ Boolean sys::compareRxIdentity(TimestampIdentity *pT, MsgHeader *pH)
 {
     Boolean isMatch = TRUE; 
 
-	if(pT->messageType != pH->messageType) {
+    if(pT->messageType != pH->messageType) {
         isMatch = FALSE;
-		return isMatch;
-	}
+        return isMatch;
+    }
 
     if(pT->sequenceId != pH->sequenceId) {
-		isMatch = FALSE;
-		return isMatch;
-	}
+        isMatch = FALSE;
+        return isMatch;
+    }
 
     PortIdentity portId;
-	m_pApp->m_ptr_msg->copyClockIdentity(portId.clockIdentity, (Octet*)pT->sourcePortIdentity);
-	portId.portNumber = flip16(*(UInteger16 *) (pT->sourcePortIdentity + 8));	
+    m_pApp->m_ptr_msg->copyClockIdentity(portId.clockIdentity, (Octet*)pT->sourcePortIdentity);
+    portId.portNumber = flip16(*(UInteger16 *) (pT->sourcePortIdentity + 8));   
 
     if(memcmp(portId.clockIdentity, pH->sourcePortIdentity.clockIdentity, CLOCK_IDENTITY_LENGTH) 
-	    || (portId.portNumber != pH->sourcePortIdentity.portNumber)) {
+        || (portId.portNumber != pH->sourcePortIdentity.portNumber)) {
         isMatch = FALSE;
-	}
+    }
 
     return isMatch;
 }
@@ -778,25 +749,25 @@ void sys::getPreciseRxTime(MsgHeader *header, TimeInternal *time,  RunTimeOpts *
     if(rtOpts->emb_ingressTime){
         int32_t t_ns = header->reserved2;
     
-    	if(t_ns < time->nanoseconds) {
-    		time->nanoseconds = t_ns;
-    	}
-    	else {   //wrap around occurred in nanoseconds
-    		time->seconds += 1;
-    		time->nanoseconds = t_ns;
-    	}
+        if(t_ns < time->nanoseconds) {
+            time->nanoseconds = t_ns;
+        }
+        else {   //wrap around occurred in nanoseconds
+            time->seconds += 1;
+            time->nanoseconds = t_ns;
+        }
     }
     else {
-    	TimestampIdentity tsId;
+        TimestampIdentity tsId;
     
-    	m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
-    	if(m_pApp->m_ptr_sys->compareRxIdentity(&tsId, header)) {
-    		time->seconds = tsId.seconds;
-    		time->nanoseconds = tsId.nanoseconds;
-    	}
-    	else {
+        m_pApp->m_ptr_sys->getRxTimestampIdentity(tsId);
+        if(m_pApp->m_ptr_sys->compareRxIdentity(&tsId, header)) {
+            time->seconds = tsId.seconds;
+            time->nanoseconds = tsId.nanoseconds;
+        }
+        else {
             DBGV("%s: Identity of timestamp mismatch \n", strPrompt.c_str());
-    	}
+        }
     }
     
     /* subtract the inbound latency adjustment */

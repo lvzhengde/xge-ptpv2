@@ -668,7 +668,6 @@ typedef struct {
     Integer16 s;
     TimeInternal inboundLatency, outboundLatency;
     Integer16 max_foreign_records;
-    Boolean ethernet_mode;
     Enumeration8 delayMechanism;
     Boolean offset_first_updated;
     char file[PATH_MAX];

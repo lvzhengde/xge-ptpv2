@@ -529,7 +529,13 @@ display::displayRunTimeOpts(RunTimeOpts * rtOpts)
     DBGV("outbound latency : \n");
     timeInternal_display(&(rtOpts->outboundLatency));
     DBGV("max_foreign_records : %d \n", rtOpts->max_foreign_records);
-    DBGV("ethernet mode : %d \n", rtOpts->ethernet_mode);
+
+    DBGV("networkProtocol : %d \n", rtOpts->networkProtocol);
+    DBGV("layer2Encap : %d \n", rtOpts->layer2Encap);
+    DBGV("vlanTag : %d \n", rtOpts->vlanTag);
+    DBGV("int7_8125ms : %d \n", rtOpts->int7_8125ms);
+    DBGV("one_step : %d \n", rtOpts->one_step);
+    DBGV("emb_ingressTime : %d \n", rtOpts->emb_ingressTime);
     DBGV("\n");
 }
 
