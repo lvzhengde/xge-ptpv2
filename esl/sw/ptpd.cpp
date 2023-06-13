@@ -7,6 +7,7 @@ ptpd::ptpd(controller *pController)
 {
     m_pApp = this;
     m_ptr_ptpClock = NULL;
+    m_end_sim = 0;
 }
 
 //destructor
@@ -18,6 +19,8 @@ ptpd::~ptpd()
 //initialize related variables
 void ptpd::init()
 {
+    m_end_sim = 0;
+
     m_ptr_msg        = new msg       (this); 
     m_ptr_net        = new net       (this);
     m_ptr_ptp_timer  = new ptp_timer (this);
@@ -128,19 +131,19 @@ void ptpd::exec()
     m_ptr_ptpClock = ptpClock;
 
     /* do the protocol engine */
-    //m_ptr_protocol->protocolExec(&m_rtOpts, ptpClock);
+    m_ptr_protocol->protocolExec(&m_rtOpts, ptpClock);
     /* forever loop.. */
 
     m_ptr_startup->ptpdShutdown(ptpClock);
 
-    NOTIFY("self shutdown, probably due to an error\n");
+    NOTIFY("self shutdown completed!\n");
 
     //exit app and clean up
-    exit();
+    quit();
 }
 
 //exit test and clean up
-void ptpd::exit()
+void ptpd::quit()
 {
     m_pController->ptr_ptp_timer = NULL; 
     

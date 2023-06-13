@@ -19,7 +19,7 @@ class loop_back: public MyApp
   
     virtual void exec();
   
-    virtual void exit();
+    virtual void quit();
 
     void register_test();
 

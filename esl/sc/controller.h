@@ -10,6 +10,7 @@
 #include "ptp_memmap.h"
 
 class ptp_timer;
+class MyApp;
 
 class controller                       	// controller
 : public sc_core::sc_module             // sc_module
@@ -50,6 +51,9 @@ class controller                       	// controller
 
   //pointer to the ptp_timer object
   ptp_timer *ptr_ptp_timer;
+
+  //pointer to application object
+  MyApp *pApp;
 
 //=============================================================================
 // Member Variables 

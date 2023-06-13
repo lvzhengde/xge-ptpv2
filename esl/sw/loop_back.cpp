@@ -38,11 +38,11 @@ void loop_back::exec()
   //test frame transmit/receive
   frame_test();
 
-  exit();
+  quit();
 }
 
 //exit test and clean up
-void loop_back::exit()
+void loop_back::quit()
 {
   wait(200, SC_NS);
 

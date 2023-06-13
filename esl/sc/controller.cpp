@@ -2,7 +2,7 @@
  * controller.cpp
  */
 
-#include "ptpd.h"
+//#include "ptpd.h"
 #include "loop_back.h"
 #include "reporting.h"               	 // reporting macros
 
@@ -40,6 +40,7 @@ controller::controller
   m_ptxn->set_data_ptr(m_data_ptr);
 
   ptr_ptp_timer = NULL;
+  pApp = NULL;
 }
 
 /// Destructor
@@ -47,6 +48,9 @@ controller::~controller()
 {
   delete [] m_data_ptr;
   delete m_ptxn;
+
+  if(pApp != NULL)
+    delete pApp;
 }
 
 /// SystemC thread for generation of GP traffic
@@ -55,7 +59,7 @@ void controller::controller_thread(void)
 {
   std::ostringstream  msg;                      ///< log message
 
-  MyApp *pApp = NULL;
+  pApp = NULL;
   
   if(m_sw_type == 0) //loop back test
     pApp = new loop_back(this);
@@ -88,7 +92,9 @@ void controller::controller_thread(void)
   delete pApp;
 
   //stop simulation
-  if(m_clock_id == 1)
+  //for loop-back test only
+  //as to protocol test, look up testbench/sim_proc()
+  if(m_sw_type == 0)
   {
     sc_stop();
   }

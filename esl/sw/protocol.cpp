@@ -94,6 +94,12 @@ protocol::protocolExec(RunTimeOpts *rtOpts, PtpClock *ptpClock)
         /* Perform the heavy signal processing synchronously */
         m_pApp->m_ptr_startup->check_signals(rtOpts, ptpClock);
 
+        //check signal for ending simulation has been set or not
+        if(m_pApp->m_end_sim != 0) {
+            NOTIFY("signal for end simulation received!\n");
+            break;
+        }
+
         //give other threads a chance
         wait(SC_ZERO_TIME);
     }

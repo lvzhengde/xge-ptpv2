@@ -18,6 +18,8 @@ public:
     RunTimeOpts m_rtOpts;         //configuration data     
 
     PtpClock    *m_ptr_ptpClock;
+
+    volatile sig_atomic_t  m_end_sim; 
     
     msg         *m_ptr_msg       ; 
     net         *m_ptr_net       ;
@@ -32,6 +34,7 @@ public:
     protocol    *m_ptr_protocol  ; 
     transport   *m_ptr_transport ;
 
+public:
     //member methods
     ptpd(controller *pController);
     
@@ -41,7 +44,7 @@ public:
     
     virtual void exec();
     
-    virtual void exit();
+    virtual void quit();
 
 };
 

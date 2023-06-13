@@ -25,7 +25,7 @@ public:
   
   virtual void exec() = 0;
   
-  virtual void exit() = 0;
+  virtual void quit() = 0;
 
 public:
   //member variables

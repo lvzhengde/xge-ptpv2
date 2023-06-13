@@ -35,7 +35,7 @@ public:
   // Port for interrupt request input
   sc_in<bool> int_ptp_i;
 
-private:
+public:
   
   typedef tlm::tlm_generic_payload  *gp_ptr;   ///< Generic Payload pointer
   
