@@ -247,6 +247,12 @@ sys::snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
 void
 sys::message(int priority, const char * format, ...)
 {
+#if DISPLAY_SLAVE_INFO_ONLY
+    if(m_pApp->m_pController->m_clock_id != 1) {
+        return;
+    }
+#endif
+
     va_list ap;
     va_start(ap, format);
 
@@ -311,7 +317,7 @@ sys::message(int priority, const char * format, ...)
         strftime(time_str, MAXTIMESTR, "%X", localtime(&now.tv_sec));
         fprintf(stderr, "%s.%06d ", time_str, (int)now.tv_usec  );
         fprintf(stderr, " (%s)  ", m_pApp->m_ptr_ptpClock ?
-               translatePortState(m_pApp->m_ptr_ptpClock) : "___");
+               translatePortState(m_pApp->m_ptr_ptpClock).c_str() : "____");
 
         vfprintf(stderr, format, ap);
     }
@@ -384,7 +390,7 @@ sys::displayStats(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     strftime(time_str, MAXTIMESTR, "%Y-%m-%d %X", localtime(&time_s));
     len += snprintf(sbuf + len, sizeof(sbuf) - len, "%s.%06d, %s, ",
                time_str, (int)now.nanoseconds/1000, /* Timestamp */
-               translatePortState(ptpClock)); /* State */
+               translatePortState(ptpClock).c_str()); /* State */
 
     if (ptpClock->portState == PTP_SLAVE) {
         len += snprint_PortIdentity(sbuf + len, sizeof(sbuf) - len,

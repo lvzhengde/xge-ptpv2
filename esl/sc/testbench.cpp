@@ -224,6 +224,9 @@ void testbench::sim_proc()
             wait(1, SC_MS);
 
             time_elapsed++;
+            if((time_elapsed%10) == 0) {
+                printf(" Simulation: %d milliseconds elapsed! \n", time_elapsed+100);
+            }
 
             //force to exit loop
             if(time_elapsed > 1000) {

@@ -75,4 +75,6 @@
 
 #define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
 
+#define DISPLAY_SLAVE_INFO_ONLY 1
+
 #endif /*CONSTANTS_DEP_H_*/
