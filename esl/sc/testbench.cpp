@@ -184,8 +184,17 @@ void testbench::sim_proc()
     wait(SC_ZERO_TIME);
 
     if(m_sw_type == 1) {
-        //wait program starting up
-        wait(100, SC_MS);  //100 milliseconds
+        int time_elapsed = 0;
+
+        //wait program starting up, 100 milliseconds
+        for(int i = 0; i < 100; i++){
+            wait(1, SC_MS);  
+
+            time_elapsed++;
+            if((time_elapsed%10) == 0) {
+                printf(" Simulation: %d milliseconds elapsed! \n", time_elapsed);
+            }
+        }
     
         pApp = (ptpd*)pInstance->m_initiator_top.m_controller.pApp;
         pApp_lp = (ptpd*)pInstance_lp->m_initiator_top.m_controller.pApp;
@@ -193,7 +202,6 @@ void testbench::sim_proc()
         pClk = pApp->m_ptr_ptpClock;
         pClk_lp = pApp_lp->m_ptr_ptpClock;
 
-        int time_elapsed = 0;
 
         //infinite loop to monitor simulation
         for(;;) {
@@ -206,6 +214,8 @@ void testbench::sim_proc()
                     ) {
                 pApp->m_end_sim = 1;
                 pApp_lp->m_end_sim = 1;
+
+                printf(" PTP Slave, Clock ID 1, reach synchronized convergence state,  Stop! \n");
                 break;
             }
 
@@ -217,6 +227,8 @@ void testbench::sim_proc()
                     ) {
                 pApp->m_end_sim = 1;
                 pApp_lp->m_end_sim = 1;
+
+                printf(" PTP Slave, Clock ID 2, reach synchronized convergence state,  Stop! \n");
                 break;
             }
 
@@ -225,13 +237,15 @@ void testbench::sim_proc()
 
             time_elapsed++;
             if((time_elapsed%10) == 0) {
-                printf(" Simulation: %d milliseconds elapsed! \n", time_elapsed+100);
+                printf(" Simulation: %d milliseconds elapsed! \n", time_elapsed);
             }
 
             //force to exit loop
-            if(time_elapsed > 1000) {
+            if(time_elapsed > 2000) {
                 pApp->m_end_sim = 1;
                 pApp_lp->m_end_sim = 1;
+
+                printf(" Simulation time elapsed: %d ms exceeds the limit, Stop! \n", time_elapsed);
                 break;
             }
         }

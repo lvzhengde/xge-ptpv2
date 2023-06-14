@@ -9,6 +9,9 @@
 #ifndef PTPD_DEP_H_
 #define PTPD_DEP_H_
 
+#define PTPD_TLM_SIM       //SystemC TLM simulation
+
+#define RUNTIME_DEBUG
 
 #ifdef RUNTIME_DEBUG
 #undef PTPD_DBGV

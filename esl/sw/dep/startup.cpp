@@ -240,7 +240,7 @@ startup::check_signals(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 /* These functions are useful to temporarily enable Debug around parts of code, similar to bash's "set -x" */
 void startup::enable_runtime_debug(void )
 {
-    m_pApp->m_rtOpts.debug_level = max(LOG_DEBUGV, rtOpts.debug_level);
+    m_pApp->m_rtOpts.debug_level = max(LOG_DEBUGV, m_pApp->m_rtOpts.debug_level);
 }
 
 void startup::disable_runtime_debug(void )

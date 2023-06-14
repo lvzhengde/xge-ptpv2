@@ -75,6 +75,6 @@
 
 #define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
 
-#define DISPLAY_SLAVE_INFO_ONLY 1
+//#define DISPLAY_CLOCK_ID_INFO_ONLY 2   //display information for clock_id = x only
 
 #endif /*CONSTANTS_DEP_H_*/

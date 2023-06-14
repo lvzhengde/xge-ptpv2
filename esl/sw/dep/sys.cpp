@@ -247,8 +247,8 @@ sys::snprint_PortIdentity(char *s, int max_len, const PortIdentity *id)
 void
 sys::message(int priority, const char * format, ...)
 {
-#if DISPLAY_SLAVE_INFO_ONLY
-    if(m_pApp->m_pController->m_clock_id != 1) {
+#ifdef DISPLAY_CLOCK_ID_INFO_ONLY
+    if(m_pApp->m_pController->m_clock_id != DISPLAY_CLOCK_ID_INFO_ONLY) {
         return;
     }
 #endif

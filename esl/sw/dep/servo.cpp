@@ -209,7 +209,7 @@ servo::updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClo
          */
 
         DBG("==> UpdateDelay():   %s\n",
-            dump_TimeInternal2("Req_RECV:", &ptpClock->delay_req_receive_time, "Req_SENT:", &ptpClock->delay_req_send_time));
+            m_pApp->m_ptr_sys->dump_TimeInternal2("Req_RECV:", &ptpClock->delay_req_receive_time, "Req_SENT:", &ptpClock->delay_req_send_time));
 
         
         m_pApp->m_ptr_arith->subTime(&ptpClock->delaySM, &ptpClock->delay_req_receive_time, 

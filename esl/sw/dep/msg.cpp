@@ -186,7 +186,7 @@ msg::unpackMMSlaveOnly( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
     #include "def/managementTLV/slaveOnly.def"
 
     #ifdef PTPD_DBG
-    mMSlaveOnly_display(data, ptpClock);
+    m_pApp->m_ptr_display->mMSlaveOnly_display(data, ptpClock);
     #endif /* PTPD_DBG */
 }
 
@@ -220,7 +220,7 @@ msg::unpackMMClockDescription( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
     #include "def/managementTLV/clockDescription.def"
 
     #ifdef PTPD_DBG
-    mMClockDescription_display(data, ptpClock);
+    m_pApp->m_ptr_display->mMClockDescription_display(data, ptpClock);
     #endif /* PTPD_DBG */
 }
 
@@ -317,7 +317,7 @@ void msg::unpackMMInitialize( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
         #include "def/managementTLV/initialize.def"
 
         #ifdef PTPD_DBG
-        mMInitialize_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMInitialize_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -348,7 +348,7 @@ void msg::unpackMMDefaultDataSet( Octet *buf, MsgManagement* m, PtpClock* ptpClo
         #include "def/managementTLV/defaultDataSet.def"
 
         #ifdef PTPD_DBG
-        mMDefaultDataSet_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMDefaultDataSet_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -379,7 +379,7 @@ void msg::unpackMMCurrentDataSet( Octet *buf, MsgManagement* m, PtpClock* ptpClo
         #include "def/managementTLV/currentDataSet.def"
 
         #ifdef PTPD_DBG
-        mMCurrentDataSet_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMCurrentDataSet_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -410,7 +410,7 @@ void msg::unpackMMParentDataSet( Octet *buf, MsgManagement* m, PtpClock* ptpCloc
         #include "def/managementTLV/parentDataSet.def"
 
         #ifdef PTPD_DBG
-        mMParentDataSet_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMParentDataSet_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -441,7 +441,7 @@ void msg::unpackMMTimePropertiesDataSet( Octet *buf, MsgManagement* m, PtpClock*
         #include "def/managementTLV/timePropertiesDataSet.def"
 
         #ifdef PTPD_DBG
-        mMTimePropertiesDataSet_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMTimePropertiesDataSet_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -472,7 +472,7 @@ void msg::unpackMMPortDataSet( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
         #include "def/managementTLV/portDataSet.def"
 
         #ifdef PTPD_DBG
-        mMPortDataSet_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMPortDataSet_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -503,7 +503,7 @@ void msg::unpackMMPriority1( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
         #include "def/managementTLV/priority1.def"
 
         #ifdef PTPD_DBG
-        mMPriority1_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMPriority1_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -534,7 +534,7 @@ void msg::unpackMMPriority2( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
         #include "def/managementTLV/priority2.def"
 
         #ifdef PTPD_DBG
-        mMPriority2_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMPriority2_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -565,7 +565,7 @@ void msg::unpackMMDomain( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
         #include "def/managementTLV/domain.def"
 
         #ifdef PTPD_DBG
-        mMDomain_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMDomain_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -596,7 +596,7 @@ void msg::unpackMMLogAnnounceInterval( Octet *buf, MsgManagement* m, PtpClock* p
         #include "def/managementTLV/logAnnounceInterval.def"
 
         #ifdef PTPD_DBG
-        mMLogAnnounceInterval_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMLogAnnounceInterval_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -627,7 +627,7 @@ void msg::unpackMMAnnounceReceiptTimeout( Octet *buf, MsgManagement* m, PtpClock
         #include "def/managementTLV/announceReceiptTimeout.def"
 
         #ifdef PTPD_DBG
-        mMAnnounceReceiptTimeout_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMAnnounceReceiptTimeout_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -658,7 +658,7 @@ void msg::unpackMMLogSyncInterval( Octet *buf, MsgManagement* m, PtpClock* ptpCl
         #include "def/managementTLV/logSyncInterval.def"
 
         #ifdef PTPD_DBG
-        mMLogSyncInterval_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMLogSyncInterval_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -689,7 +689,7 @@ void msg::unpackMMVersionNumber( Octet *buf, MsgManagement* m, PtpClock* ptpCloc
         #include "def/managementTLV/versionNumber.def"
 
         #ifdef PTPD_DBG
-        mMVersionNumber_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMVersionNumber_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -720,7 +720,7 @@ void msg::unpackMMTime( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
         #include "def/managementTLV/time.def"
 
         #ifdef PTPD_DBG
-        mMTime_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMTime_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -751,7 +751,7 @@ void msg::unpackMMClockAccuracy( Octet *buf, MsgManagement* m, PtpClock* ptpCloc
         #include "def/managementTLV/clockAccuracy.def"
 
         #ifdef PTPD_DBG
-        mMClockAccuracy_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMClockAccuracy_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -782,7 +782,7 @@ void msg::unpackMMUtcProperties( Octet *buf, MsgManagement* m, PtpClock* ptpCloc
         #include "def/managementTLV/utcProperties.def"
 
         #ifdef PTPD_DBG
-        mMUtcProperties_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMUtcProperties_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -813,7 +813,7 @@ void msg::unpackMMTraceabilityProperties( Octet *buf, MsgManagement* m, PtpClock
         #include "def/managementTLV/traceabilityProperties.def"
 
         #ifdef PTPD_DBG
-        mMTraceabilityProperties_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMTraceabilityProperties_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -844,7 +844,7 @@ void msg::unpackMMDelayMechanism( Octet *buf, MsgManagement* m, PtpClock* ptpClo
         #include "def/managementTLV/delayMechanism.def"
 
         #ifdef PTPD_DBG
-        mMDelayMechanism_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMDelayMechanism_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -875,7 +875,7 @@ void msg::unpackMMLogMinPdelayReqInterval( Octet *buf, MsgManagement* m, PtpCloc
         #include "def/managementTLV/logMinPdelayReqInterval.def"
 
         #ifdef PTPD_DBG
-        mMLogMinPdelayReqInterval_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMLogMinPdelayReqInterval_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -906,7 +906,7 @@ void msg::unpackMMErrorStatus( Octet *buf, MsgManagement* m, PtpClock* ptpClock)
         #include "def/managementTLV/errorStatus.def"
 
         #ifdef PTPD_DBG
-        mMErrorStatus_display(data, ptpClock);
+        m_pApp->m_ptr_display->mMErrorStatus_display(data, ptpClock);
         #endif /* PTPD_DBG */
 }
 
@@ -1281,7 +1281,7 @@ void msg::unpackMsgManagement(Octet *buf, MsgManagement *m, PtpClock *ptpClock)
     #include "def/message/management.def"
 
     #ifdef PTPD_DBG
-    msgManagement_display(data);
+    m_pApp->m_ptr_display->msgManagement_display(data);
     #endif /* PTPD_DBG */
 }
 
@@ -1312,7 +1312,7 @@ msg::msgUnpackHeader(Octet * buf, MsgHeader * header)
     header->logMessageInterval = (*(Integer8 *) (buf + 33));
 
 #ifdef PTPD_DBG
-    msgHeader_display(header);
+    m_pApp->m_ptr_display->msgHeader_display(header);
 #endif /* PTPD_DBG */
 }
 
@@ -1376,7 +1376,7 @@ msg::msgUnpackSync(Octet * buf, MsgSync * sync)
         flip32(*(UInteger32 *) (buf + 40));
 
 #ifdef PTPD_DBG
-    msgSync_display(sync);
+    m_pApp->m_ptr_display->msgSync_display(sync);
 #endif /* PTPD_DBG */
 }
 
@@ -1437,7 +1437,7 @@ msg::msgUnpackAnnounce(Octet * buf, MsgAnnounce * announce)
     announce->timeSource = *(Enumeration8 *) (buf + 63);
 
     #ifdef PTPD_DBG
-    msgAnnounce_display(announce);
+    m_pApp->m_ptr_display->msgAnnounce_display(announce);
     #endif /* PTPD_DBG */
 }
 
@@ -1480,7 +1480,7 @@ msg::msgUnpackFollowUp(Octet * buf, MsgFollowUp * follow)
         flip32(*(UInteger32 *) (buf + 40));
 
     #ifdef PTPD_DBG
-    msgFollowUp_display(follow);
+    m_pApp->m_ptr_display->msgFollowUp_display(follow);
     #endif /* PTPD_DBG */
 }
 
@@ -1633,7 +1633,7 @@ msg::msgUnpackDelayReq(Octet * buf, MsgDelayReq * delayreq)
         flip32(*(UInteger32 *) (buf + 40));
 
     #ifdef PTPD_DBG
-    msgDelayReq_display(delayreq);
+    m_pApp->m_ptr_display->msgDelayReq_display(delayreq);
     #endif /* PTPD_DBG */
 
 }
@@ -1651,7 +1651,7 @@ msg::msgUnpackPDelayReq(Octet * buf, MsgPDelayReq * pdelayreq)
         flip32(*(UInteger32 *) (buf + 40));
 
     #ifdef PTPD_DBG
-    msgPDelayReq_display(pdelayreq);
+    m_pApp->m_ptr_display->msgPDelayReq_display(pdelayreq);
     #endif /* PTPD_DBG */
 
 }
@@ -1673,7 +1673,7 @@ msg::msgUnpackDelayResp(Octet * buf, MsgDelayResp * resp)
         flip16(*(UInteger16 *) (buf + 52));
 
     #ifdef PTPD_DBG
-    msgDelayResp_display(resp);
+    m_pApp->m_ptr_display->msgDelayResp_display(resp);
     #endif /* PTPD_DBG */
 }
 
@@ -1694,7 +1694,7 @@ msg::msgUnpackPDelayResp(Octet * buf, MsgPDelayResp * presp)
         flip16(*(UInteger16 *) (buf + 52));
 
     #ifdef PTPD_DBG
-    msgPDelayResp_display(presp);
+    m_pApp->m_ptr_display->msgPDelayResp_display(presp);
     #endif /* PTPD_DBG */
 }
 
@@ -1748,7 +1748,7 @@ msg::msgUnpackPDelayRespFollowUp(Octet * buf, MsgPDelayRespFollowUp * prespfollo
         flip16(*(UInteger16 *) (buf + 52));
 
 #ifdef PTPD_DBG
-        msgPDelayRespFollowUp_display(prespfollow);
+        m_pApp->m_ptr_display->msgPDelayRespFollowUp_display(prespfollow);
 #endif /* PTPD_DBG */
 }
 
@@ -1772,154 +1772,154 @@ msg::msgPackManagementTLV(Octet *buf, MsgManagement *outgoing, PtpClock *ptpCloc
     case MM_CLOCK_DESCRIPTION:
         lengthField = packMMClockDescription(outgoing, buf);
         #ifdef PTPD_DBG
-        mMClockDescription_display(
+        m_pApp->m_ptr_display->mMClockDescription_display(
                 (MMClockDescription*)outgoing->tlv->dataField, ptpClock);
         #endif /* PTPD_DBG */
         break;
     case MM_USER_DESCRIPTION:
             lengthField = packMMUserDescription(outgoing, buf);
             #ifdef PTPD_DBG
-            mMUserDescription_display(
+            m_pApp->m_ptr_display->mMUserDescription_display(
                             (MMUserDescription*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_INITIALIZE:
             lengthField = packMMInitialize(outgoing, buf);
             #ifdef PTPD_DBG
-            mMInitialize_display(
+            m_pApp->m_ptr_display->mMInitialize_display(
                             (MMInitialize*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_DEFAULT_DATA_SET:
             lengthField = packMMDefaultDataSet(outgoing, buf);
             #ifdef PTPD_DBG
-            mMDefaultDataSet_display(
+            m_pApp->m_ptr_display->mMDefaultDataSet_display(
                             (MMDefaultDataSet*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_CURRENT_DATA_SET:
             lengthField = packMMCurrentDataSet(outgoing, buf);
             #ifdef PTPD_DBG
-            mMCurrentDataSet_display(
+            m_pApp->m_ptr_display->mMCurrentDataSet_display(
                             (MMCurrentDataSet*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_PARENT_DATA_SET:
             lengthField = packMMParentDataSet(outgoing, buf);
             #ifdef PTPD_DBG
-            mMParentDataSet_display(
+            m_pApp->m_ptr_display->mMParentDataSet_display(
                             (MMParentDataSet*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_TIME_PROPERTIES_DATA_SET:
             lengthField = packMMTimePropertiesDataSet(outgoing, buf);
             #ifdef PTPD_DBG
-            mMTimePropertiesDataSet_display(
+            m_pApp->m_ptr_display->mMTimePropertiesDataSet_display(
                             (MMTimePropertiesDataSet*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_PORT_DATA_SET:
             lengthField = packMMPortDataSet(outgoing, buf);
             #ifdef PTPD_DBG
-            mMPortDataSet_display(
+            m_pApp->m_ptr_display->mMPortDataSet_display(
                             (MMPortDataSet*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_PRIORITY1:
             lengthField = packMMPriority1(outgoing, buf);
             #ifdef PTPD_DBG
-            mMPriority1_display(
+            m_pApp->m_ptr_display->mMPriority1_display(
                             (MMPriority1*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_PRIORITY2:
             lengthField = packMMPriority2(outgoing, buf);
             #ifdef PTPD_DBG
-            mMPriority2_display(
+            m_pApp->m_ptr_display->mMPriority2_display(
                             (MMPriority2*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_DOMAIN:
             lengthField = packMMDomain(outgoing, buf);
             #ifdef PTPD_DBG
-            mMDomain_display(
+            m_pApp->m_ptr_display->mMDomain_display(
                             (MMDomain*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_SLAVE_ONLY:
         lengthField = packMMSlaveOnly(outgoing, buf);
         #ifdef PTPD_DBG
-        mMSlaveOnly_display(
+        m_pApp->m_ptr_display->mMSlaveOnly_display(
                 (MMSlaveOnly*)outgoing->tlv->dataField, ptpClock);
         #endif /* PTPD_DBG */
         break;
     case MM_LOG_ANNOUNCE_INTERVAL:
             lengthField = packMMLogAnnounceInterval(outgoing, buf);
             #ifdef PTPD_DBG
-            mMLogAnnounceInterval_display(
+            m_pApp->m_ptr_display->mMLogAnnounceInterval_display(
                             (MMLogAnnounceInterval*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_ANNOUNCE_RECEIPT_TIMEOUT:
             lengthField = packMMAnnounceReceiptTimeout(outgoing, buf);
             #ifdef PTPD_DBG
-            mMAnnounceReceiptTimeout_display(
+            m_pApp->m_ptr_display->mMAnnounceReceiptTimeout_display(
                             (MMAnnounceReceiptTimeout*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_LOG_SYNC_INTERVAL:
             lengthField = packMMLogSyncInterval(outgoing, buf);
             #ifdef PTPD_DBG
-            mMLogSyncInterval_display(
+            m_pApp->m_ptr_display->mMLogSyncInterval_display(
                             (MMLogSyncInterval*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_VERSION_NUMBER:
             lengthField = packMMVersionNumber(outgoing, buf);
             #ifdef PTPD_DBG
-            mMVersionNumber_display(
+            m_pApp->m_ptr_display->mMVersionNumber_display(
                             (MMVersionNumber*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_TIME:
             lengthField = packMMTime(outgoing, buf);
             #ifdef PTPD_DBG
-            mMTime_display(
+            m_pApp->m_ptr_display->mMTime_display(
                             (MMTime*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_CLOCK_ACCURACY:
             lengthField = packMMClockAccuracy(outgoing, buf);
             #ifdef PTPD_DBG
-            mMClockAccuracy_display(
+            m_pApp->m_ptr_display->mMClockAccuracy_display(
                             (MMClockAccuracy*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_UTC_PROPERTIES:
             lengthField = packMMUtcProperties(outgoing, buf);
             #ifdef PTPD_DBG
-            mMUtcProperties_display(
+            m_pApp->m_ptr_display->mMUtcProperties_display(
                             (MMUtcProperties*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_TRACEABILITY_PROPERTIES:
             lengthField = packMMTraceabilityProperties(outgoing, buf);
             #ifdef PTPD_DBG
-            mMTraceabilityProperties_display(
+            m_pApp->m_ptr_display->mMTraceabilityProperties_display(
                             (MMTraceabilityProperties*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_DELAY_MECHANISM:
             lengthField = packMMDelayMechanism(outgoing, buf);
             #ifdef PTPD_DBG
-            mMDelayMechanism_display(
+            m_pApp->m_ptr_display->mMDelayMechanism_display(
                             (MMDelayMechanism*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
     case MM_LOG_MIN_PDELAY_REQ_INTERVAL:
             lengthField = packMMLogMinPdelayReqInterval(outgoing, buf);
             #ifdef PTPD_DBG
-            mMLogMinPdelayReqInterval_display(
+            m_pApp->m_ptr_display->mMLogMinPdelayReqInterval_display(
                             (MMLogMinPdelayReqInterval*)outgoing->tlv->dataField, ptpClock);
             #endif /* PTPD_DBG */
             break;
@@ -1944,7 +1944,7 @@ msg::msgPackManagementErrorStatusTLV(Octet *buf, MsgManagement *outgoing,
 
     lengthField = packMMErrorStatus(outgoing, buf);
     #ifdef PTPD_DBG
-    mMErrorStatus_display((MMErrorStatus*)outgoing->tlv->dataField, ptpClock);
+    m_pApp->m_ptr_display->mMErrorStatus_display((MMErrorStatus*)outgoing->tlv->dataField, ptpClock);
     #endif /* PTPD_DBG */
 
     /* set lengthField */

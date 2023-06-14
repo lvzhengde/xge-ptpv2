@@ -195,10 +195,21 @@ protocol::toState(UInteger8 state, RunTimeOpts *rtOpts, PtpClock *ptpClock)
 
         DBG("state PTP_LISTENING\n");
         INFO("  now in state PTP_LISTENING\n");
+
+        float ato_interval;
+        ato_interval = (ptpClock->announceReceiptTimeout) * 
+                                 (pow((float)2, (float)ptpClock->logAnnounceInterval));
+
+#ifdef PTPD_TLM_SIM
+        if(!ptpClock->slaveOnly) {
+            ato_interval = ato_interval / 10.0;
+        }
+#endif  //SystemC TLM Simulation
+
         m_pApp->m_ptr_ptp_timer->timerStart(ANNOUNCE_RECEIPT_TIMER, 
-               (ptpClock->announceReceiptTimeout) * 
-               (pow((float)2, (float)ptpClock->logAnnounceInterval)), 
+               ato_interval, 
                ptpClock->itimer);
+
         ptpClock->portState = PTP_LISTENING;
         break;
 

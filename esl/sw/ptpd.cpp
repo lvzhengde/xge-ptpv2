@@ -96,7 +96,7 @@ void ptpd::exec()
     m_rtOpts.syslog_startup_messages_also_to_stdout = TRUE;     /* used to print inital messages both to syslog and screen */
     m_rtOpts.announceReceiptTimeout  = DEFAULT_ANNOUNCE_RECEIPT_TIMEOUT;
 #ifdef RUNTIME_DEBUG
-    m_rtOpts.debug_level = LOG_INFO;            /* by default debug messages as disabled, but INFO messages and below are printed */
+    m_rtOpts.debug_level = LOG_DEBUGV; //LOG_INFO;            /* by default debug messages as disabled, but INFO messages and below are printed */
 #endif
 
     m_rtOpts.ttl = 1;

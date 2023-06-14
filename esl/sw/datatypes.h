@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "constants_dep.h"
 #include "datatypes_dep.h"
+#include "ptpd_dep.h"
 
 using namespace std;
 

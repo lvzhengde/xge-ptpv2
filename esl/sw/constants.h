@@ -36,7 +36,7 @@
 #define DEFAULT_NO_RESET_CLOCK          FALSE
 #define DEFAULT_DOMAIN_NUMBER           0
 #define DEFAULT_DELAY_MECHANISM         P2P     // TODO
-#define DEFAULT_ANNOUNCE_INTERVAL       0      /* 0 in 802.1AS */
+#define DEFAULT_ANNOUNCE_INTERVAL       -4      /* 0 in 802.1AS */
 #define LEAP_SECOND_PAUSE_PERIOD        2      /* how long before/after leap */
                                                /* second event we pause offset */
                                                /* calculation */
@@ -44,13 +44,13 @@
 /* Master mode operates in ARB (UTC) timescale, without TAI+leap seconds */
 #define DEFAULT_UTC_OFFSET              0
 #define DEFAULT_UTC_VALID               FALSE
-#define DEFAULT_PDELAYREQ_INTERVAL      -4      /* -4 in 802.1AS */
+#define DEFAULT_PDELAYREQ_INTERVAL      -5      /* -4 in 802.1AS */
 
-#define DEFAULT_DELAYREQ_INTERVAL       -4      /* new value from page 237 of the standard */
+#define DEFAULT_DELAYREQ_INTERVAL       -5      /* new value from page 237 of the standard */
 
 #define DEFAULT_SYNC_INTERVAL           -7      /* -7 in 802.1AS */  /* from page 237 of the standard */
 /* number of announces we need to lose until a time out occurs. Thus it is 12 seconds */
-#define DEFAULT_ANNOUNCE_RECEIPT_TIMEOUT 3     /* 3 by default */
+#define DEFAULT_ANNOUNCE_RECEIPT_TIMEOUT 6     /* 3 by default */
 
 
 
