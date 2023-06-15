@@ -91,7 +91,10 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     m_pApp->m_ptr_sys->getOsTime(&time);
 
     //write RTC offset registers
-    uint64_t seconds = time.seconds + (int64_t)100.0 * (m_pController->m_clock_id + m_pApp->m_ptr_sys->getRand());
+    uint64_t seconds = time.seconds 
+                        + (int64_t)100.0 * (m_pController->m_clock_id + m_pApp->m_ptr_sys->getRand())
+                        + (m_pController->m_clock_id - 1) * 7200;
+    
     addr = base + SC_OFST_ADDR0;
     data = (seconds >> 32) & 0xffff;
     REG_WRITE(addr, data);
@@ -100,8 +103,14 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     data = seconds & 0xffffffff;
     REG_WRITE(addr, data);
 
+    uint32_t nanoseconds = 0;
+    if(m_pController->m_clock_id == 1)
+        nanoseconds = (uint32_t)2.13235e8;
+    else
+        nanoseconds = (uint32_t)6.57916e8;
+
     addr = base + NS_OFST_ADDR;
-    data = time.nanoseconds;
+    data = nanoseconds;
     REG_WRITE(addr, data);
 
     //cause adjustment to take effect

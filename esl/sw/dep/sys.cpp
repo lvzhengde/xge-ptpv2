@@ -308,9 +308,11 @@ sys::message(int priority, const char * format, ...)
          * it also can cause problems in nested debug statements (which are solved by turning the signal
          *  handling synchronous, and not calling this function inside assycnhonous signal processing)
          */
-        uint64_t seconds;
-        uint32_t nanoseconds;
+        uint64_t seconds = 0;
+        uint32_t nanoseconds = 0;
+
         getRtcValue(seconds, nanoseconds);
+
         now.tv_sec = seconds;
         now.tv_usec = nanoseconds / 1000;
 

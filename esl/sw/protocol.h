@@ -6,9 +6,11 @@
 
 class protocol : public base_data 
 {
-public:
+private:
     //member variables
+    bool m_master_has_sent_annouce;
 
+public:
     //member methods
     protocol(ptpd *pApp);
 
@@ -55,6 +57,8 @@ public:
     
     void handleSignaling(MsgHeader *header, Octet *msgIbuf, ssize_t length, 
                Boolean isFromSelf, RunTimeOpts *rtOpts, PtpClock *ptpClock);
+
+    void waitGuardInterval();
     
     void issueAnnounce(RunTimeOpts *rtOpts,PtpClock *ptpClock);
     

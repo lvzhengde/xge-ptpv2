@@ -5,6 +5,7 @@
     "files.associations": {
         "*.def": "cpp",
         "limits": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "mutex": "cpp"
     }
 }

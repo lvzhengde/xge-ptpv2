@@ -28,6 +28,7 @@ controller::controller
 , m_sw_type           ( sw_type           )     /// software type
 , m_clock_id          ( clock_id          )     /// Clock ID
 , m_has_reset         ( false             )     /// reset state or not
+, m_bus_mutex         ( "bus_mutex"       )     ///initialize and unlock the mutex
 { 
   SC_THREAD(controller_thread);
 

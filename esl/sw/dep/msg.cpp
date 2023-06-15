@@ -1320,7 +1320,7 @@ msg::msgUnpackHeader(Octet * buf, MsgHeader * header)
 void
 msg::msgPackHeader(Octet * buf, PtpClock * ptpClock)
 {
-    Nibble transport = 0x80;
+    Nibble transport = 0x10;    //802.1AS ethernet transport specific
 
     /* (spec annex D) */
     *(UInteger8 *) (buf + 0) = transport;

@@ -58,6 +58,8 @@
 protocol::protocol(ptpd *pApp)
 {
     BASE_MEMBER_ASSIGN
+
+    m_master_has_sent_annouce = false;
 }
 
 /* loop forever. doState() has a switch for the actions and events to be
@@ -182,6 +184,7 @@ protocol::toState(UInteger8 state, RunTimeOpts *rtOpts, PtpClock *ptpClock)
          */
         if (ptpClock->portState != PTP_LISTENING) {
             ptpClock->reset_count++;
+            m_master_has_sent_annouce = false;
         }
 
         /* Revert to the original DelayReq interval, and ignore the one for the last master */
@@ -428,13 +431,20 @@ protocol::doState(RunTimeOpts *rtOpts, PtpClock *ptpClock)
 
     case PTP_MASTER:
         /*
-         * handle SLAVE timers:
+         * handle MASTER timers:
          *   - Time to send new Sync
          *   - Time to send new Announce
          *   - Time to send new PathDelay
          *      (DelayResp has no timer - as these are sent and retransmitted by the slaves)
          */
     
+        //to save simulation time, send annouce msg at first
+        if(m_master_has_sent_annouce == false){
+            DBGV("Entering MASTER state, issue Annouce message at first!\n");
+            issueAnnounce(rtOpts, ptpClock);
+            m_master_has_sent_annouce = true;
+        }
+
         if (m_pApp->m_ptr_ptp_timer->timerExpired(SYNC_INTERVAL_TIMER, ptpClock->itimer)) {
             DBGV("event SYNC_INTERVAL_TIMEOUT_EXPIRES\n");
             issueSync(rtOpts, ptpClock);
@@ -1584,6 +1594,12 @@ protocol::handleSignaling(MsgHeader *header, Octet *msgIbuf, ssize_t length,
              PtpClock *ptpClock)
 {}
 
+//provide guard interval after issue message
+//to prevent overflood
+void protocol::waitGuardInterval()
+{
+    wait(MIN_TX_GUARD_INTERVAL, SC_US);
+}
 
 /*Pack and send on general multicast ip adress an Announce message*/
 void 
@@ -1598,6 +1614,8 @@ protocol::issueAnnounce(RunTimeOpts *rtOpts,PtpClock *ptpClock)
         DBGV("Announce MSG sent ! \n");
         ptpClock->sentAnnounceSequenceId++;
     }
+
+    waitGuardInterval();
 }
 
 
@@ -1636,11 +1654,16 @@ protocol::issueSync(RunTimeOpts *rtOpts,PtpClock *ptpClock)
                 tx_time.nanoseconds = tsId.nanoseconds;
 
                 m_pApp->m_ptr_arith->addTime(&tx_time, &tx_time, &rtOpts->outboundLatency);
+
+                waitGuardInterval();
                 issueFollowup(&tx_time, rtOpts, ptpClock);
             }
             else {
                 DBGV("issueFollowUp: Identity of tx timestamp mismatch \n");
             }
+        }
+        else {     //one step clock
+            waitGuardInterval();
         }
 
         ptpClock->sentSyncSequenceId++;
@@ -1664,6 +1687,8 @@ protocol::issueFollowup(TimeInternal *time,RunTimeOpts *rtOpts,PtpClock *ptpCloc
     else {
         DBGV("FollowUp MSG sent ! \n");
     }
+
+    waitGuardInterval();
 }
 
 
@@ -1730,6 +1755,8 @@ protocol::issueDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
            pow((float)2, (float)ptpClock->logMinDelayReqInterval),
            ptpClock->itimer);
     }
+
+    waitGuardInterval();
 }
 
 /*Pack and send on event multicast ip adress a PDelayReq message*/
@@ -1785,6 +1812,8 @@ protocol::issuePDelayReq(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 
         ptpClock->sentPDelayReqSequenceId++;
     }
+
+    waitGuardInterval();
 }
 
 /*Pack and send on event multicast ip adress a PDelayResp message*/
@@ -1820,11 +1849,16 @@ protocol::issuePDelayResp(TimeInternal *time,MsgHeader *header,RunTimeOpts *rtOp
                 tx_time.nanoseconds = tsId.nanoseconds;
 
                 m_pApp->m_ptr_arith->addTime(&tx_time, &tx_time, &rtOpts->outboundLatency);
+
+                waitGuardInterval();
                 issuePDelayRespFollowUp(&tx_time, &ptpClock->PdelayReqHeader, rtOpts,ptpClock);
             }
             else {
                 DBGV("issuePDelayRespFollowUp: Identity of tx timestamp mismatch \n");
             }
+        }
+        else {   //one step clock
+            waitGuardInterval();
         }
     }
 }
@@ -1846,6 +1880,8 @@ protocol::issueDelayResp(TimeInternal *time,MsgHeader *header,RunTimeOpts *rtOpt
     else {
         DBGV("PDelayResp MSG sent ! \n");
     }
+
+    waitGuardInterval();
 }
 
 
@@ -1865,6 +1901,8 @@ protocol::issuePDelayRespFollowUp(TimeInternal *time, MsgHeader *header,
     else {
         DBGV("PDelayRespFollowUp MSG sent ! \n");
     }
+
+    waitGuardInterval();
 }
 
 void 
@@ -1894,6 +1932,8 @@ protocol::issueManagementRespOrAck(MsgManagement *outgoing, RunTimeOpts *rtOpts,
     else {
         DBGV("Management response/acknowledge msg sent \n");
     }
+
+    waitGuardInterval();
 }
 
 void
@@ -1918,6 +1958,7 @@ protocol::issueManagementErrorStatus(MsgManagement *outgoing, RunTimeOpts *rtOpt
         DBGV("Management error status msg sent \n");
     }
 
+    waitGuardInterval();
 }
 
 void

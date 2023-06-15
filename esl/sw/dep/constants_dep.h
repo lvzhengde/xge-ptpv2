@@ -64,9 +64,11 @@
 
 #define DEFAULT_AI     (9.0 * PI_UNIT)       
 
-#define DEFAULT_DELAY_S     (6)
+#define DEFAULT_DELAY_S       (6)
 
-#define WAIT_TX        (10)    //in microseconds
+#define WAIT_TX               (10)    //wait tx finishing, in microseconds
+
+#define MIN_TX_GUARD_INTERVAL (25)    //minimum guard interval between tx mesages
 
 // limit operator messages to once every X seconds
 #define OPERATOR_MESSAGES_INTERVAL 300.0
@@ -75,6 +77,6 @@
 
 #define NET_ADDRESS_LENGTH 16 /* for IPv4 dotted-decimal */
 
-//#define DISPLAY_CLOCK_ID_INFO_ONLY 2   //display information for clock_id = x only
+//#define DISPLAY_CLOCK_ID_INFO_ONLY 1   //display information for clock_id = x only
 
 #endif /*CONSTANTS_DEP_H_*/
