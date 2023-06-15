@@ -579,8 +579,20 @@ protocol::handle(RunTimeOpts *rtOpts, PtpClock *ptpClock)
     case DELAY_RESP:
         st = "DelayResp";
         break;
+    case PDELAY_REQ:
+        st = "PDelayReq";
+        break;
+    case PDELAY_RESP:
+        st = "PDelayResp";
+        break;
+    case PDELAY_RESP_FOLLOW_UP:
+        st = "PDelayRespFollowUp";
+        break;
     case MANAGEMENT:
         st = "Management";
+        break;
+    case SIGNALING:
+        st = "Signaling";
         break;
     default:
         st = "Unk";
