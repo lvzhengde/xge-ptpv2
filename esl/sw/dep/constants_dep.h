@@ -62,7 +62,7 @@
 
 #define DEFAULT_AP     (3.0 * PI_UNIT)  
 
-#define DEFAULT_AI     (9.0 * PI_UNIT)       
+#define DEFAULT_AI     (15.0 * PI_UNIT)       
 
 #define DEFAULT_DELAY_S       (6)
 

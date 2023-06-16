@@ -115,7 +115,7 @@ void ptpd::exec()
     m_rtOpts.one_step         = (!TWO_STEP_FLAG) ? 1 : 0;       //0: two step, 1: one step
     m_rtOpts.emb_ingressTime  = 1;       //0: unchanged, 1: embed ingress time in received event frame
 
-    m_rtOpts.maxDelay         = 100000;   //100us
+    m_rtOpts.maxDelay         = 300000;   //300us
     m_rtOpts.maxReset         = 0;        
 
     /* Initialize run time options with command line arguments */

@@ -861,18 +861,23 @@ protocol::handleSync(MsgHeader *header, Octet *msgIbuf, ssize_t length,
             if (ptpClock->waiting_for_first_sync) {
                 ptpClock->waiting_for_first_sync = FALSE;
                 NOTICE("Received first Sync from Master\n");
-                NOTICE("   going to arm DelayReq timer for the first time, with initial rate: %d\n",
-                    ptpClock->logMinDelayReqInterval
-                );
 
-                if (ptpClock->delayMechanism == E2E)
+                if (ptpClock->delayMechanism == E2E) {
+                    NOTICE("   going to arm DelayReq timer for the first time, with initial rate: %d\n",
+                        ptpClock->logMinDelayReqInterval
+                    );
                     m_pApp->m_ptr_ptp_timer->timerStart(DELAYREQ_INTERVAL_TIMER,
                            pow((float)2, (float)ptpClock->logMinDelayReqInterval),
                            ptpClock->itimer);
-                else if (ptpClock->delayMechanism == P2P)
+                }
+                else if (ptpClock->delayMechanism == P2P) {
+                    NOTICE("   going to arm PDelayReq timer for the first time, with initial rate: %d\n",
+                        ptpClock->logMinPdelayReqInterval
+                    );
                     m_pApp->m_ptr_ptp_timer->timerStart(PDELAYREQ_INTERVAL_TIMER,
                            pow((float)2, (float)ptpClock->logMinPdelayReqInterval),
                            ptpClock->itimer);
+                }
             }
             
             //get precise RX timestamp
@@ -1638,7 +1643,7 @@ protocol::issueSync(RunTimeOpts *rtOpts,PtpClock *ptpClock)
 {
     Timestamp originTimestamp;
     TimeInternal internalTime;
-    m_pApp->m_ptr_sys->getOsTime(&internalTime);
+    m_pApp->m_ptr_sys->getRtcValue(&internalTime);
     m_pApp->m_ptr_arith->fromInternalTime(&internalTime,&originTimestamp);
 
     m_pApp->m_ptr_msg->msgPackSync(ptpClock->msgObuf,&originTimestamp,ptpClock);

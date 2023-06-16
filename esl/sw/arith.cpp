@@ -271,7 +271,7 @@ int arith::check_timestamp_is_fresh2(TimeInternal * timeA, TimeInternal * timeB)
 int arith::check_timestamp_is_fresh(TimeInternal * timeA)
 {
     TimeInternal timeB;
-    m_pApp->m_ptr_sys->getOsTime(&timeB);
+    m_pApp->m_ptr_sys->getRtcValue(&timeB);
     
     return check_timestamp_is_fresh2(timeA, &timeB);
 }

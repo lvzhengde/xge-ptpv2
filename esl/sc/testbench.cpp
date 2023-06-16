@@ -202,13 +202,17 @@ void testbench::sim_proc()
         pClk = pApp->m_ptr_ptpClock;
         pClk_lp = pApp_lp->m_ptr_ptpClock;
 
+        double ppm_tmp = (1e-6) * CLOCK_PERIOD * (1 << DOT_POS);
 
         //infinite loop to monitor simulation
         for(;;) {
 
             //pClk is slave, check synchronization state converged or not
-            if(pClk->portState == PTP_SLAVE &&
-                    pClk->offsetFromMaster.seconds == 0 && pClk->offsetFromMaster.nanoseconds < 20 &&
+            double drift = pClk->observed_drift;
+            drift = abs(drift / ppm_tmp);
+
+            if(pClk->portState == PTP_SLAVE && drift < 0.02 && time_elapsed > 250 &&
+                    pClk->offsetFromMaster.seconds == 0 && abs(pClk->offsetFromMaster.nanoseconds) < 20 &&
                     ((pClk->peerMeanPathDelay.nanoseconds > 50 && pClk->peerMeanPathDelay.nanoseconds < 2000)
                      ||(pClk->meanPathDelay.nanoseconds > 50 && pClk->meanPathDelay.nanoseconds < 2000))
                     ) {
@@ -220,8 +224,11 @@ void testbench::sim_proc()
             }
 
             //pClk_lp is slave, check synchronization state converged or not 
-            if(pClk_lp->portState == PTP_SLAVE &&
-                    pClk_lp->offsetFromMaster.seconds == 0 && pClk_lp->offsetFromMaster.nanoseconds < 20 &&
+            double drift_lp = pClk_lp->observed_drift;
+            drift_lp = abs(drift_lp / ppm_tmp);
+
+            if(pClk_lp->portState == PTP_SLAVE && drift_lp < 0.02 &&  time_elapsed > 250 &&
+                    pClk_lp->offsetFromMaster.seconds == 0 && abs(pClk_lp->offsetFromMaster.nanoseconds) < 20 &&
                     ((pClk_lp->peerMeanPathDelay.nanoseconds > 50 && pClk_lp->peerMeanPathDelay.nanoseconds < 2000)
                      ||(pClk_lp->meanPathDelay.nanoseconds > 50 && pClk_lp->meanPathDelay.nanoseconds < 2000))
                     ) {
@@ -240,8 +247,8 @@ void testbench::sim_proc()
                 printf(" Simulation: %d milliseconds elapsed! \n", time_elapsed);
             }
 
-            //force to exit loop
-            if(time_elapsed > 2000) {
+            //force to exit loop, not converged in 30 seconds
+            if(time_elapsed > 30000) {
                 pApp->m_end_sim = 1;
                 pApp_lp->m_end_sim = 1;
 

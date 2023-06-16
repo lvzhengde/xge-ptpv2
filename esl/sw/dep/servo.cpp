@@ -90,11 +90,27 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     TimeInternal  time;
     m_pApp->m_ptr_sys->getOsTime(&time);
 
+	if (ptpClock->currentUtcOffsetValid) {
+		time.seconds += ptpClock->currentUtcOffset;
+	}
+
+    uint64_t seconds = time.seconds;
+    uint32_t nanoseconds = time.nanoseconds;
+
+#ifdef PTPD_TLM_SIM
+    //intentionally set large time difference between MASTER and SLAVE
+    seconds += (int64_t)100.0 * (m_pController->m_clock_id + m_pApp->m_ptr_sys->getRand())
+                    + (m_pController->m_clock_id - 1) * 7200;
+
+    if(m_pController->m_clock_id == 1) {
+        nanoseconds = (uint32_t)2.13235e8;
+    }
+    else {
+        nanoseconds = (uint32_t)6.57916e8;
+    }
+#endif
+
     //write RTC offset registers
-    uint64_t seconds = time.seconds 
-                        + (int64_t)100.0 * (m_pController->m_clock_id + m_pApp->m_ptr_sys->getRand())
-                        + (m_pController->m_clock_id - 1) * 7200;
-    
     addr = base + SC_OFST_ADDR0;
     data = (seconds >> 32) & 0xffff;
     REG_WRITE(addr, data);
@@ -102,12 +118,6 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     addr = base + SC_OFST_ADDR1;
     data = seconds & 0xffffffff;
     REG_WRITE(addr, data);
-
-    uint32_t nanoseconds = 0;
-    if(m_pController->m_clock_id == 1)
-        nanoseconds = (uint32_t)2.13235e8;
-    else
-        nanoseconds = (uint32_t)6.57916e8;
 
     addr = base + NS_OFST_ADDR;
     data = nanoseconds;
@@ -393,19 +403,19 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
 
     if (rtOpts->maxDelay) { /* If maxDelay is 0 then it's OFF */
         if (master_to_slave_delay.seconds && rtOpts->maxDelay) {
-            INFO("updateOffset aborted, delay greater than 1"
+            INFO("Warning: updateOffset, delay greater than 1"
                  " second.\n");
             /* msgDump(ptpClock); */
-            return;
+            //return;
         }
 
-        if (master_to_slave_delay.nanoseconds > rtOpts->maxDelay) {
-            INFO("updateOffset aborted, delay %d greater than "
+        if (abs(master_to_slave_delay.nanoseconds) > rtOpts->maxDelay) {
+            INFO("Warning: updateOffset, abs(delay) %d greater than "
                  "administratively set maximum %d\n",
-                 master_to_slave_delay.nanoseconds, 
+                 abs(master_to_slave_delay.nanoseconds), 
                  rtOpts->maxDelay);
             /* msgDump(ptpClock); */
-            return;
+            //return;
         }
     }
 
@@ -438,8 +448,9 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
             &ptpClock->meanPathDelay);
     }
 
-    if (ptpClock->offsetFromMaster.seconds) {
-        /* cannot filter with secs, clear filter */
+    if (ptpClock->offsetFromMaster.seconds || 
+            abs(ptpClock->offsetFromMaster.nanoseconds) > rtOpts->maxDelay) {
+        /* cannot filter with secs, or delay greater than maximum set, clear filter */
         ofm_filt->nsec_prev = 0;
         rtOpts->offset_first_updated = TRUE;
         return;
@@ -545,10 +556,10 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
             goto display;
         }
 
-        if (ptpClock->offsetFromMaster.nanoseconds > rtOpts->maxReset) {
-            INFO("updateClock aborted, offset %d greater than "
+        if (abs(ptpClock->offsetFromMaster.nanoseconds) > rtOpts->maxReset) {
+            INFO("updateClock aborted, abs(offset) %d greater than "
                  "administratively set maximum %d\n",
-                 ptpClock->offsetFromMaster.nanoseconds, 
+                 abs(ptpClock->offsetFromMaster.nanoseconds), 
                  rtOpts->maxReset);
             if (rtOpts->displayPackets)
                 m_pApp->m_ptr_msg->msgDump(ptpClock);
@@ -556,8 +567,9 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
         }
     }
 
-    if (ptpClock->offsetFromMaster.seconds) {
-        /* if secs, reset clock or set freq adjustment to max */
+    if (ptpClock->offsetFromMaster.seconds || 
+            abs(ptpClock->offsetFromMaster.nanoseconds) > rtOpts->maxDelay) {
+        /* if secs or delay greater than maximum, reset clock or set freq adjustment to max */
         
         /* 
           if offset from master seconds is non-zero, then this is a "big jump:
