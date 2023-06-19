@@ -12,7 +12,7 @@ public:
 
     uint32_t    m_updateOffset_count;
 
-    int32_t     m_ofm_zline[30];
+    int32_t     m_ofm_zline[OFM_DELAY_LEN];
 
     bool        m_frequency_syntonized;
 

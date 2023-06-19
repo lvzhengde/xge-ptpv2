@@ -499,7 +499,7 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
     rtOpts->offset_first_updated = TRUE;
 
     //update offsetFromMaster delayline
-    for(int i = sizeof(m_ofm_zline)-1; i > 0; i--) {
+    for(int i = OFM_DELAY_LEN-1; i > 0; i--) {
         m_ofm_zline[i] = m_ofm_zline[i-1];
     }
     m_ofm_zline[0] = ptpClock->offsetFromMaster.nanoseconds;
@@ -514,8 +514,8 @@ void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
         return;
     }
 
-    m_pApp->m_ptr_sys->adjTickRate(m_initial_tick);
-    ptpClock->observed_drift = 0;
+    //m_pApp->m_ptr_sys->adjTickRate(m_initial_tick);
+    //ptpClock->observed_drift = 0;
 
     int64_t sec_offset = - ptpClock->offsetFromMaster.seconds;
     int32_t ns_offset  = - ptpClock->offsetFromMaster.nanoseconds;
@@ -708,7 +708,7 @@ display:
     DBGV("offset from master:      %10ds %11dns\n",
         ptpClock->offsetFromMaster.seconds, 
         ptpClock->offsetFromMaster.nanoseconds);
-    DBGV("observed drift:    %10d,  in %f PPM\n", ptpClock->observed_drift, 
+    DBGV("observed drift:    %10d,     %f PPM \n", ptpClock->observed_drift, 
                 ptpClock->observed_drift / PPM_DIV);
 }
 
@@ -719,7 +719,7 @@ bool servo::syntonizeFrequency(RunTimeOpts * rtOpts, PtpClock * ptpClock)
         return true;
     }
 
-    if(m_updateOffset_count < (sizeof(m_ofm_zline)+1)) {
+    if(m_updateOffset_count < (OFM_DELAY_LEN+1)) {
         return false;
     }
 
@@ -728,21 +728,21 @@ bool servo::syntonizeFrequency(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     int32_t max_pos = 0;
 
     //find extreme value and its position
-    for(int32_t i = 0; i < sizeof(m_ofm_zline); i++) {
+    for(int32_t i = 0; i < OFM_DELAY_LEN; i++) {
         int32_t abs_ofm = abs(m_ofm_zline[i]);
 
         if(abs_ofm > max_ofm) {
             max_ofm = abs_ofm;
             max_pos = i;
         }
-        else if(abs_ofm == max_ofm && i < sizeof(m_ofm_zline)/2) {
+        else if(abs_ofm == max_ofm && i < OFM_DELAY_LEN/2) {
             max_pos = i;
         }
     }
 
     //achieve syntonized state or not
     int32_t time_dev = (int32_t)4.0 * CLOCK_PERIOD;
-    if(max_ofm < time_dev && max_pos > 1 && max_pos < (sizeof(m_ofm_zline)-2)) {
+    if(max_ofm < time_dev && max_pos > 1 && max_pos < (OFM_DELAY_LEN-2)) {
         syntonized = true;
     }
 

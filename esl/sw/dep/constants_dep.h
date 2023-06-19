@@ -83,6 +83,8 @@
 
 #define DEFAULT_DELAY_S       (6)
 
+#define OFM_DELAY_LEN         (30)
+
 #define WAIT_TX               (10)    //wait tx finishing, in microseconds
 
 #define MIN_TX_GUARD_INTERVAL (25)    //minimum guard interval between tx mesages
