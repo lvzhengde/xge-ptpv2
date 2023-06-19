@@ -50,13 +50,30 @@
 
 #define CLOCK_PERIOD   (6.4)     //unit in nanoseconds
 
-#define FREQ_VARIANCE  (100)     //in PPM
+#define PPM_DIV            ((1e-6) * CLOCK_PERIOD * (1 << DOT_POS))
 
-#define DOT_POS        (26)      //position of fractional point
+#define MAX_FREQ_VARIANCE  (100)     //in PPM
+
+#define DOT_POS            (26)      //position of fractional point
 
 #define INITIAL_TICK   ((uint32_t)(CLOCK_PERIOD * (1 << DOT_POS) + 0.5))
 
-#define ADJ_FREQ_MAX   ((int32_t)(FREQ_VARIANCE * (1e-6) * CLOCK_PERIOD * (1 << DOT_POS) + 0.5))
+#define PTP_SYNCE      (1)       //if SyncE, frequency of signal clock for linkpartner equal to that of local device
+
+/**
+ * modify the tick increment value, because changing clock period 
+ * in a small quantum is inaccurate in SystemC/Verilatro simulation.
+ * the larger tick_inc, the larger effective frequency
+ */
+#if PTP_SYNCE  //SyncE
+#define FREQ_DIFF        (0)     //0 PPM
+#define LP_INITIAL_TICK  (INITIAL_TICK)
+#else   //not SyncE
+#define FREQ_DIFF        (10.0)  //10 PPM
+#define LP_INITIAL_TICK  ((uint32_t)(INITIAL_TICK*(1.0 + FREQ_DIFF*1e-6)))
+#endif  //PTP_SYNCE
+
+#define ADJ_FREQ_MAX   ((int32_t)(MAX_FREQ_VARIANCE * (1e-6) * CLOCK_PERIOD * (1 << DOT_POS) + 0.5))
 
 #define PI_UNIT        (1e9/(CLOCK_PERIOD * (1 << DOT_POS)) / 2.0)   //corresponding to f_clk/2
 

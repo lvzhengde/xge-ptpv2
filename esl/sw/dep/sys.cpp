@@ -525,8 +525,8 @@ Boolean sys::adjTickRate(Integer32 tick_inc)
 {
     uint32_t base, addr, data = 0;
 
-    int32_t max_tick = INITIAL_TICK + ADJ_FREQ_MAX;
-    int32_t min_tick = INITIAL_TICK - ADJ_FREQ_MAX;
+    int32_t max_tick = m_pApp->m_ptr_servo->m_initial_tick + ADJ_FREQ_MAX;
+    int32_t min_tick = m_pApp->m_ptr_servo->m_initial_tick - ADJ_FREQ_MAX;
 
     if(tick_inc > max_tick){
         tick_inc = max_tick;
@@ -761,7 +761,7 @@ void sys::getPreciseRxTime(MsgHeader *header, TimeInternal *time,  RunTimeOpts *
             time->nanoseconds = t_ns;
         }
         else {   //wrap around occurred in nanoseconds
-            time->seconds += 1;
+            time->seconds -= 1;
             time->nanoseconds = t_ns;
         }
     }

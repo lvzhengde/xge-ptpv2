@@ -17,8 +17,8 @@ public:
     Vchannel_model  *pChannel_lp;
 
     ///connection signals
-    sc_clock clk{"clk", 6.4, SC_NS, 0.5, 2, SC_NS, true};       
-    sc_clock lp_clk{"lp_clk", 6.4, SC_NS, 0.5, 2, SC_NS, true}; 
+    sc_clock clk    ; //{"clk", 6.4, SC_NS, 0.5, 2, SC_NS, true};       
+    sc_clock lp_clk ; //{"lp_clk", 6.4, SC_NS, 0.5, 2, SC_NS, true}; 
     sc_signal<bool> rst_n;
     sc_signal<bool> lp_rst_n;
 

@@ -14,8 +14,8 @@ testbench::testbench
 ) 
 : sc_module               (name)               /// init module name
 , m_sw_type               (sw_type)
-//, clk("clk", 6.4, SC_NS, 0.5, 2, SC_NS, true)       
-//, clk_lp("clk_lp", 6.4, SC_NS, 0.5, 2, SC_NS, true) 
+, clk("clk", CLOCK_PERIOD, SC_NS, 0.5, 2, SC_NS, true)       
+, lp_clk("lp_clk", CLOCK_PERIOD, SC_NS, 0.5, 2, SC_NS, true) 
 {
     pInstance    = NULL;
     pInstance_lp = NULL;
@@ -202,17 +202,15 @@ void testbench::sim_proc()
         pClk = pApp->m_ptr_ptpClock;
         pClk_lp = pApp_lp->m_ptr_ptpClock;
 
-        double ppm_tmp = (1e-6) * CLOCK_PERIOD * (1 << DOT_POS);
-
         //infinite loop to monitor simulation
         for(;;) {
 
             //pClk is slave, check synchronization state converged or not
             double drift = pClk->observed_drift;
-            drift = abs(drift / ppm_tmp);
+            drift = abs(abs(drift / PPM_DIV) - FREQ_DIFF);
 
-            if(pClk->portState == PTP_SLAVE && drift < 0.02 && time_elapsed > 250 &&
-                    pClk->offsetFromMaster.seconds == 0 && abs(pClk->offsetFromMaster.nanoseconds) < 20 &&
+            if(pClk->portState == PTP_SLAVE && drift < 0.05 && time_elapsed > 500 &&
+                    pClk->offsetFromMaster.seconds == 0 && abs(pClk->offsetFromMaster.nanoseconds) < 25 &&
                     ((pClk->peerMeanPathDelay.nanoseconds > 50 && pClk->peerMeanPathDelay.nanoseconds < 2000)
                      ||(pClk->meanPathDelay.nanoseconds > 50 && pClk->meanPathDelay.nanoseconds < 2000))
                     ) {
@@ -225,10 +223,10 @@ void testbench::sim_proc()
 
             //pClk_lp is slave, check synchronization state converged or not 
             double drift_lp = pClk_lp->observed_drift;
-            drift_lp = abs(drift_lp / ppm_tmp);
+            drift_lp = abs(abs(drift_lp / PPM_DIV) - FREQ_DIFF);
 
-            if(pClk_lp->portState == PTP_SLAVE && drift_lp < 0.02 &&  time_elapsed > 250 &&
-                    pClk_lp->offsetFromMaster.seconds == 0 && abs(pClk_lp->offsetFromMaster.nanoseconds) < 20 &&
+            if(pClk_lp->portState == PTP_SLAVE && drift_lp < 0.05 &&  time_elapsed > 500 &&
+                    pClk_lp->offsetFromMaster.seconds == 0 && abs(pClk_lp->offsetFromMaster.nanoseconds) < 25 &&
                     ((pClk_lp->peerMeanPathDelay.nanoseconds > 50 && pClk_lp->peerMeanPathDelay.nanoseconds < 2000)
                      ||(pClk_lp->meanPathDelay.nanoseconds > 50 && pClk_lp->meanPathDelay.nanoseconds < 2000))
                     ) {

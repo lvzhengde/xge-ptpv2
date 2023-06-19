@@ -8,7 +8,15 @@ class servo : public base_data
 {
 public:
     //member variables
+    uint32_t    m_initial_tick;
 
+    uint32_t    m_updateOffset_count;
+
+    int32_t     m_ofm_zline[30];
+
+    bool        m_frequency_syntonized;
+
+ public: 
     //member methods
     servo(ptpd *pApp);
 
@@ -33,6 +41,8 @@ public:
     void adjTickRate_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integer32 adj);
     
     void updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock);
+
+    bool syntonizeFrequency(RunTimeOpts * rtOpts, PtpClock * ptpClock);
 
 };
 

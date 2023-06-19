@@ -59,6 +59,13 @@
 servo::servo(ptpd *pApp)
 {
     BASE_MEMBER_ASSIGN 
+
+    if(m_pApp->m_pController->m_clock_id == 1) {
+        m_initial_tick = INITIAL_TICK;
+    }
+    else {
+        m_initial_tick = LP_INITIAL_TICK;
+    }
 }
 
 void servo::reset_operator_messages(RunTimeOpts * rtOpts, PtpClock * ptpClock)
@@ -90,9 +97,9 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     TimeInternal  time;
     m_pApp->m_ptr_sys->getOsTime(&time);
 
-	if (ptpClock->currentUtcOffsetValid) {
-		time.seconds += ptpClock->currentUtcOffset;
-	}
+    if (ptpClock->currentUtcOffsetValid) {
+        time.seconds += ptpClock->currentUtcOffset;
+    }
 
     uint64_t seconds = time.seconds;
     uint32_t nanoseconds = time.nanoseconds;
@@ -130,7 +137,7 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     REG_WRITE(addr, data);
 
     //start RTC, set to initial tick increment value
-    m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK);
+    m_pApp->m_ptr_sys->adjTickRate(m_initial_tick);
     
     /* clear vars */
     ptpClock->owd_filt.s_exp = 0;   /* clears one-way delay filter */
@@ -151,6 +158,10 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     rtOpts->offset_first_updated   = FALSE;
 
     ptpClock->char_last_msg='I';
+
+    m_updateOffset_count = 0;
+    memset(m_ofm_zline, 0, sizeof(m_ofm_zline));
+    m_frequency_syntonized = false;
 
     reset_operator_messages(rtOpts, ptpClock);
 }
@@ -285,9 +296,13 @@ servo::updateDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, PtpClo
             (ptpClock->meanPathDelay.nanoseconds / 2 + 
              owd_filt->nsec_prev / 2) / owd_filt->s_exp;
 
-             
-        owd_filt->nsec_prev = ptpClock->meanPathDelay.nanoseconds;
-        ptpClock->meanPathDelay.nanoseconds = owd_filt->y;
+        if(owd_filt->nsec_prev) {
+            owd_filt->nsec_prev = ptpClock->meanPathDelay.nanoseconds;
+            ptpClock->meanPathDelay.nanoseconds = owd_filt->y;
+        }
+        else {
+            owd_filt->nsec_prev = ptpClock->meanPathDelay.nanoseconds;
+        }    
 
         DBGV("delay filter %d, %d\n", owd_filt->y, owd_filt->s_exp);
     } else {
@@ -383,8 +398,13 @@ servo::updatePeerDelay(one_way_delay_filter * owd_filt, RunTimeOpts * rtOpts, Pt
         (ptpClock->peerMeanPathDelay.nanoseconds / 2 + 
          owd_filt->nsec_prev / 2) / owd_filt->s_exp;
 
-    owd_filt->nsec_prev = ptpClock->peerMeanPathDelay.nanoseconds;
-    ptpClock->peerMeanPathDelay.nanoseconds = owd_filt->y;
+    if(owd_filt->nsec_prev) {
+        owd_filt->nsec_prev = ptpClock->peerMeanPathDelay.nanoseconds;
+        ptpClock->peerMeanPathDelay.nanoseconds = owd_filt->y;
+    }
+    else {
+        owd_filt->nsec_prev = ptpClock->peerMeanPathDelay.nanoseconds;
+    }
 
     DBGV("delay filter %d, %d\n", owd_filt->y, owd_filt->s_exp);
 }
@@ -437,15 +457,23 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
 
 
     /* update 'offsetFromMaster' */
-    if (ptpClock->delayMechanism == P2P) {
+    if(m_frequency_syntonized) {
+        if (ptpClock->delayMechanism == P2P) {
+            m_pApp->m_ptr_arith->subTime(&ptpClock->offsetFromMaster, 
+                &ptpClock->delayMS, 
+                &ptpClock->peerMeanPathDelay);
+        } else if (ptpClock->delayMechanism == E2E) {
+            /* (End to End mode) */
+            m_pApp->m_ptr_arith->subTime(&ptpClock->offsetFromMaster, 
+                &ptpClock->delayMS, 
+                &ptpClock->meanPathDelay);
+        }
+    }
+    else {
+        TimeInternal fixed_delay = {0, 0};
         m_pApp->m_ptr_arith->subTime(&ptpClock->offsetFromMaster, 
             &ptpClock->delayMS, 
-            &ptpClock->peerMeanPathDelay);
-    } else if (ptpClock->delayMechanism == E2E) {
-        /* (End to End mode) */
-        m_pApp->m_ptr_arith->subTime(&ptpClock->offsetFromMaster, 
-            &ptpClock->delayMS, 
-            &ptpClock->meanPathDelay);
+            &fixed_delay);
     }
 
     if (ptpClock->offsetFromMaster.seconds || 
@@ -469,6 +497,14 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
      * computing end to end delay
      */
     rtOpts->offset_first_updated = TRUE;
+
+    //update offsetFromMaster delayline
+    for(int i = sizeof(m_ofm_zline)-1; i > 0; i--) {
+        m_ofm_zline[i] = m_ofm_zline[i-1];
+    }
+    m_ofm_zline[0] = ptpClock->offsetFromMaster.nanoseconds;
+
+    m_updateOffset_count++;
 }
 
 void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
@@ -478,7 +514,7 @@ void servo::servo_perform_clock_step(RunTimeOpts * rtOpts, PtpClock * ptpClock)
         return;
     }
 
-    m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK);
+    m_pApp->m_ptr_sys->adjTickRate(m_initial_tick);
     ptpClock->observed_drift = 0;
 
     int64_t sec_offset = - ptpClock->offsetFromMaster.seconds;
@@ -510,7 +546,7 @@ void servo::warn_operator_slow_slewing(RunTimeOpts * rtOpts, PtpClock * ptpClock
         Integer32 adj = ptpClock->observed_drift;
 
         float estimated = (((abs(ptpClock->offsetFromMaster.seconds)) + 0.0) 
-                           / (abs(adj+0.0) / INITIAL_TICK) / 3600.0);
+                           / (abs(adj+0.0) / m_initial_tick) / 3600.0);
 
         ALERT("Servo: %d seconds offset detected, will take %.1f hours to slew\n",
             ptpClock->offsetFromMaster.seconds,
@@ -531,10 +567,9 @@ void servo::adjTickRate_wrapper(RunTimeOpts * rtOpts, PtpClock * ptpClock, Integ
     }
 
     // compute corresponding PPM value 
-    double ppm_tmp = (1e-6) * CLOCK_PERIOD * (1 << DOT_POS);
-    DBG2("     adjTickRate2: call adjTickRate to %f ppm \n", adj / ppm_tmp );
+    DBG2("     adjTickRate2: call adjTickRate to %f PPM \n", adj / PPM_DIV);
 
-    m_pApp->m_ptr_sys->adjTickRate(INITIAL_TICK + adj);
+    m_pApp->m_ptr_sys->adjTickRate(m_initial_tick + adj);
 
     warn_operator_fast_slewing(rtOpts, ptpClock, adj);
 }
@@ -543,6 +578,7 @@ void
 servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
     Integer32 adj;
+    bool pre_freqency_syntonized;
 
     DBGV("==> updateClock\n");
 
@@ -567,8 +603,12 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
         }
     }
 
+    pre_freqency_syntonized = m_frequency_syntonized;
+    m_frequency_syntonized = syntonizeFrequency(rtOpts, ptpClock);
+
     if (ptpClock->offsetFromMaster.seconds || 
-            abs(ptpClock->offsetFromMaster.nanoseconds) > rtOpts->maxDelay) {
+            abs(ptpClock->offsetFromMaster.nanoseconds) > rtOpts->maxDelay
+            || (pre_freqency_syntonized == false && m_frequency_syntonized == true)) {
         /* if secs or delay greater than maximum, reset clock or set freq adjustment to max */
         
         /* 
@@ -668,6 +708,43 @@ display:
     DBGV("offset from master:      %10ds %11dns\n",
         ptpClock->offsetFromMaster.seconds, 
         ptpClock->offsetFromMaster.nanoseconds);
-    DBGV("observed drift:          %10d\n", ptpClock->observed_drift);
+    DBGV("observed drift:    %10d,  in %f PPM\n", ptpClock->observed_drift, 
+                ptpClock->observed_drift / PPM_DIV);
 }
 
+
+bool servo::syntonizeFrequency(RunTimeOpts * rtOpts, PtpClock * ptpClock)
+{
+    if(m_frequency_syntonized) {
+        return true;
+    }
+
+    if(m_updateOffset_count < (sizeof(m_ofm_zline)+1)) {
+        return false;
+    }
+
+    bool syntonized = false;
+    int32_t max_ofm = 0;
+    int32_t max_pos = 0;
+
+    //find extreme value and its position
+    for(int32_t i = 0; i < sizeof(m_ofm_zline); i++) {
+        int32_t abs_ofm = abs(m_ofm_zline[i]);
+
+        if(abs_ofm > max_ofm) {
+            max_ofm = abs_ofm;
+            max_pos = i;
+        }
+        else if(abs_ofm == max_ofm && i < sizeof(m_ofm_zline)/2) {
+            max_pos = i;
+        }
+    }
+
+    //achieve syntonized state or not
+    int32_t time_dev = (int32_t)4.0 * CLOCK_PERIOD;
+    if(max_ofm < time_dev && max_pos > 1 && max_pos < (sizeof(m_ofm_zline)-2)) {
+        syntonized = true;
+    }
+
+    return syntonized;
+}
