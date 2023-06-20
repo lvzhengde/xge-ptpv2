@@ -161,7 +161,9 @@ servo::initClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 
     m_updateOffset_count = 0;
     memset(m_ofm_zline, 0, sizeof(m_ofm_zline));
-    m_frequency_syntonized = false;
+    m_frequency_syntonized    = false;
+    m_frequency_syntonized_z1 = false;
+    m_frequency_syntonized_z2 = false;
 
     reset_operator_messages(rtOpts, ptpClock);
 }
@@ -457,7 +459,7 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
 
 
     /* update 'offsetFromMaster' */
-    if(m_frequency_syntonized) {
+    if(m_frequency_syntonized == true) {
         if (ptpClock->delayMechanism == P2P) {
             m_pApp->m_ptr_arith->subTime(&ptpClock->offsetFromMaster, 
                 &ptpClock->delayMS, 
@@ -485,10 +487,12 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
     }
 
     /* filter 'offsetFromMaster' */
-    ofm_filt->y = ptpClock->offsetFromMaster.nanoseconds / 2 + 
-        ofm_filt->nsec_prev / 2;
-    ofm_filt->nsec_prev = ptpClock->offsetFromMaster.nanoseconds;
-    ptpClock->offsetFromMaster.nanoseconds = ofm_filt->y;
+    if(m_frequency_syntonized_z1 == true || m_frequency_syntonized == false) {
+        ofm_filt->y = ptpClock->offsetFromMaster.nanoseconds / 2 + 
+            ofm_filt->nsec_prev / 2;
+        ofm_filt->nsec_prev = ptpClock->offsetFromMaster.nanoseconds;
+        ptpClock->offsetFromMaster.nanoseconds = ofm_filt->y;
+    }
 
     DBGV("offset filter %d\n", ofm_filt->y);
 
@@ -503,6 +507,10 @@ servo::updateOffset(TimeInternal * send_time, TimeInternal * recv_time,
         m_ofm_zline[i] = m_ofm_zline[i-1];
     }
     m_ofm_zline[0] = ptpClock->offsetFromMaster.nanoseconds;
+
+    m_frequency_syntonized_z2 = m_frequency_syntonized_z1;
+    m_frequency_syntonized_z1 = m_frequency_syntonized;
+    m_frequency_syntonized    = syntonizeFrequency(rtOpts, ptpClock);
 
     m_updateOffset_count++;
 }
@@ -578,7 +586,6 @@ void
 servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
     Integer32 adj;
-    bool pre_freqency_syntonized;
 
     DBGV("==> updateClock\n");
 
@@ -603,12 +610,10 @@ servo::updateClock(RunTimeOpts * rtOpts, PtpClock * ptpClock)
         }
     }
 
-    pre_freqency_syntonized = m_frequency_syntonized;
-    m_frequency_syntonized = syntonizeFrequency(rtOpts, ptpClock);
 
     if (ptpClock->offsetFromMaster.seconds || 
             abs(ptpClock->offsetFromMaster.nanoseconds) > rtOpts->maxDelay
-            || (pre_freqency_syntonized == false && m_frequency_syntonized == true)) {
+            || (m_frequency_syntonized_z2 == false && m_frequency_syntonized_z1 == true)) {
         /* if secs or delay greater than maximum, reset clock or set freq adjustment to max */
         
         /* 
@@ -715,7 +720,7 @@ display:
 
 bool servo::syntonizeFrequency(RunTimeOpts * rtOpts, PtpClock * ptpClock)
 {
-    if(m_frequency_syntonized) {
+    if(m_frequency_syntonized == true) {
         return true;
     }
 

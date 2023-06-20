@@ -14,7 +14,11 @@ public:
 
     int32_t     m_ofm_zline[OFM_DELAY_LEN];
 
-    bool        m_frequency_syntonized;
+    bool        m_frequency_syntonized;     //current syntonization state
+
+    bool        m_frequency_syntonized_z1;  //1 sync delayed
+
+    bool        m_frequency_syntonized_z2;  //2 sync delayed
 
  public: 
     //member methods
