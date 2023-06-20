@@ -746,7 +746,7 @@ bool servo::syntonizeFrequency(RunTimeOpts * rtOpts, PtpClock * ptpClock)
     }
 
     //achieve syntonized state or not
-    int32_t time_dev = (int32_t)4.0 * CLOCK_PERIOD;
+    int32_t time_dev = (int32_t)6.0 * CLOCK_PERIOD;
     if(max_ofm < time_dev && max_pos > 1 && max_pos < (OFM_DELAY_LEN-2)) {
         syntonized = true;
     }
