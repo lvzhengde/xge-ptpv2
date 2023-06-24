@@ -14,7 +14,7 @@ CMake可以直接使用Linux自带的软件包管理工具安装，而Verilator�
 如果需要调试程序，则可以安装Visual Studio Code并打开ESL项目所在目录xge-ptpv2/esl。<br>
 <br>
 具体仿真测试的使用方法请参考以下文档：<br>
->/path/to/xge-ptpv2/esl/doc/设计及测试说明.pdf<br>
+ /path/to/xge-ptpv2/esl/doc/设计及测试说明.pdf<br>
 <br>
 在SyncE状态下，仿真测试表明协议算法运行不到1秒就可以让PTP Slave和PTP Master达到高精度时间频率同步状态。<br>
 在非SyncE状态下，仿真测试结果显示，Protocol及Clock Servo算法运行15秒左右便可以让PTP Slave和PTP Master达到时间及频率同步状态。<br>
