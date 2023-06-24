@@ -1,16 +1,24 @@
 # 基于SystemC TLM平台的XGE-PTPv2软件设计
 
 #### 使用说明
-基于Linux操作系统，需要安装Verilator和CMake。<br>
-Verilator的具体安装方法，参考其官方网站或者本项目开发者的公众号文章。<br>
-
+设计和测试均基于Linux操作系统，需要安装Verilator，SystemC，以及CMake。<br>
+CMake可以直接使用Linux自带的软件包管理工具安装，而Verilator，SystemC的具体安装方法，可以参考其官方网站或者本项目开发者的公众号文章。<br>
+<br>
 运行仿真，请执行以下步骤：<br>
 >cd /path/to/solution <br>
 >rm -rf build && mkdir build && cd build <br>
 >cmake .. <br>
 >make <br> 
 >./ptpv2_tlm <br>
-
+<br>
+如果需要调试程序，则可以安装Visual Studio Code并打开ESL项目所在目录xge-ptpv2/esl。<br>
+<br>
+具体仿真测试的使用方法请参考以下文档：<br>
+>/path/to/xge-ptpv2/esl/doc/设计及测试说明.pdf<br>
+<br>
+在SyncE状态下，仿真测试表明协议算法运行不到1秒就可以让PTP Slave和PTP Master达到高精度时间频率同步状态。<br>
+在非SyncE状态下，仿真测试结果显示，Protocol及Clock Servo算法运行15秒左右便可以让PTP Slave和PTP Master达到时间及频率同步状态。<br>
+至于仿真运行时间，在开发者自己的电脑上，运行SyncE仿真测试大约需要二十几分钟，运行非SyncE仿真测试则需要六个小时以上。<br>
 
 #### 免责声明
 
