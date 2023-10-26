@@ -21,7 +21,7 @@ module sync_io (
   output reg           pps_o,              //pps output from current time
   output               intxms_o   
 );
-  parameter  INT10MS = 24'd10000000;       //10^7  nano seconds  10ms,  aligned with 1_p_p_s
+  parameter  INT10MS = 24'd10000000;       //10^7  nano seconds  10ms,  aligned with PPS signal
   parameter  INTQ8MS = 24'd7812500;        //7812500 ns, 7.8125ms
 
   wire  [63:0] zero_dword = 64'b0;
