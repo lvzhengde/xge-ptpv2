@@ -1,27 +1,24 @@
 # XGE-PTPv2
 
-# 基本功能测试
-执行以下命令以运行基本的RTL功能测试<br>
->cd /path/to/sim<br>
->./runcase.sh tc_rapid_ptp_test<br>
+# Basic Function Test
+Run following commands to execute basic RTL function test<br>
+cd /path/to/sim<br>
+./runcase.sh tc_rapid_ptp_test<br>
 
-# 设计相关说明
-1.  RTC和TSU设计基本分离，可以根据需要用于交换机/路由器或者单端口MAC/PHY的PTP设计。
-2.  one-step clock，tc offload，以及将ingress time嵌入PTP报文的设计会在数据通道引入处理延迟。
-3.  外接的dis_ptpv2_i信号可以旁路整个设计，还可以用它来关闭工作时钟信号。
-4.  配置寄存器bypass_dp信号，同样可以旁路数据通路，但TSU单元照常工作，这种情况可用于two-step clock且数据通路不引入额外延迟。
-5.  RTC的运行精度可以通过设置tick_inc的小数点位置调节。
+# Design Specifications
+1. RTC and TSU design are fundamentally separated, suitable for both switch/router applications and single-port MAC/PHY PTP designs
+2. One-step clock, TC offload, and embedding ingress time into PTP packets will introduce processing delay in data path
+3. External dis_ptpv2_i signal can bypass the entire design, also used to disable working clock signals
+4. Configuration register bypass_dp signal can bypass data path while keeping TSU unit operational, suitable for two-step clock scenarios without additional data path delay
+5. RTC precision can be adjusted by configuring tick_inc decimal point position
 
-本开源项目着重于整体架构设计和开源设计流程的建立，目前情况下，保证基本功能测试通过即可。<br>
-如果读者有意在此基础上进一步开发，请自行进行修改，使其功能符合特定需求并得到充分的验证和测试。<br>
+This open-source project focuses on establishing overall architecture design and open-source development processes. Currently, passing basic function tests is sufficient.<br>
+If you want to further develop this project, please modify it according to your specific requirements and ensure adequate validation and testing.<br>
 
-# 关于文档
-目前暂无编写正式文档的计划，开发者会在自己的公众号中不定期发表一些文章讨论设计细节。
-如果读者想要了解相关动态和设计说明，请关注开发者公众号。
+# Documentation
+No formal documentation is planned currently. Developers will publish design details in technical articles through official WeChat account periodically.
+To stay updated with project developments and design discussions, please follow our official WeChat account.
 
-#### 关注开发者公众号
-如果需要了解项目最新状态和加入相关技术探讨，请打开微信搜索公众号"时光之箭"或者扫描以下二维码关注开发者公众号。<br>
+#### Follow Developer WeChat Official Account
+To learn about project updates and join technical discussions, please search "时光之箭" on WeChat or scan the QR code below:<br>
 ![image](https://open.weixin.qq.com/qr/code?username=Arrow-of-Time-zd "时光之箭")
-
-
-
